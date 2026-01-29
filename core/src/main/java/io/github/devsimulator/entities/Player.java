@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.devsimulator.Main;
-import io.github.devsimulator.elements.Dirt;
 import io.github.devsimulator.elements.Element;
 import io.github.devsimulator.helper.PhysicSim;
 
@@ -21,18 +20,23 @@ public class Player {
 
     // 2. State Variables
     public State currentState = State.NORMAL;
-    public float assimilationMeter = 0.0f; // 0 to 100
+    public float assimilationMeter = 0.0f;
     public final float MAX_ASSIMILATION = 100.0f;
     public boolean isAlive = true;
 
-    // Balance Constants (Tweak these to make the game harder/easier)
-    private final float ASSIMILATION_RATE = 15.0f; // Risk increases by 15 per second
-    private final float RECOVERY_RATE = 10.0f;     // Risk drops by 10 per second
+    // Balance Constants
+    private final float ASSIMILATION_RATE = 15.0f;
+    private final float RECOVERY_RATE = 10.0f;
 
     public Player(World world) {
         this.world = world;
         definePlayer();
-        texture = new Texture("player.png"); // Ensure this asset exists!
+        // Make sure "player.png" is in your assets folder!
+        try {
+            texture = new Texture("player.png");
+        } catch (Exception e) {
+            System.err.println("CRITICAL: player.png not found. Using fallback.");
+        }
     }
 
     public void definePlayer() {
@@ -52,11 +56,11 @@ public class Player {
     }
 
     public void update(float dt, PhysicSim sim) {
-        if (!isAlive) return; // Stop logic if dead
+        if (!isAlive) return;
 
-        handleInput(); // Movement
+        handleInput();
 
-        // 3. New State Logic from Pseudocode
+        // 3. State Logic (Risk vs Recovery)
         if (currentState != State.NORMAL) {
             // INCREASE RISK: While transformed, you risk hardening
             assimilationMeter += ASSIMILATION_RATE * dt;
@@ -69,70 +73,88 @@ public class Player {
             assimilationMeter = Math.max(0, assimilationMeter - (RECOVERY_RATE * dt));
         }
 
-        // 4. Interaction Logic (Eating/Assimilating)
+        // 4. Interaction Logic
         if (sim != null) {
             interactWithEnvironment(sim);
         }
     }
 
     private void handleInput() {
-        // Basic Movement
-        if (Gdx.input.isKeyPressed(Input.Keys.A) && b2body.getLinearVelocity().x >= -2) {
+        Vector2 vel = b2body.getLinearVelocity();
+
+        // Horizontal Movement
+        if (Gdx.input.isKeyPressed(Input.Keys.A) && vel.x >= -2) {
             b2body.applyLinearImpulse(new Vector2(-0.2f, 0), b2body.getWorldCenter(), true);
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.D) && b2body.getLinearVelocity().x <= 2) {
+        if (Gdx.input.isKeyPressed(Input.Keys.D) && vel.x <= 2) {
             b2body.applyLinearImpulse(new Vector2(0.2f, 0), b2body.getWorldCenter(), true);
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.W) && b2body.getLinearVelocity().y == 0) {
-            b2body.applyLinearImpulse(new Vector2(0, 8f), b2body.getWorldCenter(), true);
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && b2body.getLinearVelocity().y == 0) {
+
+        // Jump Logic (Fixed with Tolerance)
+        boolean jumpPressed = Gdx.input.isKeyJustPressed(Input.Keys.W) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+
+        if (jumpPressed && Math.abs(vel.y) < 0.2f) {
             b2body.applyLinearImpulse(new Vector2(0, 8f), b2body.getWorldCenter(), true);
         }
 
         // MANUAL TRANSFORMATION KEYS (For Testing)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) currentState = State.NORMAL;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) transformTo(State.NORMAL);
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) transformTo(State.DIRT_FORM);
     }
 
     private void interactWithEnvironment(PhysicSim sim) {
-        // Calculate player position in the Sim Grid
-        int simX = (int) (b2body.getPosition().x * Main.PPM / (960f / 200f));
-        int simY = (int) (b2body.getPosition().y * Main.PPM / (640f / 200f));
+        // UPDATE: Changed to match the 240x160 grid size
+        // Screen Width 960 / Grid Width 240 = 4.0
+        // Screen Height 640 / Grid Height 160 = 4.0
+        float cellWidth = 4.0f;
+        float cellHeight = 4.0f;
 
-        for (int i = -3; i <= 3; i++) {
-            for (int j = -3; j <= 3; j++) {
-                // Get the element we are touching
-                Element e = sim.getElement(simX + i, simY + j);
+        // Get Player center in Grid Coordinates
+        int simX = (int) (b2body.getPosition().x * Main.PPM / cellWidth);
+        int simY = (int) (b2body.getPosition().y * Main.PPM / cellHeight);
 
-                if (e != null) {
-                    // Logic: If we touch Dirt, and we are NOT Dirt Form, we eat it?
-                    // OR: If we press a button, we become it.
+        // Check what is at our center
+        Element e = sim.getElement(simX, simY);
 
-                    // For now: Just clear the path so we don't get stuck
-                    sim.assimilateElement(simX + i, simY + j);
-                }
+        if (e != null) {
+            // --- WE ARE INSIDE MATTER (Sand/Water) ---
+
+            if (currentState == State.DIRT_FORM) {
+                // ABILITY: "Swim" through matter
+                // No gravity so you don't sink, low drag so you can move
+                b2body.setGravityScale(0f);
+                b2body.setLinearDamping(2f);
+            } else {
+                // NORMAL: "Quicksand" Effect
+                // Reduced gravity so you fall slow, High drag so you are stuck
+                b2body.setGravityScale(0.3f);
+                b2body.setLinearDamping(8f);
             }
+        } else {
+            // --- WE ARE IN AIR ---
+            // Reset to normal physics
+            b2body.setGravityScale(1f);
+            b2body.setLinearDamping(0f);
         }
     }
 
-    // Helper to switch states
     public void transformTo(State newState) {
         this.currentState = newState;
-        // Add physics changes here later (e.g., disable gravity for Gas)
     }
 
     public void triggerDeath(String reason) {
         isAlive = false;
         System.out.println("GAME OVER: " + reason);
-        // Reset for now so you can keep playing
+        // Reset for testing purposes
         assimilationMeter = 0;
         currentState = State.NORMAL;
         isAlive = true;
     }
 
     public void draw(SpriteBatch batch) {
-        // VISUAL FEEDBACK: Change color based on State
+        if (texture == null) return;
+
+        // VISUAL FEEDBACK: Tint based on form
         switch (currentState) {
             case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break; // Brown
             case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break; // Blue
@@ -144,11 +166,10 @@ public class Player {
             b2body.getPosition().x * Main.PPM - texture.getWidth() / 2,
             b2body.getPosition().y * Main.PPM - texture.getHeight() / 2);
 
-        // RESET Color so we don't tint the rest of the game
+        // Reset Color
         batch.setColor(1, 1, 1, 1);
     }
 
-    // Helper for the HUD
     public float getMassPercentage() {
         return assimilationMeter / MAX_ASSIMILATION;
     }

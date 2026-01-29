@@ -1,7 +1,7 @@
 package io.github.devsimulator.helper;
 
 import io.github.devsimulator.elements.Element;
-import io.github.devsimulator.elements.Dirt;
+import io.github.devsimulator.elements.ElementType;
 
 public class PhysicSim {
     private Element[][] matrix;
@@ -16,8 +16,8 @@ public class PhysicSim {
     }
 
     public void update() {
-        // 1. RESET PHASE: Clear the 'hasUpdated' flag for every element
-        // If we skip this, elements move once and then freeze forever!
+        // 1. RESET PHASE: Clear the 'hasUpdated' flag for every element.
+        // This ensures elements don't get frozen after one move.
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 if (matrix[x][y] != null) {
@@ -27,7 +27,7 @@ public class PhysicSim {
         }
 
         // 2. UPDATE PHASE: Run physics
-        // We iterate Bottom-Up (0 to height) to process floor elements first
+        // We iterate Bottom-Up to handle falling elements naturally
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 if (matrix[x][y] != null) {
@@ -39,7 +39,6 @@ public class PhysicSim {
 
     // --- Core Helpers ---
 
-    // Used by Element.java to check if it can move to a specific spot
     public boolean isWithinBounds(int x, int y) {
         return x >= 0 && x < width && y >= 0 && y < height;
     }
@@ -55,41 +54,19 @@ public class PhysicSim {
         }
     }
 
-    // --- Legacy Helpers (kept for compatibility) ---
-
-    public boolean assimilateElement(int x, int y) {
+    public Element getElement(int x, int y) {
         if (isWithinBounds(x, y)) {
-            if (matrix[x][y] != null) {
-                matrix[x][y] = null;
-                return true;
-            }
+            return matrix[x][y];
         }
-        return false;
-    }
-
-    public void fillArea(int startX, int startY, int w, int h) {
-        for (int x = startX; x < startX + w; x++) {
-            for (int y = startY; y < startY + h; y++) {
-                if (isWithinBounds(x, y)) {
-                    // Only fill if empty and not a wall
-                    if (matrix[x][y] == null && !walls[x][y]) {
-                        matrix[x][y] = new Dirt(x, y);
-                    }
-                }
-            }
-        }
-    }
-
-    public boolean isEmpty(int x, int y) {
-        if (!isWithinBounds(x, y)) return false;
-        // It's empty if there is no element AND no wall
-        return matrix[x][y] == null && !walls[x][y];
+        return null;
     }
 
     public void moveElement(int oldX, int oldY, int newX, int newY) {
         if (isWithinBounds(newX, newY)) {
             matrix[newX][newY] = matrix[oldX][oldY];
             matrix[oldX][oldY] = null;
+
+            // Update internal coordinates of the moved element
             if (matrix[newX][newY] != null) {
                 matrix[newX][newY].setX(newX);
                 matrix[newX][newY].setY(newY);
@@ -97,12 +74,13 @@ public class PhysicSim {
         }
     }
 
-    public Element getElement(int x, int y) {
-        if (isWithinBounds(x, y)) {
-            return matrix[x][y];
-        }
-        return null;
+    public boolean isEmpty(int x, int y) {
+        if (!isWithinBounds(x, y)) return false;
+        // A spot is empty ONLY if there is no element AND no wall
+        return matrix[x][y] == null && !walls[x][y];
     }
+
+    // --- Wall & Spawning Helpers ---
 
     public void setWall(int x, int y, boolean isWall) {
         if (isWithinBounds(x, y)) {
@@ -114,6 +92,31 @@ public class PhysicSim {
         if (isWithinBounds(x, y)) {
             return walls[x][y];
         }
-        return true; // Treat boundaries as walls
+        return true; // Treat out-of-bounds as walls
+    }
+
+    public void fillArea(int startX, int startY, int w, int h, ElementType type) {
+        for (int x = startX; x < startX + w; x++) {
+            for (int y = startY; y < startY + h; y++) {
+                if (isWithinBounds(x, y)) {
+                    // Only spawn if the spot is empty and not a wall
+                    if (matrix[x][y] == null && !walls[x][y]) {
+                        matrix[x][y] = type.create(x, y);
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Legacy Helpers ---
+
+    public boolean assimilateElement(int x, int y) {
+        if (isWithinBounds(x, y)) {
+            if (matrix[x][y] != null) {
+                matrix[x][y] = null;
+                return true;
+            }
+        }
+        return false;
     }
 }

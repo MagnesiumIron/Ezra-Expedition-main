@@ -42,14 +42,15 @@ public abstract class MovableSolid extends Element {
 
     // Helper: Returns true if we successfully moved or swapped
     private boolean tryMoveOrSwap(PhysicSim sim, int targetX, int targetY) {
-        // Bounds check handled by sim methods usually, but good to be safe
-        if (targetX < 0 || targetX >= 200 || targetY < 0 || targetY >= 200) return false;
+        // FIXED: Removed hardcoded '200' check.
+        // We now ask the simulation if this coordinate is valid.
+        if (!sim.isWithinBounds(targetX, targetY)) return false;
 
         Element neighbor = sim.getElement(targetX, targetY);
 
         // Case A: The spot is empty -> Move there
         if (neighbor == null) {
-            // Check for walls (from your Main.java logic)
+            // Check for walls (The Sim knows where walls are)
             if (sim.isWall(targetX, targetY)) return false;
 
             sim.moveElement(x, y, targetX, targetY);

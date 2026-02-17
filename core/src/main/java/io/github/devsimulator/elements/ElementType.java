@@ -10,3 +10,4 @@ public enum ElementType {
 
     public abstract Element create(int x, int y);
 }
+

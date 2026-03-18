@@ -4,65 +4,62 @@ import io.github.devsimulator.helper.PhysicSim;
 
 public abstract class MovableSolid extends Element {
 
-    // Take density in constructor (Sand is heavier than Water)
     public MovableSolid(int x, int y, int density) {
         super(x, y);
-        this.isSolid = true;      // It's a solid
-        this.density = density;   // Set its weight
-        this.isFreeFalling = true;
+        this.isSolid = true;
+        this.isStatic = false;
+        this.density = density;
+        this.isFreeFalling = true; // Start awake
     }
 
     @Override
     public void step(PhysicSim sim) {
-        // Prevent updating the same particle twice in one frame
         if (hasUpdated) return;
         hasUpdated = true;
 
-        // 1. Try moving directly down (Gravity)
+        if (!isFreeFalling) {
+            Element below = sim.getElement(x, y - 1);
+            // If empty below OR liquid below -> WAKE UP
+            if (sim.isWithinBounds(x, y - 1) && (below == null || !below.isSolid)) {
+                isFreeFalling = true;
+            } else {
+                return;
+            }
+        }
         if (tryMoveOrSwap(sim, x, y - 1)) {
+            wakeNeighbors(sim); // Movement wakes neighbors
             return;
         }
-
-        // 2. Randomize direction (-1 or 1)
-        int direction = Math.random() < 0.5 ? -1 : 1;
-
-        // 3. Try moving diagonally
-        if (tryMoveOrSwap(sim, x + direction, y - 1)) {
-            return;
+        if (isFreeFalling) {
+            int dir = random.nextBoolean() ? 1 : -1;
+            if (tryMoveOrSwap(sim, x + dir, y - 1)) {
+                wakeNeighbors(sim);
+                return;
+            }
+            if (tryMoveOrSwap(sim, x - dir, y - 1)) {
+                wakeNeighbors(sim);
+                return;
+            }
         }
-
-        // 4. Try the other diagonal
-        if (tryMoveOrSwap(sim, x - direction, y - 1)) {
-            return;
-        }
-
-        // If we reached here, we stopped moving
         this.isFreeFalling = false;
     }
 
-    // Helper: Returns true if we successfully moved or swapped
-    private boolean tryMoveOrSwap(PhysicSim sim, int targetX, int targetY) {
-        // FIXED: Removed hardcoded '200' check.
-        // We now ask the simulation if this coordinate is valid.
-        if (!sim.isWithinBounds(targetX, targetY)) return false;
+    private boolean tryMoveOrSwap(PhysicSim sim, int tx, int ty) {
+        if (!sim.isWithinBounds(tx, ty) || sim.isWall(tx, ty)) return false;
 
-        Element neighbor = sim.getElement(targetX, targetY);
+        Element neighbor = sim.getElement(tx, ty);
 
-        // Case A: The spot is empty -> Move there
+        // Move to Empty
         if (neighbor == null) {
-            // Check for walls (The Sim knows where walls are)
-            if (sim.isWall(targetX, targetY)) return false;
-
-            sim.moveElement(x, y, targetX, targetY);
+            sim.moveElement(x, y, tx, ty);
             return true;
         }
 
-        // Case B: The spot has a Liquid/Gas -> Swap if we are heavier
-        // We check: Neighbor is NOT solid (Liquid/Gas) AND we are denser
         if (!neighbor.isSolid && this.density > neighbor.density) {
             swapPositions(sim, neighbor);
             return true;
         }
+        this.interact(sim, neighbor);
 
         return false;
     }

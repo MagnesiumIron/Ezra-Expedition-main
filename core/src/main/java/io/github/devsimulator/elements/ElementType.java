@@ -1,9 +1,6 @@
 package io.github.devsimulator.elements;
 
 public enum ElementType {
-    DIRT {
-        @Override public Element create(int x, int y) { return new Dirt(x, y); }
-    },
     SAND {
         @Override public Element create(int x, int y) { return new Sand(x, y); }
     },
@@ -13,3 +10,4 @@ public enum ElementType {
 
     public abstract Element create(int x, int y);
 }
+

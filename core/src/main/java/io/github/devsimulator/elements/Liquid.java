@@ -3,15 +3,14 @@ package io.github.devsimulator.elements;
 import io.github.devsimulator.helper.PhysicSim;
 
 public abstract class Liquid extends Element {
-
     private final int dispersionRate;
 
     public Liquid(int x, int y, int density, int dispersionRate) {
         super(x, y);
-        this.isSolid = false; // Important: Allows solids to sink through it
+        this.isSolid = false;
         this.density = density;
         this.dispersionRate = dispersionRate;
-        this.frictionFactor = 0.1f;
+        this.isStatic = false;
     }
 
     @Override
@@ -19,31 +18,47 @@ public abstract class Liquid extends Element {
         if (hasUpdated) return;
         hasUpdated = true;
 
-        // 1. Gravity Check (Move Down)
-        if (tryMove(sim, x, y - 1)) return;
+        // 1. Gravity (Down)
+        if (tryMoveOrSwap(sim, x, y - 1)) return;
 
-        // 2. Dispersion (Flow Sideways)
-        // Liquids act differently: they slide horizontally if they can't go down
-        int direction = Math.random() < 0.5 ? 1 : -1;
+        // 2. Flow (Sideways)
+        int dir = Math.random() < 0.5 ? 1 : -1;
 
-        // Try to flow sideways up to 'dispersionRate' distance
+        // Scan for the furthest valid move
         for (int i = 1; i <= dispersionRate; i++) {
-            int targetX = x + (i * direction);
+            int targetX = x + (dir * i);
 
-            // If we hit a wall/solid, stop flowing this direction
-            if (sim.isWall(targetX, y)) break;
+            // STOP if we hit a wall or bounds
+            if (!sim.isWithinBounds(targetX, y) || sim.isWall(targetX, y)) break;
 
-            // If we find an empty spot, move there
-            if (sim.isEmpty(targetX, y)) {
+            Element neighbor = sim.getElement(targetX, y);
+
+            if (neighbor == null) {
+                // Empty spot found - Move there!
                 sim.moveElement(x, y, targetX, y);
                 return;
+            } else if (!neighbor.isSolid && this.density > neighbor.density) {
+                // Lighter liquid/gas found - Swap!
+                swapPositions(sim, neighbor);
+                return;
+            } else {
+                // Blocked by solid or heavier liquid - STOP looking in this direction
+                break;
             }
         }
     }
 
-    private boolean tryMove(PhysicSim sim, int tx, int ty) {
-        if (sim.isEmpty(tx, ty)) {
+    private boolean tryMoveOrSwap(PhysicSim sim, int tx, int ty) {
+        if (!sim.isWithinBounds(tx, ty) || sim.isWall(tx, ty)) return false;
+
+        Element neighbor = sim.getElement(tx, ty);
+        if (neighbor == null) {
             sim.moveElement(x, y, tx, ty);
+            return true;
+        }
+        // Swap if we are heavier (Water sinks in Oil/Gas)
+        if (!neighbor.isSolid && this.density > neighbor.density) {
+            swapPositions(sim, neighbor);
             return true;
         }
         return false;

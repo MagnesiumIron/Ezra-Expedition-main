@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="42">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="70">
  <tileset firstgid="1" source="testingblock.tsx"/>
  <layer id="1" name="Tile Layer 1" width="30" height="20">
   <data encoding="csv">
@@ -36,13 +36,28 @@
   <object id="36" x="352.333" y="576" width="160.333" height="31.3333"/>
   <object id="37" x="513.333" y="544.333" width="63.3333" height="63"/>
  </objectgroup>
+ <objectgroup color="#ffffff" id="5" name="transitions">
+  <object id="66" x="928.667" y="222.667" width="31.6667" height="224.333">
+   <properties>
+    <property name="spawnX" type="float" value="4"/>
+    <property name="spawnY" type="float" value="6"/>
+    <property name="targetMap" value="level2test.tmx"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup color="#475ef2" id="4" name="water_zones" tintcolor="#4922e7">
+  <object id="48" x="543.608" y="448.068" width="128" height="31.75"/>
+  <object id="49" x="576.25" y="480" width="96" height="31.5"/>
+  <object id="50" x="608.5" y="511.75" width="63.5" height="32"/>
+  <object id="51" x="672.667" y="479.667" width="255.667" height="127.333"/>
+ </objectgroup>
  <objectgroup id="2" name="collisions">
   <object id="6" x="2.2734" y="1.1367" width="443.313" height="222.793"/>
   <object id="9" x="1.1367" y="577.444" width="351.24" height="60.2451"/>
   <object id="10" x="161.411" y="545.616" width="60.2451" height="27.2808"/>
   <object id="11" x="4.5468" y="321.686" width="26.1441" height="251.211"/>
   <object id="12" x="34.101" y="547.889" width="26.1441" height="26.1441"/>
-  <object id="14" x="98.8929" y="323.96" width="88.6626" height="155.728"/>
+  <object id="14" x="98.8929" y="321.96" width="91.6626" height="157.728"/>
   <object id="15" x="97.7562" y="480.824" width="57.9717" height="28.4175"/>
   <object id="16" x="226.203" y="481.961" width="89.7993" height="28.4175"/>
   <object id="17" x="258.031" y="511.515" width="61.3818" height="29.5542"/>
@@ -56,5 +71,6 @@
   <object id="25" x="675.2" y="451.27" width="248.937" height="25.0074"/>
   <object id="26" x="771.819" y="354.65" width="123.9" height="26.1441"/>
   <object id="27" x="579.717" y="2.2734" width="379.658" height="217.11"/>
+  <object id="42" x="161.504" y="225.445" width="60.658" height="94.11"/>
  </objectgroup>
 </map>

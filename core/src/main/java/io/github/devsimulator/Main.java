@@ -10,53 +10,53 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.entities.Player;
+import io.github.devsimulator.helper.WorldContactListener;
 import io.github.devsimulator.helper.tilemapmanager;
+import io.github.devsimulator.helper.pauseMenu;
 
 public class Main extends ApplicationAdapter {
-    public static final float PPM = 32f;
-
+    public static final float PPM = 32f; // 32 PIXELS
     private SpriteBatch batch;
-    private World world;
+    public World world;
     private Box2DDebugRenderer b2dr;
-
-    private TiledMap map;
-    private OrthogonalTiledMapRenderer mapRenderer;
     private OrthographicCamera camera;
-
-    private Player player;
-    private SandManager sandManager;
+    public TiledMap map;
+    public OrthogonalTiledMapRenderer mapRenderer;
+    public Player player;
+    public SandManager sandManager;
     private Texture hudTexture;
+
+
+    private pauseMenu pauseMenu;
+    private io.github.devsimulator.helper.mainMenu mainMenu;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
-
-        // 1. Box2D Physics Setup
         world = new World(new Vector2(0, -9.8f), true);
+        world.setContactListener(new WorldContactListener());
         b2dr = new Box2DDebugRenderer();
 
-        // 2. Map Setup
         map = new TmxMapLoader().load("level1test.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map);
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 960, 640);
 
-        // 3. Create Boundaries (Box2D Walls)
         tilemapmanager.createBoundaries(map, world);
-
-        // 4. Initialize Sand Manager
         sandManager = new SandManager();
         sandManager.initLevel(map);
 
-        // 5. Create Player
         player = new Player(world);
 
-        // 6. Create HUD Texture (1x1 White Pixel)
+
+        mainMenu = new io.github.devsimulator.helper.mainMenu(player);
+        pauseMenu = new io.github.devsimulator.helper.pauseMenu(player, mainMenu);
+
         Pixmap pix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pix.setColor(1, 1, 1, 1);
         pix.fill();
@@ -68,71 +68,102 @@ public class Main extends ApplicationAdapter {
     public void render() {
         ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1f);
 
-        // --- Logic Updates ---
-        world.step(1/60f, 6, 2);
-        sandManager.update();
-
-        if (player != null) {
-            player.update(Gdx.graphics.getDeltaTime(), sandManager.sim);
+        if (!mainMenu.isStarted) {
+            mainMenu.render(Gdx.graphics.getDeltaTime());
         }
+        else {
+            pauseMenu.update();
+            if (!pauseMenu.isPaused) {
+                world.step(1/60f, 6, 2);
 
-        camera.update();
-        mapRenderer.setView(camera);
+                if (WorldContactListener.pendingTransition != null) {
+                    tilemapmanager.TransitionData data = WorldContactListener.pendingTransition;
+                    tilemapmanager.loadLevel(this, data.targetMap, data.spawnX, data.spawnY);
 
-        // --- RENDER PASS 1: SAND (Background) ---
-        // We draw the sand first so it sits behind the walls
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        sandManager.render(batch);
-        batch.end();
+                    WorldContactListener.pendingTransition = null;
+                    WorldContactListener.bodiesToDestroy.clear();
+                }
+                else if (WorldContactListener.bodiesToDestroy.size > 0) {
+                    for (Body b : WorldContactListener.bodiesToDestroy) {
+                        if (b.getFixtureList().size > 0 && "KEY".equals(b.getFixtureList().first().getUserData())) {
+                            destroyAllDoors();
+                        }
+                        world.destroyBody(b);
+                    }
+                    WorldContactListener.bodiesToDestroy.clear();
+                }
 
-        // --- RENDER PASS 2: MAP (Foreground) ---
-        // We draw the map ON TOP of the sand.
-        // This hides any messy edges where the sand touches the walls.
-        mapRenderer.render();
+                sandManager.update();
+                if (player != null) player.update(Gdx.graphics.getDeltaTime(), sandManager.sim);
 
-        // --- RENDER PASS 3: ENTITIES & HUD (Top Layer) ---
-        // We open the batch again to draw the player and UI on top of the map
-        batch.begin();
+                if(player != null) {
+                    camera.position.x = player.b2body.getPosition().x * PPM;
+                    camera.position.y = player.b2body.getPosition().y * PPM;
+                    camera.update();
+                }
+            }
 
-        // Draw Player
-        if (player != null) player.draw(batch);
+            mapRenderer.setView(camera);
 
-        // Draw HUD (Assimilation Meter)
-        float barX = 20;
-        float barY = 600;
-        float barWidth = 200;
-        float barHeight = 20;
+            batch.setProjectionMatrix(camera.combined);
+            batch.begin();
+            sandManager.render(batch);
+            batch.end();
 
-        // Background (Black)
-        batch.setColor(0f, 0f, 0f, 1f);
-        batch.draw(hudTexture, barX, barY, barWidth, barHeight);
+            mapRenderer.render();
 
-        // Foreground (Red Risk Level)
-        if (player != null) {
-            batch.setColor(0.9f, 0.1f, 0.1f, 1f);
-            float percentage = player.getMassPercentage();
-            if(percentage > 1) percentage = 1;
-            if(percentage < 0) percentage = 0;
+            b2dr.render(world, camera.combined);
 
-            batch.draw(hudTexture, barX, barY, barWidth * percentage, barHeight);
+            batch.begin();
+            if (player != null) player.draw(batch);
+            drawHUD();
+            batch.end();
+
+            pauseMenu.render(Gdx.graphics.getDeltaTime());
         }
+    }
 
-        batch.setColor(1, 1, 1, 1); // Reset color
-        batch.end();
+    private void destroyAllDoors() {
+        Array<Body> bodies = new Array<>();
+        world.getBodies(bodies);
+        for (Body b : bodies) {
+            if (b.getFixtureList().size > 0 && "DOOR".equals(b.getFixtureList().first().getUserData())) {
+                world.destroyBody(b);
+            }
+        }
+    }
 
-        // Debug Lines (Optional - comment out to hide green lines)
-        b2dr.render(world, camera.combined.cpy().scl(PPM));
+    private void drawHUD() {
+        if(player == null) return;
+        float x = camera.position.x - 400;
+        float y = camera.position.y + 250;
+
+        // Assimilation Bar (Red)
+        batch.setColor(0,0,0,1);
+        batch.draw(hudTexture, x, y, 204, 14);
+
+        batch.setColor(1,0,0,1);
+        batch.draw(hudTexture, x+2, y+2, 200 * player.getMassPercentage(), 10);
+
+        // HP Bar (Green)
+        batch.setColor(0,0,0,1);
+        batch.draw(hudTexture, x, y - 20, 204, 14);
+
+        batch.setColor(0,1,0,1);
+        batch.draw(hudTexture, x+2, y - 18, 200 * (player.hp / player.MAX_HP), 10);
+
+        batch.setColor(1,1,1,1);
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         world.dispose();
-        b2dr.dispose();
         map.dispose();
         mapRenderer.dispose();
         sandManager.dispose();
-        if (hudTexture != null) hudTexture.dispose();
+        if(hudTexture != null) hudTexture.dispose();
+        if(pauseMenu != null) pauseMenu.dispose();
+        if(mainMenu != null) mainMenu.dispose();
     }
 }

@@ -1,106 +1,86 @@
 package io.github.devsimulator.elements;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Vector3;
 import io.github.devsimulator.helper.PhysicSim;
-import java.util.BitSet;
+import java.util.Random;
 
 public abstract class Element {
-    // --- Physics Properties ---
-    protected int x, y;
-    public Vector3 velocity; // New: Supports velocity-based movement
-    public float frictionFactor = 0.5f;
-    public boolean isFreeFalling = true;
-    public boolean isSolid = false;
-    public int density = 0;
+    public int x, y;
+    public boolean hasUpdated = false;
 
-    // --- Advanced Simulation Properties (from your snippet) ---
+    // --- PHYSICS FLAGS ---
+    public boolean isSolid = false;
+    public boolean isStatic = false;     // True = Walls (Never moves)
+    public boolean isFreeFalling = true; // True = Awake, False = Asleep (Inertia)
+    public int density = 0;              // Heavier things sink
+
     public Color color;
-    public int health = 100;
-    public boolean isIgnited = false;
-    public int flammabilityResistance = 100;
-    public int resetFlammabilityResistance = 50;
-    public int heatFactor = 10;
-    public int fireDamage = 3;
-    public int temperature = 0;
-    public boolean isDead = false;
-    public boolean hasUpdated = false; // Replaces 'stepped' BitSet
+    public int temperature = 20;         // Room temp default
+    public int flammability = 0;         // 0 = Fireproof, 100 = Gasoline
+    public int corrosionResistance = 0;  // 0 = Weak, 100 = Acid Proof
+
+    protected static final Random random = new Random();
 
     public Element(int x, int y) {
         this.x = x;
         this.y = y;
-        this.velocity = new Vector3(0, 0, 0);
-        this.color = new Color(1, 1, 1, 1); // Default white
+        this.color = new Color(1, 1, 1, 1);
+
+        float noise = 0.9f + (float)Math.random() * 0.2f; // 0.9 to 1.1
+        this.color.mul(noise, noise, noise, 1.0f);
     }
 
-    // Abstract method every element must implement
     public abstract void step(PhysicSim sim);
+    // Called when this element touches another
+    public void interact(PhysicSim sim, Element neighbor) {
+        if (neighbor == null) return;
 
-    // --- Core Logic from your Snippet ---
-
-    public void swapPositions(PhysicSim sim, Element other) {
-        if (other == null) return;
-        int otherX = other.x;
-        int otherY = other.y;
-
-        sim.setElement(this.x, this.y, other);
-        sim.setElement(otherX, otherY, this);
-    }
-
-    public void die(PhysicSim sim) {
-        this.isDead = true;
-        sim.setElement(this.x, this.y, null); // Replaces with "EmptyCell" (null in your current sim)
-    }
-
-    public void dieAndReplace(PhysicSim sim, Element newElement) {
-        this.isDead = true;
-        sim.setElement(this.x, this.y, newElement);
-    }
-
-    // --- Heat & Reaction System ---
-
-    public boolean receiveHeat(int heat) {
-        if (isIgnited) return false;
-
-        // Random chance to resist heat based on resistance
-        this.flammabilityResistance -= (int) (Math.random() * heat);
-
-        if (this.flammabilityResistance <= 0) {
-            this.isIgnited = true;
-            this.color = Color.ORANGE; // Visual feedback for fire
-            return true;
+        //Heat Transfer
+        if (this.temperature > neighbor.temperature) {
+            neighbor.receiveHeat(sim, (this.temperature - neighbor.temperature) / 4);
         }
-        return false;
     }
 
-    public void takeFireDamage(PhysicSim sim) {
-        if (isIgnited) {
-            this.health -= fireDamage;
-            if (this.health <= 0) {
-                die(sim); // Burnt away
+    public void receiveHeat(PhysicSim sim, int amount) {
+        this.temperature += amount;
+        if (flammability > 0 && temperature > 100) {
+            if (random.nextInt(100) < flammability) {
+                //need fire class
+                sim.setElement(x, y, null);
             }
         }
     }
 
     public boolean corrode(PhysicSim sim) {
-        this.health -= 170; // Massive damage from acid
-        if (this.health <= 0) die(sim);
-        return true;
+        if (corrosionResistance >= 100) return false;
+        if (random.nextInt(100) > corrosionResistance) {
+            sim.setElement(x, y, null); // Destroy self
+            return true;
+        }
+        return false;
     }
 
-    // --- Color / Visuals ---
-
-    public boolean stain(float r, float g, float b, float a) {
-        if (Math.random() > 0.2 || isIgnited) return false;
-
-        this.color.add(r, g, b, a);
-        this.color.clamp(); // Ensure RGBA stays 0-1
-        return true;
+    public void swapPositions(PhysicSim sim, Element other) {
+        if (other == null) return;
+        int ox = other.x;
+        int oy = other.y;
+        sim.setElement(this.x, this.y, other);
+        sim.setElement(ox, oy, this);
+        this.isFreeFalling = true;
+        other.isFreeFalling = true;
+        this.wakeNeighbors(sim);
     }
 
-    // --- Getters & Setters ---
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public void wakeNeighbors(PhysicSim sim) {
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i==0 && j==0) continue;
+                Element e = sim.getElement(x + i, y + j);
+                if (e != null) e.isFreeFalling = true;
+            }
+        }
+    }
+
     public void setX(int x) { this.x = x; }
     public void setY(int y) { this.y = y; }
 }

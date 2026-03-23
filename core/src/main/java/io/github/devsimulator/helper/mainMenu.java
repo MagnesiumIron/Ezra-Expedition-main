@@ -5,16 +5,20 @@ import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.Main;
 
@@ -22,98 +26,147 @@ public class mainMenu {
     public Stage stage;
     public boolean isStarted = false;
     private BitmapFont font;
-    private Player player; // Added Player reference
+    private Player player;
+
+    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet;
+    private Animation<TextureRegion> hoverAnimation;
+    private float stateTime = 0f;
+    private Actor hoveredButton = null;
+
+    private Table mainTable;
+    private saveManager saveManager;
+    private Label title;
 
     public mainMenu(Player player) {
         this.player = player;
-        stage = new Stage(new ScreenViewport());
-        font = new BitmapFont();
-        font.getData().setScale(1.5f);
+        stage = new Stage(new FitViewport(360, 240));
+        font = new BitmapFont(Gdx.files.internal("fantasyfontt.fnt"));
 
-        Pixmap btnPix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        btnPix.setColor(0.3f, 0.3f, 0.3f, 1f);
-        btnPix.fill();
-        TextureRegionDrawable buttonBg = new TextureRegionDrawable(new TextureRegion(new Texture(btnPix)));
-        btnPix.dispose();
+        continueTex = new Texture("menubtn_continue.png");
+        saveLoadTex = new Texture("menubtn_saveload.png");
+        withdrawTex = new Texture("menubtn_withdraw.png");
 
-        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.up = buttonBg;
-        buttonStyle.font = font;
+        hoverSheet = new Texture("menubtn_hovereffect.png");
+        int frameCount = hoverSheet.getWidth() / 14;
+        TextureRegion[][] tmp = TextureRegion.split(hoverSheet, 14, 9);
+        TextureRegion[] frames = new TextureRegion[frameCount];
+        for (int i = 0; i < frameCount; i++) frames[i] = tmp[0][i];
+        hoverAnimation = new Animation<TextureRegion>(0.15f, frames);
+        hoverAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
-        Label.LabelStyle titleStyle = new Label.LabelStyle(font, Color.GOLD);
-        Label title = new Label("EZRA'S EXPEDITION", titleStyle);
-        title.setFontScale(2.0f);
+        ImageButton continueBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(continueTex)));
+        ImageButton loadBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(saveLoadTex)));
+        ImageButton withdrawBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(withdrawTex)));
 
-        // --- NEW BUTTONS ---
-        TextButton startBtn = new TextButton("New Expedition", buttonStyle);
-        TextButton loadBtn = new TextButton("Load Save", buttonStyle);
-        TextButton exitBtn = new TextButton("Exit Game", buttonStyle);
+        ClickListener hoverListener = new ClickListener() {
+            @Override public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                super.enter(event, x, y, pointer, fromActor);
+                hoveredButton = event.getListenerActor();
+            }
+            @Override public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                super.exit(event, x, y, pointer, toActor);
+                if (hoveredButton == event.getListenerActor()) hoveredButton = null;
+            }
+        };
 
-        startBtn.addListener(new ClickListener() {
+        continueBtn.addListener(hoverListener);
+        loadBtn.addListener(hoverListener);
+        withdrawBtn.addListener(hoverListener);
+
+        continueBtn.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) { startGame(); }
         });
 
         loadBtn.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) { loadGame(); }
+            @Override public void clicked(InputEvent event, float x, float y) {
+                boolean hasAnySave = false;
+                for (int i = 1; i <= 3; i++) {
+                    if (Gdx.app.getPreferences("EzraSave_" + i).getBoolean("hasData", false)) hasAnySave = true;
+                }
+
+                if (!hasAnySave) {
+                    title.setText("NO SAVES FOUND");
+                    title.setColor(Color.RED);
+                    Timer.schedule(new Timer.Task() {
+                        @Override public void run() { title.setText("EZRA'S EXPEDITION"); title.setColor(Color.WHITE); }
+                    }, 2f);
+                    return;
+                }
+
+                mainTable.setVisible(false);
+                saveManager.setVisible(true);
+            }
         });
 
-        exitBtn.addListener(new ClickListener() {
+        withdrawBtn.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) { Gdx.app.exit(); }
         });
 
-        Table table = new Table();
-        table.setFillParent(true);
+        mainTable = new Table();
+        mainTable.setFillParent(true);
 
         Pixmap bgPix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         bgPix.setColor(0.1f, 0.1f, 0.15f, 1f);
         bgPix.fill();
-        table.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture(bgPix))));
+        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture(bgPix))));
         bgPix.dispose();
 
-        table.add(title).padBottom(60).row();
-        table.add(startBtn).width(250).height(50).pad(10).row();
-        table.add(loadBtn).width(250).height(50).pad(10).row();
-        table.add(exitBtn).width(250).height(50).pad(10);
+        title = new Label("EZRA'S EXPEDITION", new Label.LabelStyle(font, Color.WHITE));
 
-        stage.addActor(table);
+        mainTable.add(title).padBottom(30).row();
+        mainTable.add(continueBtn).width(58).height(15).pad(5).row();
+        mainTable.add(loadBtn).width(58).height(15).pad(5).row();
+        mainTable.add(withdrawBtn).width(58).height(15).pad(5);
+
+        saveManager = new saveManager(player, false,
+            () -> { saveManager.setVisible(false); mainTable.setVisible(true); },
+            () -> { isStarted = true; Gdx.input.setInputProcessor(null); }
+        );
+        saveManager.setVisible(false);
+
+        stage.addActor(mainTable);
+        stage.addActor(saveManager);
         Gdx.input.setInputProcessor(stage);
     }
 
     private void startGame() {
-        // Reset player for a fresh run
         player.b2body.setTransform(100 / Main.PPM, 200 / Main.PPM, 0);
         player.hp = player.MAX_HP;
         player.assimilationMeter = 0;
-        player.currentState = Player.State.NORMAL;
+
+        Main.checkpointX = 100 / Main.PPM;
+        Main.checkpointY = 200 / Main.PPM;
+        Main.checkpointHP = player.MAX_HP;
+        Main.checkpointMap = "level1test.tmx";
 
         isStarted = true;
         Gdx.input.setInputProcessor(null);
-    }
-
-    private void loadGame() {
-        Preferences prefs = Gdx.app.getPreferences("EzrasExpeditionSave");
-        if (prefs.contains("playerX")) {
-            player.b2body.setTransform(prefs.getFloat("playerX"), prefs.getFloat("playerY"), 0);
-            player.hp = prefs.getFloat("hp");
-            player.assimilationMeter = prefs.getFloat("assimilation");
-
-            System.out.println("Game Loaded from Main Menu!");
-            isStarted = true; // Launch the game
-            Gdx.input.setInputProcessor(null);
-        } else {
-            System.out.println("No save data found!");
-        }
     }
 
     public void render(float dt) {
         if (!isStarted) {
             stage.act(dt);
             stage.draw();
+
+            if (hoveredButton != null && mainTable.isVisible()) {
+                stateTime += dt;
+                TextureRegion currentFrame = hoverAnimation.getKeyFrame(stateTime);
+                Vector2 pos = hoveredButton.localToStageCoordinates(new Vector2(0, 0));
+
+                stage.getBatch().begin();
+                stage.getBatch().draw(currentFrame, pos.x - 20, pos.y + 3);
+                stage.getBatch().end();
+            }
         }
     }
 
     public void dispose() {
         stage.dispose();
         font.dispose();
+        continueTex.dispose();
+        saveLoadTex.dispose();
+        withdrawTex.dispose();
+        hoverSheet.dispose();
+        if(saveManager != null) saveManager.dispose();
     }
 }

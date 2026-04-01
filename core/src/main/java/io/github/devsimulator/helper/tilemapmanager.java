@@ -2,21 +2,21 @@ package io.github.devsimulator.helper;
 
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.utils.Array;
 import io.github.devsimulator.Main;
-import io.github.devsimulator.controllers.SandManager;
 
 public class tilemapmanager {
 
+    // --- DATA CLASSES ---
     public static class TransitionData {
         public String targetMap;
         public float spawnX, spawnY;
-
         public TransitionData(String targetMap, float spawnX, float spawnY) {
             this.targetMap = targetMap;
             this.spawnX = spawnX;
@@ -24,116 +24,171 @@ public class tilemapmanager {
         }
     }
 
-    public static void createBoundaries(TiledMap map, World world) {
-        createLayerBodies(map, world, "collisions", false, "WALL");
-        createLayerBodies(map, world, "door", false, "DOOR");
-        createLayerBodies(map, world, "key", true, "KEY");
-        createLayerBodies(map, world, "goal", true, "GOAL");
-
-        createTransitions(map, world);
-    }
-
-    private static void createTransitions(TiledMap map, World world) {
-        MapLayer layer = map.getLayers().get("transitions");
-        if (layer == null) return;
-
-        for (MapObject object : layer.getObjects()) {
-            if (object instanceof RectangleMapObject) {
-                Rectangle rect = ((RectangleMapObject) object).getRectangle();
-
-                System.out.println("--- DOOR DIAGNOSTIC ---");
-                System.out.println("I found a door! Here are the exact properties I see on it:");
-
-                // Print every property the game actually sees
-                java.util.Iterator<String> keys = object.getProperties().getKeys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    Object val = object.getProperties().get(key);
-                    System.out.println(" -> Name: '" + key + "' | Type: " + val.getClass().getSimpleName() + " | Value: " + val);
-                }
-                System.out.println("-----------------------");
-
-                String targetMap = object.getProperties().get("targetMap", String.class);
-                Float spawnX = object.getProperties().get("spawnX", Float.class);
-                Float spawnY = object.getProperties().get("spawnY", Float.class);
-
-                if (targetMap != null && spawnX != null && spawnY != null) {
-                    BodyDef bdef = new BodyDef();
-                    bdef.type = BodyDef.BodyType.StaticBody;
-                    bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM,
-                        (rect.getY() + rect.getHeight() / 2) / Main.PPM);
-
-                    Body body = world.createBody(bdef);
-                    PolygonShape shape = new PolygonShape();
-                    shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
-
-                    FixtureDef fdef = new FixtureDef();
-                    fdef.shape = shape;
-                    fdef.isSensor = true;
-
-                    body.createFixture(fdef).setUserData(new TransitionData(targetMap, spawnX, spawnY));
-                    shape.dispose();
-                    System.out.println("SUCCESS: Door activated!");
-                } else {
-                    System.out.println("FAILED: One or more properties are missing or the wrong type.");
-                }
-            }
+    public static class RuneData {
+        public String elementType;
+        public boolean isSpawner, isContainer;
+        public int runeID;
+        public float worldX, worldY, width, height;
+        public RuneData(String type, boolean spawner, boolean container, int id, float x, float y, float w, float h) {
+            this.elementType = type; this.isSpawner = spawner; this.isContainer = container;
+            this.runeID = id; this.worldX = x; this.worldY = y; this.width = w; this.height = h;
         }
     }
-    private static void createLayerBodies(TiledMap map, World world, String layerName, boolean isSensor, String userData) {
-        MapLayer layer = map.getLayers().get(layerName);
-        if (layer == null) return;
 
-        for (MapObject object : layer.getObjects()) {
-            if (object instanceof RectangleMapObject) {
+    public static class InteractableData {
+        public String header, description;
+        public boolean isHero;
+        public float worldX, worldY, width, height;
+        public InteractableData(String header, String desc, boolean isHero, float x, float y, float w, float h) {
+            this.header = header; this.description = desc; this.isHero = isHero;
+            this.worldX = x; this.worldY = y; this.width = w; this.height = h;
+        }
+    }
+
+    // --- LAYER PARSING ---
+    public static void createBoundaries(TiledMap map, World world) {
+
+        // 1. COLLISIONS LAYER
+        MapLayer collisionLayer = map.getLayers().get("collisions");
+        if (collisionLayer != null) {
+            MapObjects objects = collisionLayer.getObjects();
+            for (MapObject object : objects.getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
-
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
-                bdef.position.set((rect.getX() + rect.getWidth() / 2) / Main.PPM,
-                    (rect.getY() + rect.getHeight() / 2) / Main.PPM);
+                float w = rect.getWidth() / Main.PPM;
+                float h = rect.getHeight() / Main.PPM;
+                bdef.position.set((rect.getX() / Main.PPM) + w / 2, (rect.getY() / Main.PPM) + h / 2);
 
                 Body body = world.createBody(bdef);
                 PolygonShape shape = new PolygonShape();
-                shape.setAsBox(rect.getWidth() / 2 / Main.PPM, rect.getHeight() / 2 / Main.PPM);
-
+                shape.setAsBox(w / 2, h / 2);
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
-                fdef.isSensor = isSensor;
 
-                body.createFixture(fdef).setUserData(userData);
+                if (object.getProperties().containsKey("isKey")) {
+                    fdef.isSensor = true;
+                    body.createFixture(fdef).setUserData("KEY");
+                } else if (object.getProperties().containsKey("isDoor")) {
+                    body.createFixture(fdef).setUserData("DOOR");
+                } else {
+                    body.createFixture(fdef).setUserData("GROUND");
+                }
+                shape.dispose();
+            }
+
+            for (MapObject object : objects.getByType(PolygonMapObject.class)) {
+                Polygon polygon = ((PolygonMapObject) object).getPolygon();
+                BodyDef bdef = new BodyDef();
+                bdef.type = BodyDef.BodyType.StaticBody;
+                bdef.position.set(polygon.getX() / Main.PPM, polygon.getY() / Main.PPM);
+                Body body = world.createBody(bdef);
+                float[] vertices = polygon.getVertices();
+                float[] worldVertices = new float[vertices.length];
+                for (int i = 0; i < vertices.length; ++i) worldVertices[i] = vertices[i] / Main.PPM;
+                PolygonShape shape = new PolygonShape();
+                shape.set(worldVertices);
+                body.createFixture(shape, 0).setUserData("GROUND");
                 shape.dispose();
             }
         }
-    }
 
-    public static void loadLevel(Main game, String mapName, float spawnX, float spawnY) {
-        System.out.println("Transitioning to map: " + mapName);
+        // 2. TRANSITIONS LAYER
+        MapLayer transitionLayer = map.getLayers().get("transitions");
+        if (transitionLayer != null) {
+            for (MapObject object : transitionLayer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                BodyDef bdef = new BodyDef();
+                bdef.type = BodyDef.BodyType.StaticBody;
+                float w = rect.getWidth() / Main.PPM;
+                float h = rect.getHeight() / Main.PPM;
+                bdef.position.set((rect.getX() / Main.PPM) + w / 2, (rect.getY() / Main.PPM) + h / 2);
 
-        Array<Body> bodies = new Array<Body>();
-        game.world.getBodies(bodies);
-        for (Body b : bodies) {
-            if (b.getFixtureList().size > 0) {
-                Object userData = b.getFixtureList().first().getUserData();
-                if (!"PLAYER".equals(userData) && !"FOOT_SENSOR".equals(userData)) {
-                    game.world.destroyBody(b);
-                }
+                Body body = world.createBody(bdef);
+                PolygonShape shape = new PolygonShape();
+                shape.setAsBox(w / 2, h / 2);
+                FixtureDef fdef = new FixtureDef();
+                fdef.shape = shape;
+                fdef.isSensor = true;
+
+                String target = object.getProperties().get("targetMap", String.class);
+                float sx = object.getProperties().get("spawnX", -1f, Float.class) / Main.PPM;
+                float sy = object.getProperties().get("spawnY", -1f, Float.class) / Main.PPM;
+
+                body.createFixture(fdef).setUserData(new TransitionData(target, sx, sy));
+                shape.dispose();
             }
         }
 
-        if (game.map != null) game.map.dispose();
-        if (game.sandManager != null) game.sandManager.dispose();
+        // 3. INTERACTABLES LAYER (Signs)
+        MapLayer interactLayer = map.getLayers().get("interactables");
+        if (interactLayer != null) {
+            for (MapObject object : interactLayer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                float w = rect.width / Main.PPM;
+                float h = rect.height / Main.PPM;
+                float x = rect.x / Main.PPM;
+                float y = rect.y / Main.PPM;
 
-        game.map = new TmxMapLoader().load(mapName);
-        game.mapRenderer.setMap(game.map);
+                BodyDef bdef = new BodyDef();
+                bdef.type = BodyDef.BodyType.StaticBody;
+                bdef.position.set(x + w/2, y + h/2);
+                Body body = world.createBody(bdef);
 
-        createBoundaries(game.map, game.world);
-        game.sandManager = new SandManager();
-        game.sandManager.initLevel(game.map);
+                PolygonShape shape = new PolygonShape();
+                shape.setAsBox(w/2, h/2);
+                FixtureDef fdef = new FixtureDef();
+                fdef.shape = shape;
+                fdef.isSensor = true;
 
-        if (game.player != null) {
-            game.player.b2body.setTransform(spawnX, spawnY, 0);
-            game.player.b2body.setLinearVelocity(0, 0);
+                String head = object.getProperties().get("header", "TUTORIAL", String.class);
+                String desc = object.getProperties().get("description", "...", String.class);
+                boolean hero = object.getProperties().get("isHero", false, Boolean.class);
+
+                InteractableData data = new InteractableData(head, desc, hero, x, y, w, h);
+                body.createFixture(fdef).setUserData(data);
+
+                // ADD TO SORTING LIST
+                WorldContactListener.allSigns.add(data);
+
+                shape.dispose();
+            }
+        }
+
+        // 4. RUNES LAYER
+        MapLayer runeLayer = map.getLayers().get("runes");
+        if (runeLayer != null) {
+            for (MapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                float w = rect.getWidth() / Main.PPM;
+                float h = rect.getHeight() / Main.PPM;
+                float worldX = rect.getX() / Main.PPM;
+                float worldY = rect.getY() / Main.PPM;
+
+                BodyDef bdef = new BodyDef();
+                bdef.type = BodyDef.BodyType.StaticBody;
+                bdef.position.set(worldX + w/2, worldY + h/2);
+                Body body = world.createBody(bdef);
+
+                PolygonShape shape = new PolygonShape();
+                shape.setAsBox(w/2, h/2);
+                FixtureDef fdef = new FixtureDef();
+                fdef.shape = shape;
+                fdef.isSensor = true;
+
+                String type = object.getProperties().get("elementType", "NONE", String.class);
+                boolean isSpawner = object.getProperties().get("isSpawner", false, Boolean.class);
+                boolean isContainer = object.getProperties().get("isContainer", false, Boolean.class);
+                int runeID = object.getProperties().get("runeID", 0, Integer.class);
+
+                RuneData data = new RuneData(type, isSpawner, isContainer, runeID, worldX, worldY, w, h);
+                body.createFixture(fdef).setUserData(data);
+
+                // ADD TO SORTING LIST
+                WorldContactListener.allRunes.add(data);
+
+                shape.dispose();
+            }
         }
     }
 }

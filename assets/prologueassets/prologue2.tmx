@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="36">
+ <tileset firstgid="1" name="CastleTiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
+  <image source="tilesets/CastleTiles.png" width="256" height="224"/>
+ </tileset>
+ <tileset firstgid="57" name="runes" tilewidth="32" tileheight="32" tilecount="9" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="tilesets/runes/1-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="1">
+   <image source="tilesets/runes/2-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="2">
+   <image source="tilesets/runes/3-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="3">
+   <image source="tilesets/runes/4-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="4">
+   <image source="tilesets/runes/5-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="5">
+   <image source="tilesets/runes/6-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="6">
+   <image source="tilesets/runes/7-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="7">
+   <image source="tilesets/runes/8-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="8">
+   <image source="tilesets/runes/9-32x32.png" width="32" height="32"/>
+  </tile>
+ </tileset>
+ <layer id="1" name="backdrop" width="20" height="12">
+  <data encoding="csv">
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
+</data>
+ </layer>
+ <layer id="2" name="terrain" width="20" height="12">
+  <data encoding="csv">
+26,26,26,19,0,0,12,12,12,0,0,12,12,13,13,13,13,0,0,13,
+0,0,0,0,0,0,12,12,12,0,0,12,12,0,0,0,0,0,0,13,
+0,0,0,0,0,0,12,12,12,0,0,13,13,0,0,0,0,0,38,13,
+0,0,0,0,0,0,12,12,12,0,0,0,0,0,0,0,0,0,0,13,
+0,0,0,0,0,58,12,12,12,0,0,0,0,58,0,0,0,0,0,13,
+0,0,6,0,0,38,12,12,12,0,0,13,13,36,0,0,0,0,0,13,
+2,2,2,3,0,0,12,12,12,0,0,12,12,0,0,0,0,0,0,13,
+0,0,0,11,0,0,12,12,12,0,0,12,12,0,0,0,0,0,0,13,
+0,0,0,11,0,0,13,13,13,0,0,12,12,0,0,0,0,0,0,13,
+0,0,0,11,0,0,0,0,0,0,0,12,12,0,0,0,0,0,0,13,
+0,0,0,11,0,0,0,0,0,0,0,12,12,0,0,6,65,0,0,13,
+0,0,0,13,13,13,13,13,13,13,13,12,12,13,13,13,13,13,13,13
+</data>
+ </layer>
+ <objectgroup id="3" name="collisions">
+  <object id="1" x="0" y="0" width="128" height="32"/>
+  <object id="2" x="-32" y="32" width="32" height="192"/>
+  <object id="3" x="0" y="192" width="128" height="32"/>
+  <object id="4" x="96" y="224" width="32" height="160"/>
+  <object id="5" x="128" y="352" width="224" height="32"/>
+  <object id="6" x="192" y="0" width="96" height="288"/>
+  <object id="9" x="160" y="160">
+   <polygon points="0,0 32,32 32,0"/>
+  </object>
+  <object id="10" x="416" y="160">
+   <polygon points="0,0 32,0 0,32"/>
+  </object>
+  <object id="11" x="576" y="64">
+   <polygon points="0,0 32,0 32,32 0,0"/>
+  </object>
+  <object id="12" x="352" y="0" width="64" height="96"/>
+  <object id="13" x="416" y="0" width="128" height="32"/>
+  <object id="14" x="608" y="0" width="32" height="384"/>
+  <object id="15" x="416" y="352" width="192" height="32"/>
+  <object id="16" x="352" y="160" width="64" height="224"/>
+  <object id="21" x="544" y="-32" width="64" height="32"/>
+  <object id="24" x="128" y="0" width="64" height="32"/>
+  <object id="25" x="288" y="0" width="64" height="32"/>
+ </objectgroup>
+ <objectgroup id="6" name="runes">
+  <object id="22" x="512" y="320" width="32" height="32">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isSpawner" type="bool" value="true"/>
+    <property name="runeID" type="int" value="5"/>
+   </properties>
+  </object>
+  <object id="23" x="160" y="128" width="32" height="32">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isSpawner" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="35" x="416" y="128" width="32" height="32">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isSpawner" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="26" x="416" y="32" width="192" height="320">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="5"/>
+   </properties>
+  </object>
+  <object id="27" x="352" y="96" width="64" height="64">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="5"/>
+   </properties>
+  </object>
+  <object id="31" x="288" y="32" width="64" height="128">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="5"/>
+   </properties>
+  </object>
+  <object id="33" x="2" y="32" width="190" height="160">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="5"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="water_zones">
+  <object id="28" x="128" y="192" width="64" height="160"/>
+  <object id="29" x="192" y="288" width="160" height="64"/>
+  <object id="30" x="288" y="160" width="64" height="128"/>
+ </objectgroup>
+ <objectgroup id="4" name="interactables">
+  <object id="17" x="480" y="320" width="32" height="32">
+   <properties>
+    <property name="description" value="WHILE POSSESSING AN ELEMENT FROM THE RUNE IF YOU MATCH CERTAIN RUNES WITH THE RIGHT ELEMENT YOU CAN CALL FORTH THEM ALTHOUGH UNSTABLE SO BE CAUTIOUS"/>
+    <property name="header" value="SPAWN RUNE"/>
+    <property name="isHero" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="18" x="64" y="160" width="32" height="32">
+   <properties>
+    <property name="description" value="ADDITIONALLY YOU CAN CHANGE ELEMENTS THROUGH DIFFERENT RUNES BUT TAKE EXTRA CARE FOR YOU CAN ONLY ACTIVATE THE ABILITY THREE TIMES THEN YOU NEED TO RECHARGE AT THE RUNE AGAIN"/>
+    <property name="header" value="ELEMENTS"/>
+    <property name="isHero" type="bool" value="false"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="5" name="transitions">
+  <object id="20" x="544" y="0" width="64" height="32">
+   <properties>
+    <property name="spawnX" type="float" value="50"/>
+    <property name="spawnY" type="float" value="50"/>
+    <property name="targetMap" value="prologueend.tmx"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

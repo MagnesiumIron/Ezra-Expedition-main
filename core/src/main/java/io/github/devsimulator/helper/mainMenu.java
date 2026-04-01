@@ -1,7 +1,6 @@
 package io.github.devsimulator.helper;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -130,14 +129,16 @@ public class mainMenu {
     }
 
     private void startGame() {
-        player.b2body.setTransform(100 / Main.PPM, 200 / Main.PPM, 0);
+        float spawnX = 100 / Main.PPM;
+        float spawnY = 200 / Main.PPM;
+
+        player.b2body.setTransform(spawnX, spawnY, 0);
         player.hp = player.MAX_HP;
         player.assimilationMeter = 0;
 
-        Main.checkpointX = 100 / Main.PPM;
-        Main.checkpointY = 200 / Main.PPM;
-        Main.checkpointHP = player.MAX_HP;
-        Main.checkpointMap = "level1test.tmx";
+        // FIXED: Tell the menu to start the game at the Prologue
+        io.github.devsimulator.helper.WorldContactListener.pendingTransition =
+            new io.github.devsimulator.helper.tilemapmanager.TransitionData("prologuespawn.tmx", spawnX, spawnY);
 
         isStarted = true;
         Gdx.input.setInputProcessor(null);

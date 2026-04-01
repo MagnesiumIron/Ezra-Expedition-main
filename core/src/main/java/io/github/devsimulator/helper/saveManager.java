@@ -218,24 +218,29 @@ public class saveManager extends Table {
         prefs.putFloat("playerY", player.b2body.getPosition().y);
         prefs.putFloat("hp", player.hp);
         prefs.putFloat("assimilation", player.assimilationMeter);
-        prefs.putString("mapName", Main.checkpointMap);
+
+        // UPDATED: Use correct map path
+        prefs.putString("mapName", "level1assets/level1fr.tmx");
+
         prefs.flush();
         buildSlotsTable();
     }
 
     private void executeLoad(int slot) {
         Preferences prefs = Gdx.app.getPreferences("EzraSave_" + slot);
-        player.b2body.setTransform(prefs.getFloat("playerX"), prefs.getFloat("playerY"), 0);
+
+        float savedX = prefs.getFloat("playerX");
+        float savedY = prefs.getFloat("playerY");
+
+        // UPDATED: Default to the correct map path
+        String savedMap = prefs.getString("mapName", "level1assets/level1fr.tmx");
+
+        player.b2body.setTransform(savedX, savedY, 0);
         player.hp = prefs.getFloat("hp");
         player.assimilationMeter = prefs.getFloat("assimilation");
 
-        Main.checkpointX = prefs.getFloat("playerX");
-        Main.checkpointY = prefs.getFloat("playerY");
-        Main.checkpointHP = player.hp;
-        Main.checkpointMap = prefs.getString("mapName");
-
         WorldContactListener.pendingTransition = new io.github.devsimulator.helper.tilemapmanager.TransitionData(
-            Main.checkpointMap, Main.checkpointX, Main.checkpointY
+            savedMap, savedX, savedY
         );
 
         onLoadSuccess.run();

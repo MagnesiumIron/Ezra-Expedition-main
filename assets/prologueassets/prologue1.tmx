@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="9" nextobjectid="20">
+ <tileset firstgid="1" name="CastleTiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
+  <image source="tilesets/CastleTiles.png" width="256" height="224"/>
+ </tileset>
+ <tileset firstgid="57" name="runes" tilewidth="32" tileheight="32" tilecount="9" columns="0">
+  <grid orientation="orthogonal" width="1" height="1"/>
+  <tile id="0">
+   <image source="tilesets/runes/1-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="1">
+   <image source="tilesets/runes/2-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="2">
+   <image source="tilesets/runes/3-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="3">
+   <image source="tilesets/runes/4-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="4">
+   <image source="tilesets/runes/5-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="5">
+   <image source="tilesets/runes/6-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="6">
+   <image source="tilesets/runes/7-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="7">
+   <image source="tilesets/runes/8-32x32.png" width="32" height="32"/>
+  </tile>
+  <tile id="8">
+   <image source="tilesets/runes/9-32x32.png" width="32" height="32"/>
+  </tile>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="20" height="12">
+  <data encoding="csv">
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10
+</data>
+ </layer>
+ <layer id="2" name="terrain" width="20" height="12">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,26,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,46,0,0,0,46,0,46,0,0,0,0,0,0,0,46,0,0,46,
+47,45,45,47,47,47,45,47,45,47,47,46,46,47,47,47,45,45,47,45,
+47,45,45,47,47,46,46,47,47,46,47,47,47,47,47,45,45,45,47,47,
+47,47,47,47,47,47,47,47,47,47,47,47,47,47,47,45,45,45,47,47,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="3" name="props" width="20" height="12">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,8,0,0,0,0,0,0,8,0,0,0,0,0,8,0,0,8,
+0,0,6,57,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,3,10,10,10,10,10,10,10,10,1,0,0,0,
+0,0,0,0,0,0,0,11,0,0,0,0,0,0,0,0,9,0,0,0,
+0,0,0,0,0,0,0,41,42,42,42,42,42,42,42,42,43,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="5" name="interactables">
+  <object id="6" x="64" y="224" width="32" height="32">
+   <properties>
+    <property name="description" value="YOU HAVE BEEN GIVEN THE POWER TO ABSORB ELEMENTS THROUGH THE RUNE  BY PRESSING E BUT BE WARNED IF YOU ABUSE THIS ABILITY TOO MUCH YOU MAY DIE"/>
+    <property name="header" value="RUNE SYSTEM"/>
+    <property name="isHero" type="bool" value="false"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="8" name="runes">
+  <object id="19" x="96" y="224" width="32" height="32">
+   <properties>
+    <property name="elementType" value="SAND"/>
+    <property name="isSpawner" type="bool" value="false"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="transitions">
+  <object id="17" x="608" y="64" width="32" height="192">
+   <properties>
+    <property name="spawnX" type="float" value="100"/>
+    <property name="spawnY" type="float" value="200"/>
+    <property name="targetMap" value="prologue2.tmx"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="6" name="collisions">
+  <object id="8" x="0" y="32" width="640" height="32"/>
+  <object id="9" x="0" y="256" width="256" height="32"/>
+  <object id="10" x="-32" y="32" width="32" height="256"/>
+  <object id="12" x="224" y="288" width="32" height="64"/>
+  <object id="13" x="256" y="320" width="256" height="32"/>
+  <object id="14" x="512" y="288" width="32" height="64"/>
+  <object id="15" x="512" y="256" width="128" height="32"/>
+  <object id="16" x="640" y="32" width="32" height="256"/>
+ </objectgroup>
+ <objectgroup id="4" name="sand_zones">
+  <object id="4" x="256" y="224" width="256" height="96"/>
+  <object id="5" x="288" y="192" width="192" height="32"/>
+ </objectgroup>
+</map>

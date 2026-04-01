@@ -1,63 +1,96 @@
 package io.github.devsimulator.helper;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import io.github.devsimulator.Main; // Fixes the "Cannot find Main" error
+import io.github.devsimulator.helper.tilemapmanager.InteractableData;
+import io.github.devsimulator.helper.tilemapmanager.RuneData;
 
 public class WorldContactListener implements ContactListener {
 
+    // --- STATIC STORAGE (The "Phonebook" of the current map) ---
+    public static Array<InteractableData> allSigns = new Array<>();
+    public static Array<RuneData> allRunes = new Array<>();
+
+    // These store the absolute closest object to Ezra at any given moment
+    public static InteractableData closestSign = null;
+    public static RuneData closestRune = null;
+
+    // --- PHYSICS STATE ---
+    public static int footContacts = 0;
     public static Array<Body> bodiesToDestroy = new Array<>();
     public static tilemapmanager.TransitionData pendingTransition = null;
-    public static int footContacts = 0;
 
+    // --- SORTING LOGIC (Calculates distance every frame) ---
+    public static void sortSignsByDistance(Vector2 playerPos) {
+        closestSign = null;
+        float minDst = Float.MAX_VALUE;
+
+        for (InteractableData sign : allSigns) {
+            float dst = playerPos.dst(sign.worldX * Main.PPM, sign.worldY * Main.PPM);
+            if (dst < minDst) {
+                minDst = dst;
+                closestSign = sign;
+            }
+        }
+    }
+
+    public static void sortRunesByDistance(Vector2 playerPos) {
+        closestRune = null;
+        float minDst = Float.MAX_VALUE;
+
+        for (RuneData rune : allRunes) {
+            float dst = playerPos.dst(rune.worldX * Main.PPM, rune.worldY * Main.PPM);
+            if (dst < minDst) {
+                minDst = dst;
+                closestRune = rune;
+            }
+        }
+    }
+
+    // --- CONTACT LOGIC ---
     @Override
     public void beginContact(Contact contact) {
-        Fixture a = contact.getFixtureA();
-        Fixture b = contact.getFixtureB();
+        Fixture fa = contact.getFixtureA();
+        Fixture fb = contact.getFixtureB();
 
-        // Foot Sensor touches a Wall
-        if ((isFootSensor(a) && isWall(b)) || (isFootSensor(b) && isWall(a))) {
-            footContacts++;
+        // 1. Foot Contacts (For Jumping)
+        if (fa.getUserData() == "FOOT" || fb.getUserData() == "FOOT") footContacts++;
+
+        // 2. Sensors (Transitions, Keys, Runes, Signs)
+        checkSensor(fa, fb);
+    }
+
+    private void checkSensor(Fixture a, Fixture b) {
+        Object dataA = a.getUserData();
+        Object dataB = b.getUserData();
+
+        // Check A
+        processSensorData(dataA, a.getBody());
+        // Check B
+        processSensorData(dataB, b.getBody());
+    }
+
+    private void processSensorData(Object data, Body body) {
+        if (data == null) return;
+
+        // Transition Logic
+        if (data instanceof tilemapmanager.TransitionData) {
+            pendingTransition = (tilemapmanager.TransitionData) data;
         }
 
-        // Map Transition Sensor
-        if (isPlayer(a) && isTransition(b)) {
-            pendingTransition = (tilemapmanager.TransitionData) b.getUserData();
-        } else if (isPlayer(b) && isTransition(a)) {
-            pendingTransition = (tilemapmanager.TransitionData) a.getUserData();
+        if ("KEY".equals(data)) {
+            bodiesToDestroy.add(body);
         }
 
-        // Collect Keys
-        if (isPlayer(a) && isKey(b)) collectKey(b);
-        else if (isPlayer(b) && isKey(a)) collectKey(a);
-
-        // Goal
-        if ((isPlayer(a) && isGoal(b)) || (isPlayer(b) && isGoal(a))) {
-            System.out.println("Level Accomplished");
-        }
     }
 
     @Override
     public void endContact(Contact contact) {
-        Fixture a = contact.getFixtureA();
-        Fixture b = contact.getFixtureB();
-
-        if ((isFootSensor(a) && isWall(b)) || (isFootSensor(b) && isWall(a))) {
-            footContacts--;
-        }
-    }
-
-    private void collectKey(Fixture keyFixture) {
-        System.out.println("KEY has been collected! Doors opening...");
-        bodiesToDestroy.add(keyFixture.getBody());
-    }
-
-    private boolean isPlayer(Fixture f) { return "PLAYER".equals(f.getUserData()); }
-    private boolean isKey(Fixture f) { return "KEY".equals(f.getUserData()); }
-    private boolean isGoal(Fixture f) { return "GOAL".equals(f.getUserData()); }
-    private boolean isFootSensor(Fixture f) { return "FOOT_SENSOR".equals(f.getUserData()); }
-    private boolean isWall(Fixture f) { return "WALL".equals(f.getUserData()); }
-    private boolean isTransition(Fixture f) {
-        return f.getUserData() instanceof tilemapmanager.TransitionData;
+        Fixture fa = contact.getFixtureA();
+        Fixture fb = contact.getFixtureB();
+        if (fa.getUserData() == "FOOT" || fb.getUserData() == "FOOT") footContacts--;
     }
 
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}

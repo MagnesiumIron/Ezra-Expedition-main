@@ -16,14 +16,15 @@ public class level1 extends baseLevel {
         this.player = player;
         this.sandManager = sandManager;
 
+        this.mapPath = "level1assets/level1fr.tmx";
 
-        map = new TmxMapLoader().load("level1assets/level1fr.tmx");
+        map = new TmxMapLoader().load(this.mapPath);
         mapRenderer = new OrthogonalTiledMapRenderer(map);
 
         tilemapmanager.createBoundaries(map, world);
         sandManager.initLevel(map);
 
-        System.out.println("Level 1 (level1assets/level1fr.tmx) Loaded Successfully!");
+        System.out.println("Level 1 (" + this.mapPath + ") Loaded Successfully!");
     }
 
     @Override

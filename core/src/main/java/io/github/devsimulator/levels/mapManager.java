@@ -9,6 +9,7 @@ import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.WorldContactListener;
 
 public class mapManager {
+    public static String currentMapPath = "prologueassets/prologuespawn.tmx";
     public baseLevel currentLevel;
     private World world;
     private Player player;
@@ -60,9 +61,9 @@ public class mapManager {
         }
 
         currentLevel = newLevel;
-
         // 2. Load the level (This calls tilemapmanager.createBoundaries)
         currentLevel.loadLevel(world, player, sandManager);
+        currentMapPath = newLevel.mapPath;
 
         // 3. Update SandManager with the new map's data
         if (sandManager != null && currentLevel.map != null) {

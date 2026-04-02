@@ -76,6 +76,7 @@ public class Player {
         b2body = world.createBody(bdef);
 
         FixtureDef fdef = new FixtureDef();
+
         CircleShape shape = new CircleShape();
         shape.setRadius(9 / Main.PPM);
         fdef.shape = shape;
@@ -84,7 +85,8 @@ public class Player {
         shape.dispose();
 
         PolygonShape footShape = new PolygonShape();
-        footShape.setAsBox(-1 / Main.PPM, 1 / Main.PPM, new Vector2(0, -9 / Main.PPM), 0);
+        footShape.setAsBox(4 / Main.PPM, 1 / Main.PPM, new Vector2(0, -9 / Main.PPM), 0);
+
         FixtureDef footDef = new FixtureDef();
         footDef.shape = footShape;
         footDef.isSensor = true;
@@ -127,7 +129,7 @@ public class Player {
             if (Gdx.input.isKeyPressed(Input.Keys.A)) targetX = -MOVE_SPEED;
             if (Gdx.input.isKeyPressed(Input.Keys.D)) targetX = MOVE_SPEED;
 
-            if (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.W) /*|| Gdx.input.isKeyPressed(Input.Keys.UP)*/) {
                 desiredY = JUMP_SPEED * 0.5f;
             } else if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
                 desiredY = -JUMP_SPEED * 0.5f;
@@ -143,7 +145,11 @@ public class Player {
 
             if (Gdx.input.isKeyPressed(Input.Keys.A)) targetX = -currentMoveSpeed;
             if (Gdx.input.isKeyPressed(Input.Keys.D)) targetX = currentMoveSpeed;
-            float lerpFactor = isGrounded ? 0.12f : 0.05f;
+            //float lerpFactor = isGrounded ? 0.12f : 0.05f;
+            float lerpFactor = isGrounded ? 0.30f : 0.05f;
+            if (targetX == 0 && isGrounded) {
+                lerpFactor = 0.60f;
+            }
 
             float desiredX = com.badlogic.gdx.math.MathUtils.lerp(vel.x, targetX, lerpFactor);
 
@@ -170,8 +176,8 @@ public class Player {
         Vector2 vel = b2body.getLinearVelocity();
         boolean holdingJump = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyPressed(Input.Keys.UP);
 
-        if (vel.y > 0 && !holdingJump) b2body.setGravityScale(GRAVITY_FALL * 2);
-        else if (vel.y < 0) b2body.setGravityScale(GRAVITY_FALL);
+        if (vel.y > 0 && !holdingJump) b2body.setGravityScale(GRAVITY_FALL * 2.5f);
+        else if (vel.y < 0) b2body.setGravityScale(GRAVITY_FALL * 1.5f);
         else b2body.setGravityScale(GRAVITY_NORMAL);
 
         if (vel.y < TERMINAL_VELOCITY) b2body.setLinearVelocity(vel.x, TERMINAL_VELOCITY);

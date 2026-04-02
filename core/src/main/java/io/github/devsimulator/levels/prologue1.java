@@ -14,8 +14,9 @@ public class prologue1 extends baseLevel {
         this.player = player;
         this.sandManager = sandManager;
 
+        this.mapPath = "prologueassets/prologue1.tmx";
         // Path to your second tutorial map
-        map = new TmxMapLoader().load("prologueassets/prologue1.tmx");
+        map = new TmxMapLoader().load(this.mapPath);
         mapRenderer = new OrthogonalTiledMapRenderer(map);
 
         tilemapmanager.createBoundaries(map, world);

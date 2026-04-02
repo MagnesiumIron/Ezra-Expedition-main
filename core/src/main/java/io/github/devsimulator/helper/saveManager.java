@@ -220,7 +220,7 @@ public class saveManager extends Table {
         prefs.putFloat("assimilation", player.assimilationMeter);
 
         // UPDATED: Use correct map path
-        prefs.putString("mapName", "level1assets/level1fr.tmx");
+        prefs.putString("mapName", io.github.devsimulator.levels.mapManager.currentMapPath);
 
         prefs.flush();
         buildSlotsTable();
@@ -232,8 +232,8 @@ public class saveManager extends Table {
         float savedX = prefs.getFloat("playerX");
         float savedY = prefs.getFloat("playerY");
 
-        // UPDATED: Default to the correct map path
-        String savedMap = prefs.getString("mapName", "level1assets/level1fr.tmx");
+        // UPDATED: Safe default to the correct map path
+        String savedMap = prefs.getString("mapName", "prologueassets/prologuespawn.tmx");
 
         player.b2body.setTransform(savedX, savedY, 0);
         player.hp = prefs.getFloat("hp");

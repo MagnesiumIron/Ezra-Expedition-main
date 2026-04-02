@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -12,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
@@ -20,10 +22,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.entities.Player;
-import io.github.devsimulator.helper.WorldContactListener;
-import io.github.devsimulator.helper.tilemapmanager;
-import io.github.devsimulator.helper.pauseMenu;
-import io.github.devsimulator.helper.tutorialGUI;
+import io.github.devsimulator.helper.*;
 import io.github.devsimulator.levels.mapManager;
 import io.github.devsimulator.levels.prologuespawn;
 
@@ -50,6 +49,15 @@ public class Main extends ApplicationAdapter {
     private Texture hoverSheet;
     private Animation<TextureRegion> hoverAnimation;
     private BitmapFont font;
+    private float accumulator = 0;
+    private static final float TIME_STEP = 1/60f;
+    private Matrix4 uiMatrix;
+
+    // Rune Textures
+    private Texture texChargerActive;
+    private Texture texChargerConsumed;
+    private Texture texTriggerReady;
+    private Texture texTriggerPressed;
 
     @Override
     public void create() {
@@ -60,6 +68,7 @@ public class Main extends ApplicationAdapter {
         camera = new OrthographicCamera();
         viewport = new FitViewport(720, 480, camera);
         viewport.apply();
+        uiMatrix = new Matrix4().setToOrtho2D(0, 0, 720, 480);
 
         sandManager = new SandManager();
         player = new Player(world);
@@ -75,6 +84,15 @@ public class Main extends ApplicationAdapter {
         arTexture = new Texture("barUI_ar.png");
         hpRegion = new TextureRegion(hpTexture);
         arRegion = new TextureRegion(arTexture);
+
+        try { texChargerActive = new Texture("rune_active.png"); }
+        catch (Exception e) { texChargerActive = createFallbackTexture(Color.GOLDENROD); }
+        try { texChargerConsumed = new Texture("rune_dead.png"); }
+        catch (Exception e) { texChargerConsumed = createFallbackTexture(Color.WHITE); }
+        try { texTriggerReady = new Texture("trigger_up.png"); }
+        catch (Exception e) { texTriggerReady = createFallbackTexture(Color.TAN); }
+        try { texTriggerPressed = new Texture("trigger_down.png"); }
+        catch (Exception e) { texTriggerPressed = createFallbackTexture(Color.FOREST); }
 
         // Load Font and Tutorial GUI
         try {
@@ -92,7 +110,7 @@ public class Main extends ApplicationAdapter {
             int frameCount = hoverSheet.getWidth() / 14;
             TextureRegion[][] tmp = TextureRegion.split(hoverSheet, 14, 9);
             TextureRegion[] frames = new TextureRegion[frameCount];
-            for (int i = 0; i < frameCount; i++) frames[i] = tmp[0][i];
+            System.arraycopy(tmp[0], 0, frames, 0, frameCount);
             hoverAnimation = new Animation<>(0.15f, frames);
             hoverAnimation.setPlayMode(Animation.PlayMode.LOOP);
         } catch (Exception e) {
@@ -112,7 +130,12 @@ public class Main extends ApplicationAdapter {
 
             if (!pauseMenu.isPaused && !isTutorialReading) {
                 stateTime += dt;
-                world.step(1/60f, 6, 2);
+                //world.step(1/60f, 6, 2);
+                accumulator += Math.min(dt, 0.25f);
+                while (accumulator >= TIME_STEP) {
+                    world.step(TIME_STEP, 6, 2);
+                    accumulator -= TIME_STEP;
+                }
 
                 if (WorldContactListener.pendingTransition != null) {
                     tilemapmanager.TransitionData data = WorldContactListener.pendingTransition;
@@ -141,16 +164,66 @@ public class Main extends ApplicationAdapter {
             }
 
             mapMgr.renderBackground(camera);
+
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
-            sandManager.render(batch);
-            if (!isTutorialReading && WorldContactListener.closestSign != null && WorldContactListener.closestSign.isHero) {
-                drawHeroArrow();
+
+            sandManager.render(batch); //draws cellular automata
+
+            for (tilemapmanager.RuneData rune : WorldContactListener.allRunes) {
+                Texture texToDraw = null;
+
+                if (!rune.isSpawner && !rune.isContainer) {
+                    // 1. CHARGER RUNES (Grants elements to Ezra)
+                    texToDraw = rune.isConsumed ? texChargerConsumed : texChargerActive;
+                }
+                else if (rune.isSpawner && !rune.isContainer) {
+                    // 2. TRIGGER RUNES (Buttons/Switches on the floor)
+                    boolean isTriggered = sandManager.completedGeysers.contains(rune.runeID, false);
+                    for (tilemapmanager.RuneData activeContainer : sandManager.activeContainers) {
+                        if (activeContainer.runeID == rune.runeID) {
+                            isTriggered = true;
+                            break;
+                        }
+                    }
+                    texToDraw = isTriggered ? texTriggerPressed : texTriggerReady;
+                }
+
+                // Draw the selected texture exactly over the TiledMap rectangle coordinates
+                if (texToDraw != null) {
+                    batch.draw(texToDraw, rune.worldX * PPM, rune.worldY * PPM, rune.width * PPM, rune.height * PPM);
+                }
             }
+            /*if (!isTutorialReading && WorldContactListener.closestSign != null && WorldContactListener.closestSign.isHero) {
+                drawHeroArrow();
+            }*/
+            if (player != null && !isTutorialReading) {
+                Vector2 pPos = new Vector2(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
+
+                // Check Closest Sign
+                if (WorldContactListener.closestSign != null) {
+                    float distSign = pPos.dst(WorldContactListener.closestSign.worldX * PPM, WorldContactListener.closestSign.worldY * PPM);
+                    if (distSign < 64f) {
+                        drawInteractionPrompt(WorldContactListener.closestSign.worldX, WorldContactListener.closestSign.worldY,
+                            WorldContactListener.closestSign.width, WorldContactListener.closestSign.height);
+                    }
+                }
+
+                // Check Closest Rune
+                if (WorldContactListener.closestRune != null) {
+                    float distRune = pPos.dst(WorldContactListener.closestRune.worldX * PPM, WorldContactListener.closestRune.worldY * PPM);
+                    if (distRune < 64f && !WorldContactListener.closestRune.isConsumed && !WorldContactListener.closestRune.isContainer) {
+                        drawInteractionPrompt(WorldContactListener.closestRune.worldX, WorldContactListener.closestRune.worldY,
+                            WorldContactListener.closestRune.width, WorldContactListener.closestRune.height);
+                    }
+                }
+            }
+
+            if (player != null) player.draw(batch);
             batch.end();
 
+            batch.setProjectionMatrix(uiMatrix);
             batch.begin();
-            if (player != null) player.draw(batch);
             drawHUD();
             batch.end();
 
@@ -162,19 +235,50 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    private void drawHeroArrow() {
+    /*private void drawHeroArrow() {
         tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
         TextureRegion frame = hoverAnimation.getKeyFrame(stateTime, true);
         float pulse = 0.7f + MathUtils.sin(stateTime * 5f) * 0.3f;
         batch.setColor(1, 1, 1, pulse);
         batch.draw(frame, (sign.worldX * PPM) - 16 + (sign.width * PPM / 2), (sign.worldY * PPM) + (sign.height * PPM) + 20, 16, 16, 32, 32, 1f, 1f, 180f);
         batch.setColor(Color.WHITE);
+    }*/
+
+    private Texture createFallbackTexture(Color color) {//temp graphics when rune's graphics are not yet set or nadelete file for example
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(color);
+        pixmap.fill();
+        Texture generatedTex = new Texture(pixmap);
+        pixmap.dispose();
+        return generatedTex;
+    }
+        //ADDED THIS NEW METHOD: Floating object lang when the player is getting nearer the interactable objects
+    private void drawInteractionPrompt(float objWorldX, float objWorldY, float objWidth, float objHeight) {
+        TextureRegion frame = hoverAnimation.getKeyFrame(stateTime, true);
+        float pulse = 0.8f + com.badlogic.gdx.math.MathUtils.sin(stateTime * 6f) * 0.2f;
+        float bobOffset = com.badlogic.gdx.math.MathUtils.sin(stateTime * 4f) * 4f;
+
+        batch.setColor(1f, 1f, 1f, pulse);
+
+        // Calculate the center top of the object, adding the bob offset
+        float drawX = (objWorldX * PPM) + (objWidth * PPM / 2f) - (frame.getRegionWidth() / 2f);
+        float drawY = (objWorldY * PPM) + (objHeight * PPM) + 16f + bobOffset;
+
+        // Draw the frame pointing down (rotation 180)
+        batch.draw(frame, drawX, drawY, frame.getRegionWidth() / 2f, frame.getRegionHeight() / 2f,
+            frame.getRegionWidth(), frame.getRegionHeight(), 1f, 1f, 180f);
+
+        batch.setColor(Color.WHITE);
     }
 
     private void drawHUD() {
         if(player == null) return;
-        float x = camera.position.x - 325;
-        float y = camera.position.y + 140;
+
+        /* float x = camera.position.x - 325;
+        float y = camera.position.y + 140; */
+        float x = 20;
+        float y = 380;
+
         batch.draw(bgTexture, x, y);
         float hpPercent = player.hp / player.MAX_HP;
         hpRegion.setRegion(0, 0, Math.round(154f * hpPercent), hpTexture.getHeight());
@@ -218,6 +322,13 @@ public class Main extends ApplicationAdapter {
         pauseMenu.dispose();
         mainMenu.dispose();
         mapMgr.dispose();
+
+        // Destroy the dynamic rune textures to prevent memory leaks
+        if(texChargerActive != null) texChargerActive.dispose();
+        if(texChargerConsumed != null) texChargerConsumed.dispose();
+        if(texTriggerReady != null) texTriggerReady.dispose();
+        if(texTriggerPressed != null) texTriggerPressed.dispose();
+
         if(tutorialGui != null) tutorialGui.dispose();
         if(hoverSheet != null) hoverSheet.dispose();
         if(font != null) font.dispose();

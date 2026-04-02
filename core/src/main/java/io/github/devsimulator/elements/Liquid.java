@@ -24,6 +24,10 @@ public abstract class Liquid extends Element {
         // 2. Flow (Sideways)
         int dir = Math.random() < 0.5 ? 1 : -1;
 
+        /*if (!attemptFlow(sim, dir, dispersionRate)) {
+            attemptFlow(sim, -dir, dispersionRate);
+        }*/
+
         // Scan for the furthest valid move
         for (int i = 1; i <= dispersionRate; i++) {
             int targetX = x + (dir * i);

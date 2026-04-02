@@ -8,6 +8,7 @@ import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.entities.Player;
 
 public abstract class baseLevel {
+    public String mapPath = "unknown";
     public TiledMap map;
     public OrthogonalTiledMapRenderer mapRenderer;
 

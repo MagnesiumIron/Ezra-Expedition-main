@@ -56,7 +56,9 @@ public class WorldContactListener implements ContactListener {
         Fixture fb = contact.getFixtureB();
 
         // 1. Foot Contacts (For Jumping)
-        if (fa.getUserData() == "FOOT" || fb.getUserData() == "FOOT") footContacts++;
+        if ("FOOT_SENSOR".equals(fa.getUserData()) || "FOOT_SENSOR".equals(fb.getUserData())) {
+            footContacts++;
+        }
 
         // 2. Sensors (Transitions, Keys, Runes, Signs)
         checkSensor(fa, fb);
@@ -72,6 +74,15 @@ public class WorldContactListener implements ContactListener {
         processSensorData(dataB, b.getBody());
     }
 
+    @Override
+    public void endContact(Contact contact) {
+        Fixture fa = contact.getFixtureA();
+        Fixture fb = contact.getFixtureB();
+        if ("FOOT_SENSOR".equals(fa.getUserData()) || "FOOT_SENSOR".equals(fb.getUserData())) {
+            footContacts--;
+        }
+    }
+
     private void processSensorData(Object data, Body body) {
         if (data == null) return;
 
@@ -84,13 +95,6 @@ public class WorldContactListener implements ContactListener {
             bodiesToDestroy.add(body);
         }
 
-    }
-
-    @Override
-    public void endContact(Contact contact) {
-        Fixture fa = contact.getFixtureA();
-        Fixture fb = contact.getFixtureB();
-        if (fa.getUserData() == "FOOT" || fb.getUserData() == "FOOT") footContacts--;
     }
 
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}

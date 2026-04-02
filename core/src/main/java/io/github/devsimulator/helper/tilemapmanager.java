@@ -26,11 +26,11 @@ public class tilemapmanager {
 
     public static class RuneData {
         public String elementType;
-        public boolean isSpawner, isContainer;
+        public boolean isSpawner, isContainer, isConsumed;
         public int runeID;
         public float worldX, worldY, width, height;
         public RuneData(String type, boolean spawner, boolean container, int id, float x, float y, float w, float h) {
-            this.elementType = type; this.isSpawner = spawner; this.isContainer = container;
+            this.elementType = type; this.isSpawner = spawner; this.isContainer = container; this.isConsumed = false;
             this.runeID = id; this.worldX = x; this.worldY = y; this.width = w; this.height = h;
         }
     }

@@ -1,6 +1,7 @@
 package io.github.devsimulator.levels;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -81,6 +82,7 @@ public class mapManager {
     public void update(float dt) {
         if (currentLevel != null) {
             currentLevel.update(dt);
+            AnimatedTiledMapTile.updateAnimationBaseTime();
         }
     }
 

@@ -1,11 +1,11 @@
 package io.github.devsimulator;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -16,7 +16,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -49,15 +48,11 @@ public class Main extends ApplicationAdapter {
     private Texture hoverSheet;
     private Animation<TextureRegion> hoverAnimation;
     private BitmapFont font;
+
+    // Physics Accumulator & UI
     private float accumulator = 0;
     private static final float TIME_STEP = 1/60f;
     private Matrix4 uiMatrix;
-
-    // Rune Textures
-    private Texture texChargerActive;
-    private Texture texChargerConsumed;
-    private Texture texTriggerReady;
-    private Texture texTriggerPressed;
 
     @Override
     public void create() {
@@ -84,15 +79,6 @@ public class Main extends ApplicationAdapter {
         arTexture = new Texture("barUI_ar.png");
         hpRegion = new TextureRegion(hpTexture);
         arRegion = new TextureRegion(arTexture);
-
-        try { texChargerActive = new Texture("rune_active.png"); }
-        catch (Exception e) { texChargerActive = createFallbackTexture(Color.GOLDENROD); }
-        try { texChargerConsumed = new Texture("rune_dead.png"); }
-        catch (Exception e) { texChargerConsumed = createFallbackTexture(Color.WHITE); }
-        try { texTriggerReady = new Texture("trigger_up.png"); }
-        catch (Exception e) { texTriggerReady = createFallbackTexture(Color.TAN); }
-        try { texTriggerPressed = new Texture("trigger_down.png"); }
-        catch (Exception e) { texTriggerPressed = createFallbackTexture(Color.FOREST); }
 
         // Load Font and Tutorial GUI
         try {
@@ -130,7 +116,7 @@ public class Main extends ApplicationAdapter {
 
             if (!pauseMenu.isPaused && !isTutorialReading) {
                 stateTime += dt;
-                //world.step(1/60f, 6, 2);
+
                 accumulator += Math.min(dt, 0.25f);
                 while (accumulator >= TIME_STEP) {
                     world.step(TIME_STEP, 6, 2);
@@ -163,40 +149,18 @@ public class Main extends ApplicationAdapter {
                 }
             }
 
+            AnimatedTiledMapTile.updateAnimationBaseTime();
+
+            // 1. Draw the actual Tiled map elements (This is what draws your configured runes!)
             mapMgr.renderBackground(camera);
 
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
 
-            sandManager.render(batch); //draws cellular automata
+            // 2. Draw Cellular Automata
+            sandManager.render(batch);
 
-            for (tilemapmanager.RuneData rune : WorldContactListener.allRunes) {
-                Texture texToDraw = null;
-
-                if (!rune.isSpawner && !rune.isContainer) {
-                    // 1. CHARGER RUNES (Grants elements to Ezra)
-                    texToDraw = rune.isConsumed ? texChargerConsumed : texChargerActive;
-                }
-                else if (rune.isSpawner && !rune.isContainer) {
-                    // 2. TRIGGER RUNES (Buttons/Switches on the floor)
-                    boolean isTriggered = sandManager.completedGeysers.contains(rune.runeID, false);
-                    for (tilemapmanager.RuneData activeContainer : sandManager.activeContainers) {
-                        if (activeContainer.runeID == rune.runeID) {
-                            isTriggered = true;
-                            break;
-                        }
-                    }
-                    texToDraw = isTriggered ? texTriggerPressed : texTriggerReady;
-                }
-
-                // Draw the selected texture exactly over the TiledMap rectangle coordinates
-                if (texToDraw != null) {
-                    batch.draw(texToDraw, rune.worldX * PPM, rune.worldY * PPM, rune.width * PPM, rune.height * PPM);
-                }
-            }
-            /*if (!isTutorialReading && WorldContactListener.closestSign != null && WorldContactListener.closestSign.isHero) {
-                drawHeroArrow();
-            }*/
+            // 3. Draw Proximity UI Prompts (Hovering arrows/keys)
             if (player != null && !isTutorialReading) {
                 Vector2 pPos = new Vector2(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
 
@@ -219,15 +183,17 @@ public class Main extends ApplicationAdapter {
                 }
             }
 
+            // 4. Draw Player
             if (player != null) player.draw(batch);
             batch.end();
 
+            // 5. Draw HUD using Static Matrix
             batch.setProjectionMatrix(uiMatrix);
             batch.begin();
             drawHUD();
             batch.end();
 
-            // Stages go here
+            // 6. Draw Stages (Tutorials / Menus)
             if (isTutorialReading) {
                 tutorialGui.render(dt);
             }
@@ -235,36 +201,17 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    /*private void drawHeroArrow() {
-        tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
-        TextureRegion frame = hoverAnimation.getKeyFrame(stateTime, true);
-        float pulse = 0.7f + MathUtils.sin(stateTime * 5f) * 0.3f;
-        batch.setColor(1, 1, 1, pulse);
-        batch.draw(frame, (sign.worldX * PPM) - 16 + (sign.width * PPM / 2), (sign.worldY * PPM) + (sign.height * PPM) + 20, 16, 16, 32, 32, 1f, 1f, 180f);
-        batch.setColor(Color.WHITE);
-    }*/
-
-    private Texture createFallbackTexture(Color color) {//temp graphics when rune's graphics are not yet set or nadelete file for example
-        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(color);
-        pixmap.fill();
-        Texture generatedTex = new Texture(pixmap);
-        pixmap.dispose();
-        return generatedTex;
-    }
-        //ADDED THIS NEW METHOD: Floating object lang when the player is getting nearer the interactable objects
     private void drawInteractionPrompt(float objWorldX, float objWorldY, float objWidth, float objHeight) {
+        if (hoverAnimation == null) return;
         TextureRegion frame = hoverAnimation.getKeyFrame(stateTime, true);
         float pulse = 0.8f + com.badlogic.gdx.math.MathUtils.sin(stateTime * 6f) * 0.2f;
         float bobOffset = com.badlogic.gdx.math.MathUtils.sin(stateTime * 4f) * 4f;
 
         batch.setColor(1f, 1f, 1f, pulse);
 
-        // Calculate the center top of the object, adding the bob offset
         float drawX = (objWorldX * PPM) + (objWidth * PPM / 2f) - (frame.getRegionWidth() / 2f);
         float drawY = (objWorldY * PPM) + (objHeight * PPM) + 16f + bobOffset;
 
-        // Draw the frame pointing down (rotation 180)
         batch.draw(frame, drawX, drawY, frame.getRegionWidth() / 2f, frame.getRegionHeight() / 2f,
             frame.getRegionWidth(), frame.getRegionHeight(), 1f, 1f, 180f);
 
@@ -274,8 +221,6 @@ public class Main extends ApplicationAdapter {
     private void drawHUD() {
         if(player == null) return;
 
-        /* float x = camera.position.x - 325;
-        float y = camera.position.y + 140; */
         float x = 20;
         float y = 380;
 
@@ -322,13 +267,6 @@ public class Main extends ApplicationAdapter {
         pauseMenu.dispose();
         mainMenu.dispose();
         mapMgr.dispose();
-
-        // Destroy the dynamic rune textures to prevent memory leaks
-        if(texChargerActive != null) texChargerActive.dispose();
-        if(texChargerConsumed != null) texChargerConsumed.dispose();
-        if(texTriggerReady != null) texTriggerReady.dispose();
-        if(texTriggerPressed != null) texTriggerPressed.dispose();
-
         if(tutorialGui != null) tutorialGui.dispose();
         if(hoverSheet != null) hoverSheet.dispose();
         if(font != null) font.dispose();

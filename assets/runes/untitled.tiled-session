@@ -1,0 +1,177 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx": {
+            "expandedGroupLayers": [
+                8
+            ],
+            "expandedObjectLayers": [
+                16,
+                13
+            ],
+            "scale": 2,
+            "selectedLayer": 11,
+            "viewCenter": {
+                "x": 859.75,
+                "y": 322.5
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_drop_clean_shadow": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_spritesheet_online_shadow": {
+            "dynamicWrapping": false
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#props": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#runes": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#runesAnimationOnline": {
+            "dynamicWrapping": false,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#runesOnline": {
+            "dynamicWrapping": false
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#terrain": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx": {
+            "expandedObjectLayers": [
+                8,
+                4
+            ],
+            "scale": 1,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": -374.5,
+                "y": 244
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#CastleTiles": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#runes": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx": {
+            "expandedObjectLayers": [
+                6
+            ],
+            "scale": 1.47546875,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 51.17017896854814,
+                "y": 214.16922588160543
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#runes": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx": {
+            "expandedObjectLayers": [
+                8
+            ],
+            "scale": 1,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": 452,
+                "y": 132
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#CastleTiles": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#RUNES_ONLINE_32PX": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#clouds": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#runes": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx": {
+            "expandedObjectLayers": [
+                6,
+                5,
+                4
+            ],
+            "scale": 2,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 248,
+                "y": 182.5
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#CastleTiles": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#runes": {
+            "scaleInDock": 1
+        },
+        "animated_rune_spritesheet_offline.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "runesAnimation.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "runesOnline.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "sampleRunes.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "frame.defaultDuration": 120,
+    "last.exportedFilePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
+    "last.externalTilesetPath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
+    "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes/arijkx_animated_runes_v1/spritesheets",
+    "lastUsedTilesetExportFilter": "All Files (*)",
+    "openFiles": [
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+        "sampleRunes.tsx",
+        "runesOnline.tsx",
+        "runesAnimation.tsx",
+        "animated_rune_spritesheet_offline.tsx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.transparentColor": "#0000ff",
+    "tileset.type": 0,
+    "tileset.useTransparentColor": true
+}

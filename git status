@@ -1,0 +1,15 @@
+[33m1136bdc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/level-2-implementationpart2[m[33m)[m HEAD@{0}: commit: Added rune animations
+[33m132ae66[m[33m ([m[1;31morigin/feature/level-2-implementation[m[33m, [m[1;32mfeature/level-2-implementation[m[33m)[m HEAD@{1}: checkout: moving from feature/level-2-implementation to feature/level-2-implementationpart2
+[33m132ae66[m[33m ([m[1;31morigin/feature/level-2-implementation[m[33m, [m[1;32mfeature/level-2-implementation[m[33m)[m HEAD@{2}: commit: Jump logic fixed. Added temporary runes activation graphics, added graphics for interactable objects.
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{3}: checkout: moving from feature/full_refactor to feature/level-2-implementation
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{4}: reset: moving to HEAD
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{5}: reset: moving to HEAD
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{6}: checkout: moving from main to feature/full_refactor
+[33mc48f472[m[33m ([m[1;32mmain[m[33m)[m HEAD@{7}: reset: moving to HEAD@{1}
+[33mbc7e44d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32memergency-backup[m[33m, [m[1;32mbackup-just-in-case[m[33m)[m HEAD@{8}: commit: Fixed the jump issue, added a little bit of graphics for interactable objects, Will implement level2 next
+[33mc48f472[m[33m ([m[1;32mmain[m[33m)[m HEAD@{9}: checkout: moving from feature/full_refactor to main
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{10}: checkout: moving from main to feature/full_refactor
+[33mc48f472[m[33m ([m[1;32mmain[m[33m)[m HEAD@{11}: checkout: moving from feature/full_refactor to main
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{12}: reset: moving to HEAD
+[33m2009fb8[m[33m ([m[1;31morigin/feature/full_refactor[m[33m, [m[1;32mfeature/full_refactor[m[33m)[m HEAD@{13}: checkout: moving from main to feature/full_refactor
+[33mc48f472[m[33m ([m[1;32mmain[m[33m)[m HEAD@{14}: clone: from https://github.com/MagnesiumIron/Ezra-Expedition-main.git

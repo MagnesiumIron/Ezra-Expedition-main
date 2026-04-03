@@ -1,10 +1,21 @@
 package io.github.devsimulator.elements;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.utils.Pool.Poolable;
 import io.github.devsimulator.helper.PhysicSim;
 import java.util.Random;
 
-public abstract class Element {
+/*
+*   We added the Poolable here to reset the elements objects when they die. This solves the Memory leak
+* particularly during transitions because everytime the player died or transition to other maps, the manager will
+* create a new PhysicsSim() object. So, what will happen is since the sandMgr created a new object, the old one
+* will just be abandoned. And that's a massive waste and could lead to massive memory leak. So, implementing Poolable
+* is viable option to recycle those abandoned particles instead of constantly allocating new memory since you are
+* creating a new object each time the player died or transitioned.
+*
+*/
+
+public abstract class Element implements Poolable {
     public int x, y;
     public boolean hasUpdated = false;
 
@@ -30,6 +41,15 @@ public abstract class Element {
         this.color.mul(noise, noise, noise, 1.0f);
     }
 
+    @Override
+    public void reset() {
+        this.hasUpdated = false;
+        this.isFreeFalling = true;
+        this.temperature = 20;
+    }
+
+    public void freeToPool() {} //leave this empty as this will be overridden by particular Elements
+
     public abstract void step(PhysicSim sim);
     // Called when this element touches another
     public void interact(PhysicSim sim, Element neighbor) {
@@ -47,6 +67,7 @@ public abstract class Element {
             if (random.nextInt(100) < flammability) {
                 //need fire class
                 sim.setElement(x, y, null);
+                this.freeToPool();
             }
         }
     }
@@ -55,6 +76,7 @@ public abstract class Element {
         if (corrosionResistance >= 100) return false;
         if (random.nextInt(100) > corrosionResistance) {
             sim.setElement(x, y, null); // Destroy self
+            this.freeToPool();
             return true;
         }
         return false;

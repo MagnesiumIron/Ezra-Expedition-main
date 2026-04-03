@@ -20,11 +20,11 @@
                 16,
                 13
             ],
-            "scale": 2,
+            "scale": 0.75,
             "selectedLayer": 11,
             "viewCenter": {
-                "x": 859.75,
-                "y": 322.5
+                "x": 1161.3333333333333,
+                "y": 465.33333333333337
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_drop_clean_shadow": {
@@ -53,16 +53,20 @@
             "dynamicWrapping": true,
             "scaleInDock": 1
         },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/props/Campfire sheet.tsx": {
+            "dynamicWrapping": false
+        },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx": {
             "expandedObjectLayers": [
+                6,
                 8,
                 4
             ],
             "scale": 1,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": -374.5,
-                "y": 244
+                "x": 136,
+                "y": 381
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#CastleTiles": {
@@ -78,8 +82,8 @@
             "scale": 1.47546875,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 51.17017896854814,
-                "y": 214.16922588160543
+                "x": 397.1619188817113,
+                "y": 132.16138938896535
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {
@@ -95,8 +99,8 @@
             "scale": 1,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 452,
-                "y": 132
+                "x": 517,
+                "y": 269
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#CastleTiles": {
@@ -118,11 +122,11 @@
                 5,
                 4
             ],
-            "scale": 2,
+            "scale": 1,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 248,
-                "y": 182.5
+                "x": 436,
+                "y": 156
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#CastleTiles": {
@@ -157,6 +161,8 @@
     "last.externalTilesetPath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
     "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes/arijkx_animated_runes_v1/spritesheets",
     "lastUsedTilesetExportFilter": "All Files (*)",
+    "map.height": 12,
+    "map.width": 20,
     "openFiles": [
     ],
     "project": "untitled.tiled-project",

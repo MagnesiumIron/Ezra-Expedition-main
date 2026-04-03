@@ -164,4 +164,15 @@ public class PhysicSim {
             }
         }
     }
+
+    public void clearToPool() {//this method will prevent level load leaks
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (matrix[x][y] != null && !(matrix[x][y] instanceof io.github.devsimulator.elements.EmptyCell)) {
+                    matrix[x][y].freeToPool(); // Recycle everything!
+                    matrix[x][y] = null;
+                }
+            }
+        }
+    }
 }

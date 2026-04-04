@@ -30,7 +30,7 @@ public class Player {
     private float coyoteTimer = 0;
     private float jumpBufferTimer = 0;
 
-    public enum State { NORMAL, DIRT_FORM, LIQUID_FORM, GAS_FORM }
+    public enum State { NORMAL, DIRT_FORM, LIQUID_FORM, GAS_FORM, LAVA_FORM }
 
     public Body b2body;
     private Texture texture;
@@ -279,7 +279,8 @@ public class Player {
                         Gdx.app.log("Player", "This geyser is exhausted.");
                     } else if (currentState != State.NORMAL) {
                         boolean match = (currentState == State.DIRT_FORM && (type.equals("DIRT") || type.equals("SAND"))) ||
-                            (currentState == State.LIQUID_FORM && type.equals("WATER"));
+                            (currentState == State.LIQUID_FORM && type.equals("WATER")) ||
+                            (currentState == State.LAVA_FORM && type.equals("LAVA"));
 
                         if (match) {
                             sandMgr.toggleSpawner(rune);
@@ -307,6 +308,8 @@ public class Player {
                         currentState = State.DIRT_FORM;
                     } else if (storedElement.equals("WATER")) {
                         currentState = State.LIQUID_FORM;
+                    } else if (storedElement.equals("LAVA")) {
+                        currentState = State.LAVA_FORM; // Or whatever state you want Lava to use
                     }
                 } else if (currentState != State.NORMAL) {
                     if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
@@ -337,6 +340,8 @@ public class Player {
             }
         }
         else if (currentState == State.LIQUID_FORM && e instanceof Water) {
+            isFloatingInElement = true;
+        } else if (currentState == State.LAVA_FORM && e instanceof Lava) {
             isFloatingInElement = true;
         }
         else {
@@ -411,6 +416,7 @@ public class Player {
         switch (currentState) {
             case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
             case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
+            case LAVA_FORM: batch.setColor(1.0f, 0.4f, 0.0f, 1f); break;
             default: batch.setColor(1, 1, 1, 1); break;
         }
         batch.draw(texture, b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f, b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f);

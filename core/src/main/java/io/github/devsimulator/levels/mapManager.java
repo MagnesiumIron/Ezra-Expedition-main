@@ -31,6 +31,8 @@ public class mapManager {
         else if (targetMapName.contains("prologue2.tmx")) nextLevel = new prologue2();
         else if (targetMapName.contains("prologueend.tmx")) nextLevel = new prologueend();
         else if (targetMapName.contains("level1fr.tmx") || targetMapName.equals("level1")) nextLevel = new level1();
+        else if (targetMapName.contains("level1fr2.tmx")) nextLevel = new level1fr2();
+        else if (targetMapName.contains("level2.tmx")) nextLevel = new level2();
 
         if (nextLevel != null) {
             changeLevel(nextLevel, spawnX, spawnY);

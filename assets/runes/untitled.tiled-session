@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "",
+    "activeFile": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
@@ -17,14 +17,16 @@
                 8
             ],
             "expandedObjectLayers": [
+                14,
+                23,
                 16,
                 13
             ],
-            "scale": 0.75,
-            "selectedLayer": 11,
+            "scale": 2,
+            "selectedLayer": 15,
             "viewCenter": {
-                "x": 1161.3333333333333,
-                "y": 465.33333333333337
+                "x": 912.75,
+                "y": 304
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_drop_clean_shadow": {
@@ -53,20 +55,123 @@
             "dynamicWrapping": true,
             "scaleInDock": 1
         },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx": {
+            "expandedGroupLayers": [
+                2
+            ],
+            "expandedObjectLayers": [
+                9,
+                12,
+                10,
+                16
+            ],
+            "scale": 1,
+            "selectedLayer": 10,
+            "viewCenter": {
+                "x": 1432.5,
+                "y": 227
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#Tile_01": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#level1_terrainset": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#terrain": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#terrainLevel1": {
+            "scaleInDock": 1
+        },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/props/Campfire sheet.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/Level1_terrain.tsx": {
+            "dynamicWrapping": true,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/objects.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx": {
+            "expandedObjectLayers": [
+                3,
+                4
+            ],
+            "scale": 0.75,
+            "selectedLayer": 11,
+            "viewCenter": {
+                "x": 339.3333333333333,
+                "y": 149.33333333333331
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx#clouds": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx#sky": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx": {
+            "expandedGroupLayers": [
+                13
+            ],
+            "expandedObjectLayers": [
+                11,
+                3,
+                4,
+                20
+            ],
+            "scale": 0.33,
+            "selectedLayer": 12,
+            "viewCenter": {
+                "x": -489.3939393939395,
+                "y": -566.6666666666666
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#1": {
+            "dynamicWrapping": false
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#clouds": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#grass1": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#grass2": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#orig": {
+            "dynamicWrapping": false
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#origbig": {
+            "dynamicWrapping": false
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx#sky": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/tilesets/terrain/dungeon bricks/dungeon_terrain.tsx": {
             "dynamicWrapping": false
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx": {
             "expandedObjectLayers": [
                 6,
-                8,
-                4
+                4,
+                8
             ],
             "scale": 1,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 136,
-                "y": 381
+                "x": 259.5,
+                "y": 400.5
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#CastleTiles": {
@@ -77,13 +182,17 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx": {
             "expandedObjectLayers": [
-                6
+                5,
+                3,
+                6,
+                4,
+                7
             ],
-            "scale": 1.47546875,
-            "selectedLayer": 1,
+            "scale": 0.75,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 397.1619188817113,
-                "y": 132.16138938896535
+                "x": 405.9999999999999,
+                "y": 160
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {
@@ -94,13 +203,15 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx": {
             "expandedObjectLayers": [
+                6,
+                4,
                 8
             ],
-            "scale": 1,
-            "selectedLayer": 8,
+            "scale": 0.75,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 517,
-                "y": 269
+                "x": 551.3333333333334,
+                "y": 541.3333333333334
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#CastleTiles": {
@@ -118,15 +229,15 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx": {
             "expandedObjectLayers": [
-                6,
                 5,
+                6,
                 4
             ],
             "scale": 1,
-            "selectedLayer": 2,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 436,
-                "y": 156
+                "x": 746.5,
+                "y": 237
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#CastleTiles": {
@@ -137,6 +248,7 @@
             "scaleInDock": 1
         },
         "animated_rune_spritesheet_offline.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -158,26 +270,43 @@
     },
     "frame.defaultDuration": 120,
     "last.exportedFilePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
-    "last.externalTilesetPath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
-    "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes/arijkx_animated_runes_v1/spritesheets",
+    "last.externalTilesetPath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground",
+    "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/tilesets/terrain/dungeon bricks",
     "lastUsedTilesetExportFilter": "All Files (*)",
     "map.height": 12,
-    "map.width": 20,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 40,
     "openFiles": [
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx",
+        "runesOnline.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx"
     ],
     "project": "untitled.tiled-project",
+    "property.type": "bool",
     "recentFiles": [
-        "sampleRunes.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/Level1_terrain.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/objects.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx",
         "runesOnline.tsx",
-        "runesAnimation.tsx",
-        "animated_rune_spritesheet_offline.tsx"
+        "sampleRunes.tsx",
+        "animated_rune_spritesheet_offline.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx",
+        "runesAnimation.tsx"
     ],
-    "tileset.embedInMap": true,
+    "tileset.embedInMap": false,
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
     "tileset.margin": 0,
     "tileset.spacing": 0,
     "tileset.transparentColor": "#0000ff",
     "tileset.type": 0,
-    "tileset.useTransparentColor": true
+    "tileset.useTransparentColor": false
 }

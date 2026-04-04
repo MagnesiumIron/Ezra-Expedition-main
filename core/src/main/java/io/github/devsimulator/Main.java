@@ -142,7 +142,7 @@ public class Main extends ApplicationAdapter {
                         }
                     }
                 }
-                updateCameraPosition();
+                updateCameraPosition(dt);
             } else if (isTutorialReading) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
                     isTutorialReading = false;
@@ -233,18 +233,24 @@ public class Main extends ApplicationAdapter {
         batch.draw(arRegion, x + 101f, y + 26f);
     }
 
-    private void updateCameraPosition() {
+    private void updateCameraPosition(float dt) {
         if (player == null) return;
         float targetX = player.b2body.getPosition().x * PPM;
         float targetY = player.b2body.getPosition().y * PPM;
+
+        float lerpAlpha = 6.0f * dt;
+
+        float newX = com.badlogic.gdx.math.MathUtils.lerp(camera.position.x, targetX, lerpAlpha);
+        float newY = com.badlogic.gdx.math.MathUtils.lerp(camera.position.y, targetY, lerpAlpha);
+
         TiledMap currentMap = mapMgr.currentLevel != null ? mapMgr.currentLevel.map : null;
         if (currentMap != null) {
             float mapPixelWidth = currentMap.getProperties().get("width", Integer.class) * currentMap.getProperties().get("tilewidth", Integer.class);
             float mapPixelHeight = currentMap.getProperties().get("height", Integer.class) * currentMap.getProperties().get("tileheight", Integer.class);
-            float clampedX = MathUtils.clamp(targetX, viewport.getWorldWidth()/2f, Math.max(viewport.getWorldWidth()/2f, mapPixelWidth - viewport.getWorldWidth()/2f));
-            float clampedY = MathUtils.clamp(targetY, viewport.getWorldHeight()/2f, Math.max(viewport.getWorldHeight()/2f, mapPixelHeight - viewport.getWorldHeight()/2f));
-            camera.position.set(clampedX, clampedY, 0);
+            newX = com.badlogic.gdx.math.MathUtils.clamp(newX, viewport.getWorldWidth()/2f, Math.max(viewport.getWorldWidth()/2f, mapPixelWidth - viewport.getWorldWidth()/2f));
+            newY = com.badlogic.gdx.math.MathUtils.clamp(newY, viewport.getWorldHeight()/2f, Math.max(viewport.getWorldHeight()/2f, mapPixelHeight - viewport.getWorldHeight()/2f));
         }
+        camera.position.set(newX, newY, 0);
         camera.update();
     }
 

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#329b7b78" nextlayerid="22" nextobjectid="45">
+ <tileset firstgid="1" name="sky" tilewidth="32" tileheight="32" tilecount="180" columns="18">
+  <image source="parralax/1.png" width="576" height="324"/>
+ </tileset>
+ <tileset firstgid="181" name="clouds" tilewidth="32" tileheight="32" tilecount="180" columns="18">
+  <image source="parralax/2.png" width="576" height="324"/>
+ </tileset>
+ <tileset firstgid="361" source="tilesets/terrain/dungeon bricks/dungeon_terrain.tsx"/>
+ <tileset firstgid="473" source="../level1assets/tilesets/props/Campfire sheet.tsx"/>
+ <tileset firstgid="513" source="../runes/runesOnline.tsx"/>
+ <group id="13" name="parallax">
+  <imagelayer id="15" name="sky" repeatx="1">
+   <image source="parralax/1.png" width="576" height="324"/>
+  </imagelayer>
+  <imagelayer id="5" name="clouds" repeatx="1">
+   <image source="parralax/2.png" width="576" height="324"/>
+  </imagelayer>
+  <imagelayer id="16" name="background" repeatx="1">
+   <image source="parralax/3.png" width="576" height="324"/>
+  </imagelayer>
+  <imagelayer id="17" name="foreground" repeatx="1">
+   <image source="parralax/4.png" width="576" height="324"/>
+  </imagelayer>
+ </group>
+ <layer id="18" name="terrain" width="20" height="12">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,378,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+445,446,447,448,445,446,447,448,445,446,447,448,445,446,447,448,445,446,447,448,
+445,446,447,448,445,446,447,448,445,446,447,448,445,446,447,448,445,446,447,448
+</data>
+ </layer>
+ <layer id="19" name="dungeon" width="20" height="12">
+  <data encoding="csv">
+361,362,362,362,362,362,362,363,426,426,426,426,411,378,378,362,378,378,378,363,
+377,378,378,378,378,378,378,425,426,426,426,426,427,378,425,426,427,378,378,379,
+377,378,378,378,378,378,378,425,426,426,426,426,427,378,426,442,443,384,383,379,
+377,378,378,378,378,378,378,425,426,426,426,426,427,378,442,378,378,378,378,379,
+377,378,378,378,378,378,378,442,442,365,365,442,443,378,378,378,378,378,378,379,
+377,378,409,426,411,378,378,378,378,428,428,473,378,378,378,378,378,378,378,379,
+377,378,425,426,427,378,425,413,378,415,416,426,426,426,378,409,426,427,378,412,
+377,378,441,442,443,378,378,413,378,431,432,378,378,378,378,441,380,443,378,412,
+377,378,378,378,378,378,378,413,378,378,378,378,378,378,378,378,380,378,378,378,
+393,394,394,394,394,394,394,429,412,412,412,412,394,410,394,394,380,394,394,394,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <layer id="21" name="runes_visual" width="20" height="12">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,525,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,537,0,0,0,0,525,0,0,0,378,537,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup color="#00aa00" id="4" name="collisions">
+  <object id="3" x="0" y="320" width="640" height="64"/>
+  <object id="7" x="70.0606" y="160.49" width="82.5166" height="79.1459"/>
+  <object id="8" x="192.194" y="192.006" width="63.8009" height="32.0737"/>
+  <object id="9" x="226.689" y="-9.54792e-15" width="179.311" height="138"/>
+  <object id="10" x="224" y="223.997" width="32" height="96.047"/>
+  <object id="11" x="256.001" y="287.999" width="128" height="32.0039"/>
+  <object id="12" x="384.003" y="303.333" width="127.999" height="16.6655"/>
+  <object id="13" x="288" y="138" width="64" height="118"/>
+  <object id="14" x="351.999" y="192.011" width="96" height="31.9922"/>
+  <object id="16" x="543.995" y="302.999" width="96.0063" height="17.0012"/>
+  <object id="17" x="511.938" y="192.008" width="64.0631" height="47.3483"/>
+  <object id="20" x="512.049" y="239.355" width="31.9437" height="80.6377"/>
+  <object id="21" x="448.002" y="31.9925" width="95.9989" height="47.028"/>
+  <object id="22" x="448.091" y="79.4405" width="31.908" height="32.5568"/>
+  <object id="24" x="26.0134" y="303.335" width="197.968" height="16.6655"/>
+  <object id="25" x="-0.00169837" y="0" width="26.0156" height="319.996"/>
+  <object id="26" x="26.0129" y="0.00119097" width="200.671" height="16.6538"/>
+  <object id="28" x="608" y="0" width="31.9961" height="256.004"/>
+  <object id="39" x="484" y="-0.33275" width="31.9992" height="16.6655"/>
+  <object id="41" x="544.009" y="64.2454" width="63.8989" height="31.7555"/>
+  <object id="42" x="491.891" y="207.043" width="19.9301" height="32.4075"/>
+ </objectgroup>
+ <objectgroup id="11" name="transition">
+  <object id="6" x="608" y="256.004" width="32" height="46.9918">
+   <properties>
+    <property name="spawnX" type="float" value="100"/>
+    <property name="spawnY" type="float" value="200"/>
+    <property name="targetMap" value="prologue1.tmx"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup color="#aa0000" id="20" name="lava_zones">
+  <object id="29" x="26.0931" y="239.956" width="197.909" height="63.3172"/>
+  <object id="43" x="152.754" y="192.675" width="46.8257" height="53.5255"/>
+  <object id="44" x="26.3485" y="162.281" width="43.1818" height="77.3172"/>
+ </objectgroup>
+ <objectgroup id="3" name="runes">
+  <object id="30" x="95.9574" y="128.983" width="32" height="31.0156">
+   <properties>
+    <property name="elementType" value="LAVA"/>
+    <property name="isSpawner" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="31" x="384.051" y="160.007" width="32" height="32">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isSpawner" type="bool" value="false"/>
+   </properties>
+  </object>
+  <object id="32" x="544.242" y="160" width="31.7574" height="32">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isSpawner" type="bool" value="true"/>
+    <property name="runeID" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="33" x="223.997" y="160" width="31.9957" height="32">
+   <properties>
+    <property name="elementType" value="LAVA"/>
+    <property name="isSpawner" type="bool" value="true"/>
+    <property name="runeID" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="34" x="256.004" y="191.998" width="31.9884" height="95.9891">
+   <properties>
+    <property name="elementType" value="LAVA"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="35" x="353.251" y="224.009" width="95.741" height="63.9919">
+   <properties>
+    <property name="elementType" value="LAVA"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="36" x="449.254" y="206.086" width="42.0517" height="94.8698">
+   <properties>
+    <property name="elementType" value="LAVA"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="37" x="544.007" y="239.337" width="63.9832" height="63.6521">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="2"/>
+   </properties>
+  </object>
+  <object id="40" x="576.018" y="192.005" width="31.9715" height="47.3201">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="2"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

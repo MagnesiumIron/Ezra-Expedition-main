@@ -77,17 +77,24 @@ public class tilemapmanager {
                 shape.dispose();
             }
 
+
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
+
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(polygon.getX() / Main.PPM, polygon.getY() / Main.PPM);
                 Body body = world.createBody(bdef);
+
                 float[] vertices = polygon.getVertices();
                 float[] worldVertices = new float[vertices.length];
-                for (int i = 0; i < vertices.length; ++i) worldVertices[i] = vertices[i] / Main.PPM;
+                for (int i = 0; i < vertices.length; ++i) {
+                    worldVertices[i] = vertices[i] / Main.PPM;
+                }
+
                 PolygonShape shape = new PolygonShape();
                 shape.set(worldVertices);
+
                 body.createFixture(shape, 0).setUserData("GROUND");
                 shape.dispose();
             }

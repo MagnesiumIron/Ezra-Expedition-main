@@ -34,6 +34,7 @@
   </tile>
  </tileset>
  <tileset firstgid="66" source="../runes/runesOnline.tsx"/>
+ <tileset firstgid="246" source="../level1assets/tilesets/terrainground/Level1_terrain.tsx"/>
  <layer id="1" name="backdrop" width="20" height="12">
   <data encoding="csv">
 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,

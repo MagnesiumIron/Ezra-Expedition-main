@@ -15,7 +15,16 @@ public enum ElementType {
             w.init(x, y);
             return w;
         }
+    },
+    LAVA {
+        @Override
+        public Element create(int x, int y) {
+            Lava l = io.github.devsimulator.controllers.SandManager.lavaPool.obtain();
+            l.init(x, y);
+            return l;
+        }
     };
+
 
     public abstract Element create(int x, int y);
 }

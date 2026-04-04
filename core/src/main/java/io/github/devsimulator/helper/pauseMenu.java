@@ -103,6 +103,7 @@
             withdrawBtn.addListener(new ClickListener() {
                 @Override public void clicked(InputEvent event, float x, float y) {
                     togglePause();
+                    mainMenu.returnFromGame();
                     mainMenu.isStarted = false;
                     Gdx.input.setInputProcessor(mainMenu.stage);
                 }

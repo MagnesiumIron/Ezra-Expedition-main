@@ -2,8 +2,10 @@ package io.github.devsimulator.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.devsimulator.Main;
@@ -42,7 +44,7 @@ public class Player {
 
     public float hp = 100.0f;
     public final float MAX_HP = 100.0f;
-    private final float SUFFOCATION_RATE = 6.0f;
+    private final float SUFFOCATION_RATE = 25.0f;
 
     // --- RUNE SYSTEM VARIABLES ---
     public int assimilationCharges = 0;
@@ -56,14 +58,17 @@ public class Player {
     private int jumpCounter = 0;
     private final int MAX_JUMPS = 2;
 
-    //added element jump midair lock
-    public boolean hasUsedElementBoost = false;
-
-    private float lastYpos = 0f;
-    private int verticalRestFrames = 0;
-
     private final float ASSIMILATION_RATE = 15.0f;
     private final float RECOVERY_RATE = 10.0f;
+
+    private float stepTimer = 0f;
+    public String currentSurface = "default";
+
+    public static Sound[] stoneSteps = {
+        Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step1.wav")),
+        Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step2.wav")),
+        Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step3.wav"))
+    };
 
     public Player(World world) {
         definePlayer(world);
@@ -91,7 +96,7 @@ public class Player {
         shape.dispose();
 
         PolygonShape footShape = new PolygonShape();
-        footShape.setAsBox(4 / Main.PPM, 1 / Main.PPM, new Vector2(0, -9 / Main.PPM), 0);
+        footShape.setAsBox(4 / Main.PPM, 1 / Main.PPM, new Vector2(0, -16 / Main.PPM), 0);
 
         FixtureDef footDef = new FixtureDef();
         footDef.shape = footShape;
@@ -100,6 +105,24 @@ public class Player {
         footShape.dispose();
 
         b2body.setGravityScale(GRAVITY_NORMAL);
+    }
+    private void playFootstep(float dt) {
+        // Only play footsteps when grounded
+        if (!isGrounded) return;
+
+        // Only play when moving horizontally
+        if (Math.abs(b2body.getLinearVelocity().x) < 0.1f) return;
+
+        stepTimer += dt;
+
+        if (stepTimer >= 0.35f) { // adjust speed
+            stepTimer = 0;
+
+            if (currentSurface.equals("stone")) {
+                int index = MathUtils.random(0, stoneSteps.length - 1);
+                stoneSteps[index].play(0.4f);
+            }
+        }
     }
 
     public void update(float dt, SandManager sandMgr) {
@@ -123,6 +146,7 @@ public class Player {
         handleMovement();
         applyVariableGravity();
         updateStats(dt);
+        playFootstep(dt);
     }
 
     private void handleMovement() {
@@ -164,16 +188,17 @@ public class Player {
                 jumpBufferTimer = 0;
                 coyoteTimer = 0;
                 jumpCounter = 1;
-                verticalRestFrames = 0;
+                float volume = 0.9f + (float)Math.random() * 0.2f;
+                float pitch  = 0.9f + (float)Math.random() * 0.3f;
+                Main.jumpSound.play(volume, pitch, 0f);
             } else if (jumpBufferTimer > 0 && jumpCounter < MAX_JUMPS && coyoteTimer <= 0) {
-                if (currentState == State.NORMAL) {
-                    desiredY = currentJumpSpeed;
-                    jumpBufferTimer = 0;
-                    jumpCounter++;
-                } else {
-                    jumpBufferTimer = 0; //cancels normal double jump in Normal State
-                }
+                desiredY = currentJumpSpeed;
+                jumpBufferTimer = 0;
+                jumpCounter++;float volume = 0.9f + (float)Math.random() * 0.2f;
+                float pitch  = 0.9f + (float)Math.random() * 0.3f;
+                Main.jumpSound.play(volume, pitch, 0f);
             }
+
             b2body.setLinearVelocity(desiredX, desiredY);
         }
     }
@@ -209,24 +234,14 @@ public class Player {
         Element feet = getSafeElement(sim, simX, simY - RADIUS_OFFSET);
         boolean standingOnElement = (feet != null && !(feet instanceof EmptyCell));
 
-        float currentY = b2body.getPosition().y;
-        if(Math.abs(currentY - lastYpos) < 0.005f) {
-            verticalRestFrames++;
-        } else {
-            verticalRestFrames = 0;
-        }
-        lastYpos = currentY;
-
-        boolean isTrulyResting = verticalRestFrames >= 2;
-
         if (currentState == State.DIRT_FORM || currentState == State.LIQUID_FORM) {
-            isGrounded = standingOnWall && isTrulyResting;
+            isGrounded = standingOnWall;
         } else {
-            isGrounded = (standingOnWall || standingOnElement) && isTrulyResting;
+            isGrounded = standingOnWall || standingOnElement;
         }
 
-        if (isGrounded) {
-            hasUsedElementBoost = false;
+        boolean isResting = Math.abs(b2body.getLinearVelocity().y) < 0.05f;
+        if (isGrounded && isResting) {
             jumpCounter = 0;
         }
 
@@ -241,16 +256,22 @@ public class Player {
 
         // --- INTERACTION LOGIC ---
         Vector2 pixelPos = new Vector2(b2body.getPosition().x * Main.PPM, b2body.getPosition().y * Main.PPM);
-        // Constantly check for nearby signs and runes in EVERY frame
+
+        // FIX: Constantly check for nearby signs and runes EVERY frame!
         WorldContactListener.sortSignsByDistance(pixelPos);
         WorldContactListener.sortRunesByDistance(pixelPos);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             if (WorldContactListener.closestSign != null) {
+
+                // --- NEW DISTANCE CHECK ---
+                // Calculate how far Ezra is from the sign in pixels
                 float dist = pixelPos.dst(
                     WorldContactListener.closestSign.worldX * Main.PPM,
                     WorldContactListener.closestSign.worldY * Main.PPM
                 );
+
+                // 64 pixels is about 2 tiles. If further than that, ignore the press!
                 if (dist < 64f) {
                     interactedThisFrame = true;
                     return;
@@ -264,6 +285,8 @@ public class Player {
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             tilemapmanager.RuneData rune = WorldContactListener.closestRune;
             boolean processedRune = false;
+
+            // --- NEW DISTANCE CHECK ---
             // Calculate distance from Ezra's current pixel position to the rune
             float dist = -1;
             if (rune != null) {
@@ -303,22 +326,21 @@ public class Player {
             if (!processedRune) {
                 if (assimilationCharges > 0 && currentState == State.NORMAL) {
                     assimilationCharges--;
+                    float volIn = 0.9f + (float)Math.random() * 0.2f;
+                    float pitchIn = 0.9f + (float)Math.random() * 0.3f;
+                    Main.assimilationIN.play(volIn, pitchIn, 0f);
                     if (storedElement.equals("DIRT") || storedElement.equals("SAND")) {
                         currentState = State.DIRT_FORM;
                     } else if (storedElement.equals("WATER")) {
                         currentState = State.LIQUID_FORM;
                     }
                 } else if (currentState != State.NORMAL) {
-                    if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
-                        currentState = State.NORMAL;
-                    } else {
-                        Vector2 vel = b2body.getLinearVelocity();
-                        b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
-                        hasUsedElementBoost = true;
-                    }
+                    float volOut = 0.9f + (float)Math.random() * 0.2f;
+                    float pitchOut = 0.9f + (float)Math.random() * 0.3f;
+                    Main.assimilationOUT.play(volOut, pitchOut, 0f);
+                    currentState = State.NORMAL;
                 }
             }
-
         }
     }
 
@@ -329,6 +351,7 @@ public class Player {
 
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
             isFloatingInElement = true;
+            // --- THE "NUDGE" FIX ---
             // If Ezra is moving, give him a tiny extra force to "push"
             // through those invisible micro-corners of the sand pixels.
             Vector2 vel = b2body.getLinearVelocity();
@@ -345,12 +368,10 @@ public class Player {
     }
 
     private void updateStats(float dt) {
-        boolean isOverloaded = false;
         if (currentState != State.NORMAL) {
             assimilationMeter = Math.min(MAX_ASSIMILATION, assimilationMeter + (ASSIMILATION_RATE * dt));
             if (assimilationMeter >= MAX_ASSIMILATION) {
-                isOverloaded = true;
-                hp -= (SUFFOCATION_RATE * 0.5f) * dt;
+                hp -= SUFFOCATION_RATE * dt;
                 if (hp <= 0) triggerDeath("Overload");
             }
         } else {
@@ -360,7 +381,7 @@ public class Player {
         if (isSubmergedNormal) {
             hp -= SUFFOCATION_RATE * dt;
             if (hp <= 0) triggerDeath("Suffocated / Drowned");
-        } else if (currentState == State.NORMAL && !isOverloaded) {
+        } else {
             hp = Math.min(MAX_HP, hp + (RECOVERY_RATE * 0.5f * dt));
         }
     }
@@ -402,6 +423,7 @@ public class Player {
         try { return sim.getElement(x, y); } catch (Exception e) { return null; }
     }
 
+    // --- HUD HELPER METHOD (FIXED) ---
     public float getMassPercentage() {
         return assimilationMeter / MAX_ASSIMILATION;
     }

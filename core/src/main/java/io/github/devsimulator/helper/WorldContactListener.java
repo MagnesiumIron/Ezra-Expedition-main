@@ -1,19 +1,19 @@
 package io.github.devsimulator.helper;
 
+import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
-import io.github.devsimulator.Main; // Fixes the "Cannot find Main" error
+import io.github.devsimulator.Main;
 import io.github.devsimulator.helper.tilemapmanager.InteractableData;
 import io.github.devsimulator.helper.tilemapmanager.RuneData;
 
 public class WorldContactListener implements ContactListener {
 
-    // --- STATIC STORAGE (The "Phonebook" of the current map) ---
+    // --- STATIC STORAGE ---
     public static Array<InteractableData> allSigns = new Array<>();
     public static Array<RuneData> allRunes = new Array<>();
 
-    // These store the absolute closest object to Ezra at any given moment
     public static InteractableData closestSign = null;
     public static RuneData closestRune = null;
 
@@ -22,7 +22,7 @@ public class WorldContactListener implements ContactListener {
     public static Array<Body> bodiesToDestroy = new Array<>();
     public static tilemapmanager.TransitionData pendingTransition = null;
 
-    // --- SORTING LOGIC (Calculates distance every frame) ---
+    // --- SORTING LOGIC ---
     public static void sortSignsByDistance(Vector2 playerPos) {
         closestSign = null;
         float minDst = Float.MAX_VALUE;
@@ -55,22 +55,37 @@ public class WorldContactListener implements ContactListener {
         Fixture fa = contact.getFixtureA();
         Fixture fb = contact.getFixtureB();
 
-        // 1. Foot Contacts (For Jumping)
         if ("FOOT_SENSOR".equals(fa.getUserData()) || "FOOT_SENSOR".equals(fb.getUserData())) {
             footContacts++;
         }
-
-        // 2. Sensors (Transitions, Keys, Runes, Signs)
         checkSensor(fa, fb);
+        checkSurface(fa, fb);
+    }
+
+    private void checkSurface(Fixture a, Fixture b) {
+        boolean aIsFoot = "FOOT_SENSOR".equals(a.getUserData());
+        boolean bIsFoot = "FOOT_SENSOR".equals(b.getUserData());
+
+        if (!aIsFoot && !bIsFoot) return;
+
+        Fixture tileFixture = aIsFoot ? b : a;
+
+        if (tileFixture.getUserData() instanceof MapObject) {
+            MapObject obj = (MapObject) tileFixture.getUserData();
+
+            if (obj.getProperties().containsKey("surface")) {
+                String surface = obj.getProperties().get("surface", String.class);
+                Main.player.currentSurface = surface;
+            }
+        }
+
     }
 
     private void checkSensor(Fixture a, Fixture b) {
         Object dataA = a.getUserData();
         Object dataB = b.getUserData();
 
-        // Check A
         processSensorData(dataA, a.getBody());
-        // Check B
         processSensorData(dataB, b.getBody());
     }
 
@@ -78,6 +93,7 @@ public class WorldContactListener implements ContactListener {
     public void endContact(Contact contact) {
         Fixture fa = contact.getFixtureA();
         Fixture fb = contact.getFixtureB();
+
         if ("FOOT_SENSOR".equals(fa.getUserData()) || "FOOT_SENSOR".equals(fb.getUserData())) {
             footContacts--;
         }
@@ -86,7 +102,6 @@ public class WorldContactListener implements ContactListener {
     private void processSensorData(Object data, Body body) {
         if (data == null) return;
 
-        // Transition Logic
         if (data instanceof tilemapmanager.TransitionData) {
             pendingTransition = (tilemapmanager.TransitionData) data;
         }
@@ -94,7 +109,6 @@ public class WorldContactListener implements ContactListener {
         if ("KEY".equals(data)) {
             bodiesToDestroy.add(body);
         }
-
     }
 
     @Override public void preSolve(Contact contact, Manifold oldManifold) {}

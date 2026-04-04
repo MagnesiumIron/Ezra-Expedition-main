@@ -5,6 +5,7 @@ import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import io.github.devsimulator.Main;
 import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.WorldContactListener;
@@ -40,43 +41,67 @@ public class mapManager {
     }
 
     public void changeLevel(baseLevel newLevel, float spawnX, float spawnY) {
+
+
         if (currentLevel != null) {
             currentLevel.dispose();
         }
 
-        // --- FIXED: CLEAR GHOSTS ---
-        // We use allSigns and allRunes now. nearbyRunes was removed.
         WorldContactListener.allSigns.clear();
         WorldContactListener.allRunes.clear();
         WorldContactListener.closestSign = null;
         WorldContactListener.closestRune = null;
 
-        // 1. Clear out old physics bodies
         Array<Body> bodies = new Array<>();
         world.getBodies(bodies);
         for (Body b : bodies) {
-            // Keep Ezra, destroy everything else
             if (b != player.b2body) {
                 world.destroyBody(b);
             }
         }
 
+
         currentLevel = newLevel;
-        // 2. Load the level (This calls tilemapmanager.createBoundaries)
         currentLevel.loadLevel(world, player, sandManager);
         currentMapPath = newLevel.mapPath;
 
-        // 3. Update SandManager with the new map's data
+
         if (sandManager != null && currentLevel.map != null) {
             sandManager.initLevel(currentLevel.map);
         }
 
-        // 4. Reset Player Position
+
         player.b2body.setTransform(spawnX, spawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
 
-        // Reset physics contacts
+
         WorldContactListener.footContacts = 0;
+
+        //AMBIENCE SYSTEM
+        String name = newLevel.getClass().getSimpleName();
+
+        boolean isPrologue =
+            name.equals("prologuespawn") ||
+                name.equals("prologue1") ||
+                name.equals("prologue2") ||
+                name.equals("prologueend");
+
+        boolean isLevel1 = name.equals("level1");
+        if (Main.ambience != null && Main.ambience.isPlaying()) {
+            Main.ambience.stop();
+        }
+        if (Main.level1Ambience != null && Main.level1Ambience.isPlaying()) {
+            Main.level1Ambience.stop();
+        }
+        if (isPrologue) {
+            if (Main.ambience != null && !Main.ambience.isPlaying()) {
+                Main.ambience.play();
+            }
+        } else if (isLevel1) {
+            if (Main.level1Ambience != null && !Main.level1Ambience.isPlaying()) {
+                Main.level1Ambience.play();
+            }
+        }
     }
 
     public void update(float dt) {

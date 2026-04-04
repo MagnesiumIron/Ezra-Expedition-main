@@ -1,6 +1,7 @@
 package io.github.devsimulator.helper;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -36,6 +37,9 @@ public class mainMenu {
     private saveManager saveManager;
     private Label title;
 
+    private static Music menuMusic;
+    private static Music ambienceMusic;
+
     public mainMenu(Player player) {
         this.player = player;
         stage = new Stage(new FitViewport(360, 240));
@@ -52,6 +56,26 @@ public class mainMenu {
         for (int i = 0; i < frameCount; i++) frames[i] = tmp[0][i];
         hoverAnimation = new Animation<TextureRegion>(0.15f, frames);
         hoverAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+        if (menuMusic == null) {
+            menuMusic = Gdx.audio.newMusic(Gdx.files.internal("music/menu_theme.mp3"));
+            menuMusic.setLooping(true);
+            menuMusic.setVolume(0.25f);
+        }
+
+        if (!menuMusic.isPlaying()) {
+            menuMusic.play();
+        }
+
+        if (ambienceMusic == null) {
+            ambienceMusic = Gdx.audio.newMusic(Gdx.files.internal("music/caveambience.mp3"));
+            ambienceMusic.setLooping(true);
+            ambienceMusic.setVolume(0.15f);
+        }
+
+        if (!ambienceMusic.isPlaying()) {
+            ambienceMusic.play();
+        }
 
         ImageButton continueBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(continueTex)));
         ImageButton loadBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(saveLoadTex)));
@@ -91,7 +115,6 @@ public class mainMenu {
                     }, 2f);
                     return;
                 }
-
                 mainTable.setVisible(false);
                 saveManager.setVisible(true);
             }
@@ -118,8 +141,10 @@ public class mainMenu {
         mainTable.add(withdrawBtn).width(58).height(15).pad(5);
 
         saveManager = new saveManager(player, false,
-            () -> { saveManager.setVisible(false); mainTable.setVisible(true); },
-            () -> { isStarted = true; Gdx.input.setInputProcessor(null); }
+            () -> { saveManager.setVisible(false); mainTable.setVisible(true);},
+            () -> { isStarted = true; Gdx.input.setInputProcessor(null);
+                if (menuMusic != null) menuMusic.stop();
+                if (ambienceMusic != null) ambienceMusic.stop();}
         );
         saveManager.setVisible(false);
 
@@ -142,6 +167,9 @@ public class mainMenu {
 
         isStarted = true;
         Gdx.input.setInputProcessor(null);
+
+        if (menuMusic != null) menuMusic.stop();
+        if (ambienceMusic != null) ambienceMusic.stop();
     }
 
     public void render(float dt) {
@@ -160,6 +188,21 @@ public class mainMenu {
             }
         }
     }
+    public void returnFromGame() {
+        isStarted = false;
+        if (Main.ambience != null) Main.ambience.stop();
+        if (Main.level1Ambience != null) Main.level1Ambience.stop();
+
+        // restart music if needed
+        if (menuMusic != null && !menuMusic.isPlaying()) {
+            menuMusic.play();
+        }
+        if (ambienceMusic != null && !ambienceMusic.isPlaying()) {
+            ambienceMusic.play();
+        }
+
+        Gdx.input.setInputProcessor(stage);
+    }
 
     public void dispose() {
         stage.dispose();
@@ -170,4 +213,5 @@ public class mainMenu {
         hoverSheet.dispose();
         if(saveManager != null) saveManager.dispose();
     }
+
 }

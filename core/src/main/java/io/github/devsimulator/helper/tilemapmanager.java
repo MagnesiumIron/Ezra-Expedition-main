@@ -52,43 +52,56 @@ public class tilemapmanager {
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
             MapObjects objects = collisionLayer.getObjects();
+
+            // RECTANGLE COLLISIONS
             for (MapObject object : objects.getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
+
                 float w = rect.getWidth() / Main.PPM;
                 float h = rect.getHeight() / Main.PPM;
                 bdef.position.set((rect.getX() / Main.PPM) + w / 2, (rect.getY() / Main.PPM) + h / 2);
 
                 Body body = world.createBody(bdef);
+
                 PolygonShape shape = new PolygonShape();
                 shape.setAsBox(w / 2, h / 2);
+
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
 
-                if (object.getProperties().containsKey("isKey")) {
-                    fdef.isSensor = true;
-                    body.createFixture(fdef).setUserData("KEY");
-                } else if (object.getProperties().containsKey("isDoor")) {
-                    body.createFixture(fdef).setUserData("DOOR");
-                } else {
-                    body.createFixture(fdef).setUserData("GROUND");
-                }
+                Fixture fixture = body.createFixture(fdef);
+
+                // ⭐ FIX: Attach the MapObject so footsteps can read "surface"
+                fixture.setUserData(object);
+
                 shape.dispose();
             }
 
+            // POLYGON COLLISIONS
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
+
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(polygon.getX() / Main.PPM, polygon.getY() / Main.PPM);
+
                 Body body = world.createBody(bdef);
+
                 float[] vertices = polygon.getVertices();
                 float[] worldVertices = new float[vertices.length];
-                for (int i = 0; i < vertices.length; ++i) worldVertices[i] = vertices[i] / Main.PPM;
+                for (int i = 0; i < vertices.length; ++i)
+                    worldVertices[i] = vertices[i] / Main.PPM;
+
                 PolygonShape shape = new PolygonShape();
                 shape.set(worldVertices);
-                body.createFixture(shape, 0).setUserData("GROUND");
+
+                Fixture fixture = body.createFixture(shape, 0);
+
+                // ⭐ FIX: Attach the MapObject
+                fixture.setUserData(object);
+
                 shape.dispose();
             }
         }
@@ -98,15 +111,19 @@ public class tilemapmanager {
         if (transitionLayer != null) {
             for (MapObject object : transitionLayer.getObjects().getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
+
                 float w = rect.getWidth() / Main.PPM;
                 float h = rect.getHeight() / Main.PPM;
                 bdef.position.set((rect.getX() / Main.PPM) + w / 2, (rect.getY() / Main.PPM) + h / 2);
 
                 Body body = world.createBody(bdef);
+
                 PolygonShape shape = new PolygonShape();
                 shape.setAsBox(w / 2, h / 2);
+
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
                 fdef.isSensor = true;
@@ -116,6 +133,7 @@ public class tilemapmanager {
                 float sy = object.getProperties().get("spawnY", -1f, Float.class) / Main.PPM;
 
                 body.createFixture(fdef).setUserData(new TransitionData(target, sx, sy));
+
                 shape.dispose();
             }
         }
@@ -125,6 +143,7 @@ public class tilemapmanager {
         if (interactLayer != null) {
             for (MapObject object : interactLayer.getObjects().getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
                 float w = rect.width / Main.PPM;
                 float h = rect.height / Main.PPM;
                 float x = rect.x / Main.PPM;
@@ -133,10 +152,12 @@ public class tilemapmanager {
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(x + w/2, y + h/2);
+
                 Body body = world.createBody(bdef);
 
                 PolygonShape shape = new PolygonShape();
                 shape.setAsBox(w/2, h/2);
+
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
                 fdef.isSensor = true;
@@ -146,9 +167,9 @@ public class tilemapmanager {
                 boolean hero = object.getProperties().get("isHero", false, Boolean.class);
 
                 InteractableData data = new InteractableData(head, desc, hero, x, y, w, h);
+
                 body.createFixture(fdef).setUserData(data);
 
-                // ADD TO SORTING LIST
                 WorldContactListener.allSigns.add(data);
 
                 shape.dispose();
@@ -160,6 +181,7 @@ public class tilemapmanager {
         if (runeLayer != null) {
             for (MapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
                 float w = rect.getWidth() / Main.PPM;
                 float h = rect.getHeight() / Main.PPM;
                 float worldX = rect.getX() / Main.PPM;
@@ -168,10 +190,12 @@ public class tilemapmanager {
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(worldX + w/2, worldY + h/2);
+
                 Body body = world.createBody(bdef);
 
                 PolygonShape shape = new PolygonShape();
                 shape.setAsBox(w/2, h/2);
+
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
                 fdef.isSensor = true;
@@ -182,9 +206,9 @@ public class tilemapmanager {
                 int runeID = object.getProperties().get("runeID", 0, Integer.class);
 
                 RuneData data = new RuneData(type, isSpawner, isContainer, runeID, worldX, worldY, w, h);
+
                 body.createFixture(fdef).setUserData(data);
 
-                // ADD TO SORTING LIST
                 WorldContactListener.allRunes.add(data);
 
                 shape.dispose();

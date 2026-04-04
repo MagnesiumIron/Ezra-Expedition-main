@@ -11,7 +11,6 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pool;
 import io.github.devsimulator.elements.*;
 import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.PhysicSim;
@@ -31,24 +30,11 @@ public class SandManager {
 
     public Player player;
 
-    public static final Pool<Sand> sandPool = new Pool<Sand>(2000, 15000) {
-        @Override protected Sand newObject() { return new Sand(-1, -1); }
-    };
-
-    public static final Pool<Water> waterPool = new Pool<Water>(2000, 15000) {
-        @Override protected Water newObject() { return new Water(-1, -1); }
-    };
-
     public SandManager() {
         createTexture();
     }
 
     public void initLevel(TiledMap map) {
-        //Recycle the old map first before creating a new one
-        if (sim != null) {
-            sim.clearToPool();
-        }
-
         int tilesX = map.getProperties().get("width", Integer.class);
         int tilesY = map.getProperties().get("height", Integer.class);
         int tileW = map.getProperties().get("tilewidth", Integer.class);
@@ -94,6 +80,7 @@ public class SandManager {
             }
         }
 
+        // --- THE MISSING RENDER FIX ---
         // We MUST call these at the end of initLevel to populate the starting zones!
         spawnLayer(map, "sand_zones", ElementType.SAND);
         spawnLayer(map, "water_zones", ElementType.WATER);
@@ -176,8 +163,11 @@ public class SandManager {
     }
 
     private Element createElement(int x, int y, ElementType type) {
-        if (type == null) return null;
-        return type.create(x, y);
+        switch (type) {
+            case SAND:  return new Sand(x, y);
+            case WATER: return new Water(x, y);
+            default:    return null;
+        }
     }
 
     public void spawnLayer(TiledMap map, String layerName, ElementType type) {

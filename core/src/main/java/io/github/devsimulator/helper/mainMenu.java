@@ -104,11 +104,7 @@ public class mainMenu {
         mainTable = new Table();
         mainTable.setFillParent(true);
 
-        Pixmap bgPix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        bgPix.setColor(0.1f, 0.1f, 0.15f, 1f);
-        bgPix.fill();
-        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture(bgPix))));
-        bgPix.dispose();
+        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(menuBg)));
 
         title = new Label("EZRA'S EXPEDITION", new Label.LabelStyle(font, Color.WHITE));
 
@@ -153,18 +149,6 @@ public class mainMenu {
     public void render(float dt) {
         if (!isStarted) {
             stage.act(dt);
-
-            stage.getViewport().apply();
-
-            stage.getBatch().begin();
-            stage.getBatch().draw(
-                menuBg,
-                0, 0,
-                stage.getViewport().getWorldWidth(),
-                stage.getViewport().getWorldHeight()
-            );
-            stage.getBatch().end();
-
             stage.draw();
 
             if (hoveredButton != null && mainTable.isVisible()) {

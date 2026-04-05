@@ -39,6 +39,8 @@ public class Main extends ApplicationAdapter {
     public mapManager mapMgr;
     public Player player;
     public SandManager sandManager;
+    private com.badlogic.gdx.graphics.g2d.GlyphLayout sharedLayout;
+    private Vector2 cachedPlayerPos;
 
     private Texture bgTexture, hpTexture, arTexture;
     private TextureRegion hpRegion, arRegion;
@@ -94,6 +96,8 @@ public class Main extends ApplicationAdapter {
 
         sandManager = new SandManager();
         player = new Player(world);
+        sharedLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout();
+        cachedPlayerPos = new Vector2();
 
         mapMgr = new mapManager(world, player, sandManager);
         mapMgr.changeLevel(new prologuespawn(), 100 / PPM, 200 / PPM);
@@ -198,15 +202,15 @@ public class Main extends ApplicationAdapter {
                         float bobbingOffset = MathUtils.sin(stateTime * 4f) * 4f;
                         float rX = (rune.worldX * PPM) + (rune.width * PPM / 2f);
                         float rY = (rune.worldY * PPM) + (rune.height * PPM) + 25f + bobbingOffset;
-                        font.getData().setScale(0.5f); // Enlarged font
+                        font.getData().setScale(0.5f);
 
                         String el = rune.elementType.toUpperCase();
                         if (el.equals("WATER")) font.setColor(0.2f, 0.6f, 1.0f, 1f);
                         else if (el.equals("LAVA")) font.setColor(1.0f, 0.4f, 0.0f, 1f);
                         else font.setColor(0.6f, 0.4f, 0.2f, 1f);
 
-                        com.badlogic.gdx.graphics.g2d.GlyphLayout rLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, el);
-                        font.draw(batch, el, rX - (rLayout.width / 2f), rY);
+                        sharedLayout.setText(font, el);
+                        font.draw(batch, el, rX - (sharedLayout.width / 2f), rY);
                     }
                 }
                 font.setColor(Color.WHITE);
@@ -231,13 +235,15 @@ public class Main extends ApplicationAdapter {
     private String getString() {
         String currentPrompt = "";
         if (player != null && !isTutorialReading) {
-            Vector2 pPos = new Vector2(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
+            // ZERO-ALLOCATION VECTOR UPDATING
+            cachedPlayerPos.set(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
+
             if (WorldContactListener.closestSign != null) {
-                float distSign = pPos.dst(WorldContactListener.closestSign.worldX * PPM, WorldContactListener.closestSign.worldY * PPM);
+                float distSign = cachedPlayerPos.dst(WorldContactListener.closestSign.worldX * PPM, WorldContactListener.closestSign.worldY * PPM);
                 if (distSign < 64f) currentPrompt = "Press [F] to read";
             }
             if (WorldContactListener.closestRune != null) {
-                float distRune = pPos.dst(WorldContactListener.closestRune.worldX * PPM, WorldContactListener.closestRune.worldY * PPM);
+                float distRune = cachedPlayerPos.dst(WorldContactListener.closestRune.worldX * PPM, WorldContactListener.closestRune.worldY * PPM);
                 if (distRune < 64f && !WorldContactListener.closestRune.isConsumed && !WorldContactListener.closestRune.isContainer) {
 
                     tilemapmanager.RuneData rune = WorldContactListener.closestRune;
@@ -330,10 +336,11 @@ public class Main extends ApplicationAdapter {
         // center subtitle
         if (currentPrompt != null && !currentPrompt.isEmpty() && font != null) {
             font.getData().setScale(0.5f);
-            com.badlogic.gdx.graphics.g2d.GlyphLayout layout = new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, currentPrompt);
+            sharedLayout.setText(font, currentPrompt);
             float screenCenterX = viewport.getWorldWidth() / 2f;
             float bottomY = 60f;
-            font.draw(batch, currentPrompt, screenCenterX - (layout.width / 2f), bottomY);
+            font.draw(batch, currentPrompt, screenCenterX - (sharedLayout.width / 2f), bottomY);
+
             font.getData().setScale(1.0f);
         }
     }

@@ -22,7 +22,8 @@ import io.github.devsimulator.Main;
 
 public class SandManager {
     public PhysicSim sim;
-    private Texture whitePixel;
+    private Pixmap fluidPixmap;
+    private Texture fluidTexture;
     private int simW;
     private int simH;
     private final float CELL_SIZE = 4f;
@@ -49,10 +50,6 @@ public class SandManager {
         @Override protected Smoke newObject() { return new Smoke(-1, -1); }
     };
 
-    public SandManager() {
-        createTexture();
-    }
-
     public void initLevel(TiledMap map) {
         //Recycle the old map first before creating a new one
         if (sim != null) {
@@ -68,12 +65,17 @@ public class SandManager {
         simH = (int) ((tilesY * tileH) / CELL_SIZE);
         sim = new PhysicSim(simW, simH);
 
-        // Initialize Collisions
+        if (fluidPixmap != null) fluidPixmap.dispose();
+        if (fluidTexture != null) fluidTexture.dispose();
+        fluidPixmap = new Pixmap(simW, simH, Pixmap.Format.RGBA8888);
+        fluidPixmap.setBlending(Pixmap.Blending.None);
+        fluidTexture = new Texture(simW, simH, Pixmap.Format.RGBA8888);
+
         // Initialize Collisions
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
 
-            // 1. RECTANGLES (You already have this)
+            // Rectangle for tile
             for (RectangleMapObject object : collisionLayer.getObjects().getByType(RectangleMapObject.class)) {
                 Rectangle rect = object.getRectangle();
                 int startX = Math.max(0, (int) (rect.x / CELL_SIZE));
@@ -88,7 +90,7 @@ public class SandManager {
                 }
             }
 
-            // 2. POLYGONS (ADD THIS NEW BLOCK!)
+            // polygon tile
             for (PolygonMapObject object : collisionLayer.getObjects().getByType(PolygonMapObject.class)) {
                 Polygon polygon = object.getPolygon();
                 Rectangle bounds = polygon.getBoundingRectangle();
@@ -133,14 +135,11 @@ public class SandManager {
                 boolean isContainer = object.getProperties().get("isContainer", false, Boolean.class);
                 int id = object.getProperties().get("runeID", 0, Integer.class);
 
-                // Convert the polygon into a bounding rectangle so the spawner logic can read it
                 Rectangle r = object.getPolygon().getBoundingRectangle();
                 allRunes.add(new RuneData(rawType, isSpawner, isContainer, id, r.x, r.y, r.width, r.height));
             }
 
         }
-
-        // We MUST call these at the end of initLevel to populate the starting zones!
         spawnLayer(map, "sand_zones", ElementType.SAND);
         spawnLayer(map, "water_zones", ElementType.WATER);
         spawnLayer(map, "lava_zones", ElementType.LAVA);
@@ -245,29 +244,26 @@ public class SandManager {
         }
     }
 
-    private void createTexture() {
-        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(1f, 1f, 1f, 1f);
-        pixmap.fill();
-        whitePixel = new Texture(pixmap);
-        pixmap.dispose();
-    }
-
     public void render(SpriteBatch batch) {
-        if (sim == null || whitePixel == null) return;
+        if (sim == null || fluidPixmap == null) return;
+        fluidPixmap.setColor(0, 0, 0, 0); // Transparent
+        fluidPixmap.fill();
+
         for (int y = 0; y < simH; y++) {
             for (int x = 0; x < simW; x++) {
                 Element e = sim.getElement(x, y);
                 if (e != null && !(e instanceof EmptyCell)) {
-                    batch.setColor(e.color != null ? e.color : com.badlogic.gdx.graphics.Color.WHITE);
-                    batch.draw(whitePixel, x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    int rgba = com.badlogic.gdx.graphics.Color.rgba8888(e.color);
+                    fluidPixmap.drawPixel(x, simH - 1 - y, rgba);
                 }
             }
         }
-        batch.setColor(1, 1, 1, 1);
+        fluidTexture.draw(fluidPixmap, 0, 0);
+        batch.draw(fluidTexture, 0, 0, simW * CELL_SIZE, simH * CELL_SIZE);
     }
 
     public void dispose() {
-        if (whitePixel != null) whitePixel.dispose();
+        if (fluidPixmap != null) fluidPixmap.dispose();
+        if (fluidTexture != null) fluidTexture.dispose();
     }
 }

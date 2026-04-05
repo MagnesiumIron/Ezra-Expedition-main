@@ -46,14 +46,10 @@ public class mapManager {
             currentLevel.dispose();
         }
 
-        // --- FIXED: CLEAR GHOSTS ---
-        // We use allSigns and allRunes now. nearbyRunes was removed.
-        WorldContactListener.allSigns.clear();
-        WorldContactListener.allRunes.clear();
+        WorldContactListener.clearHashes();
         WorldContactListener.closestSign = null;
         WorldContactListener.closestRune = null;
 
-        // 1. Clear out old physics bodies
         Array<Body> bodies = new Array<>();
         world.getBodies(bodies);
         for (Body b : bodies) {
@@ -64,20 +60,20 @@ public class mapManager {
         }
 
         currentLevel = newLevel;
-        // 2. Load the level (This calls tilemapmanager.createBoundaries)
+        // load level
         currentLevel.loadLevel(world, player, sandManager);
         currentMapPath = newLevel.mapPath;
 
-        // 3. Update SandManager with the new map's data
+        // call sandmanager to update the tile map
         if (sandManager != null && currentLevel.map != null) {
             sandManager.initLevel(currentLevel.map);
         }
 
-        // 4. Reset Player Position
+        // reset player position
         player.b2body.setTransform(spawnX, spawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
 
-        // Reset physics contacts
+        // reset physics contacts
         WorldContactListener.footContacts = 0;
     }
 

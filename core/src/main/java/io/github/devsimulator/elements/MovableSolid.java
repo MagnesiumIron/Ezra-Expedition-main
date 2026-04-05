@@ -70,6 +70,11 @@ public abstract class MovableSolid extends Element {
             return true;
         }
 
+        // check reaction
+        if (sim.processAlchemy(this, neighbor)) {
+            return true; // if reacted, it will stop moving
+        }
+
         if (!neighbor.isSolid && this.density > neighbor.density) {
             swapPositions(sim, neighbor);
             return true;

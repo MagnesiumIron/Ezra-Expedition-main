@@ -2,12 +2,18 @@ package io.github.devsimulator.helper;
 
 import io.github.devsimulator.elements.Element;
 import io.github.devsimulator.elements.ElementType;
+import io.github.devsimulator.elements.Smoke;
+import io.github.devsimulator.controllers.SandManager;
+import java.util.HashMap;
 
 public class PhysicSim {
     //GRID
     private Element[][] matrix;
     private boolean[][] walls;
     private int width, height;
+
+    //ELEMENT ALCHEMY DICTIONARY VIA HASHMAP
+    private final HashMap<String, ElementType> alchemyRecipes = new HashMap<>();
 
     // OPTIMIZATION FOR EVERY PIXEL FRAME
     private final int CHUNK_SIZE = 32;
@@ -20,6 +26,11 @@ public class PhysicSim {
         this.height = height;
         this.matrix = new Element[width][height];
         this.walls = new boolean[width][height];
+
+        //Alchemy recipes or chemical reaction (MUST ALPHABETIZE)
+        alchemyRecipes.put("LAVA_WATER", ElementType.OBSIDIAN);
+        alchemyRecipes.put("DIRT_WATER", ElementType.MUD);
+        alchemyRecipes.put("LAVA_SAND", ElementType.GLASS);
 
         // Initialize Chunks
         // use integer division + 1 to ensure we cover the edges if not divisible
@@ -106,6 +117,43 @@ public class PhysicSim {
                 }
             }
         }
+    }
+
+    public boolean processAlchemy(Element e1, Element e2) {
+        if (e1 == null || e2 == null) return false;
+
+        String n1 = e1.getClass().getSimpleName().toUpperCase();
+        String n2 = e2.getClass().getSimpleName().toUpperCase();
+
+        // Alphabetize the string so WATER_LAVA and LAVA_WATER both output "LAVA_WATER"
+        String key = n1.compareTo(n2) < 0 ? n1 + "_" + n2 : n2 + "_" + n1;
+
+        ElementType resultType = alchemyRecipes.get(key);
+        if (resultType != null) {
+            int e1x = e1.x, e1y = e1.y;
+            int e2x = e2.x, e2y = e2.y;
+
+            // clear the old elements first
+            setElement(e1x, e1y, null);
+            setElement(e2x, e2y, null);
+            e1.freeToPool();
+            e2.freeToPool();
+
+            // spawn the reaction of the two elements
+            setElement(e1x, e1y, resultType.create(e1x, e1y));
+
+            // evaporate the second element into smoke/steam
+            Smoke smoke = SandManager.smokePool.obtain();
+            smoke.init(e2x, e2y);
+            setElement(e2x, e2y, smoke);
+
+            return true;
+        }
+        return false;
+    }
+
+    public ElementType getAlchemyRecipe(String key) {
+        return alchemyRecipes.get(key);
     }
 
     public void setElement(int x, int y, Element e) {

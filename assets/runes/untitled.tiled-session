@@ -23,15 +23,15 @@
             ],
             "expandedObjectLayers": [
                 14,
+                13,
                 23,
-                16,
-                13
+                16
             ],
             "scale": 2,
             "selectedLayer": 15,
             "viewCenter": {
-                "x": 912.75,
-                "y": 304
+                "x": 960.25,
+                "y": 192.25
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_drop_clean_shadow": {
@@ -65,16 +65,16 @@
                 2
             ],
             "expandedObjectLayers": [
-                9,
                 12,
+                9,
                 10,
                 16
             ],
             "scale": 0.75,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": 691.3333333333334,
-                "y": 277.99999999999994
+                "x": 607.3333333333333,
+                "y": 246.66666666666669
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#Tile_01": {
@@ -106,16 +106,16 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx": {
             "expandedObjectLayers": [
-                11,
                 3,
                 4,
-                20
+                20,
+                11
             ],
             "scale": 0.5,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": 573,
-                "y": 133
+                "x": 319,
+                "y": 191
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx#clouds": {
@@ -192,17 +192,17 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx": {
             "expandedObjectLayers": [
-                5,
                 3,
-                6,
                 4,
-                7
+                7,
+                5,
+                6
             ],
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 405.9999999999999,
-                "y": 160
+                "x": 319.3333333333333,
+                "y": 191.33333333333331
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {
@@ -213,15 +213,15 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx": {
             "expandedObjectLayers": [
-                6,
                 4,
-                8
+                8,
+                6
             ],
             "scale": 0.75,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 551.3333333333334,
-                "y": 541.3333333333334
+                "x": 640.6666666666666,
+                "y": 191.33333333333331
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#CastleTiles": {
@@ -239,15 +239,15 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx": {
             "expandedObjectLayers": [
+                4,
                 5,
-                6,
-                4
+                6
             ],
             "scale": 1,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 746.5,
-                "y": 237
+                "x": 319.5,
+                "y": 191.5
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#CastleTiles": {

@@ -46,9 +46,14 @@ public class Player {
     public final float MAX_HP = 100.0f;
     private final float SUFFOCATION_RATE = 6.0f;
 
-    // --- RUNE SYSTEM VARIABLES ---
+    /* --- RUNE SYSTEM VARIABLES ---
     public int assimilationCharges = 0;
-    public String storedElement = "NONE";
+    public String storedElement = "NONE";*/
+
+    //NEW RUNE SYSTEM: Can have Two Slots
+    public String[] elementSlots = {"NONE", "NONE"};
+    public int[] chargeSlots = {0, 0};
+    public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
 
     private boolean isGrounded = false;
     private boolean isSubmergedNormal = false;
@@ -93,7 +98,6 @@ public class Player {
         b2body = world.createBody(bdef);
 
         FixtureDef fdef = new FixtureDef();
-
         CircleShape shape = new CircleShape();
         shape.setRadius(9 / Main.PPM);
         fdef.shape = shape;
@@ -115,7 +119,6 @@ public class Player {
     private void playFootstep(float dt) {
         // no sound if it's within the element zone
         if (!isGrounded || isFloatingInElement) return;
-
         // will only play if the player is moving horizontally
         if (Math.abs(b2body.getLinearVelocity().x) < 0.1f) return;
 
@@ -203,7 +206,6 @@ public class Player {
                 float pitch  = 0.9f + (float)Math.random() * 0.3f;
                 if (Main.jumpSound != null) Main.jumpSound.play(volume, pitch, 0f);
             }
-
             b2body.setLinearVelocity(desiredX, desiredY);
         }
     }
@@ -234,7 +236,23 @@ public class Player {
         int simX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
         int simY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
 
-        // 1. Grounding Logic
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
+            activeSlot = 0;
+            Gdx.app.log("Player", "Switched to Slot 1: " + elementSlots[activeSlot]);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
+            activeSlot = 1;
+            Gdx.app.log("Player", "Switched to Slot 2: " + elementSlots[activeSlot]);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            if (!elementSlots[activeSlot].equals("NONE")) {
+                Gdx.app.log("Player", "Dropped " + elementSlots[activeSlot] + " from Slot " + (activeSlot + 1));
+                elementSlots[activeSlot] = "NONE";
+                chargeSlots[activeSlot] = 0;
+                currentState = State.NORMAL;
+            }
+        }
+
         boolean standingOnWall = WorldContactListener.footContacts > 0;
         Element feet = getSafeElement(sim, simX, simY - RADIUS_OFFSET);
         boolean standingOnElement = (feet != null && !(feet instanceof EmptyCell));
@@ -262,6 +280,8 @@ public class Player {
 
         if (currentState == State.NORMAL) {
             displaceTerrain(sim);
+        } else {
+            triggerPlayerAlchemy(sim);
         }
 
         Element center = getSafeElement(sim, simX, simY);
@@ -269,9 +289,7 @@ public class Player {
             applyElementEffects(center);
         }
 
-        // --- INTERACTION LOGIC ---
         Vector2 pixelPos = new Vector2(b2body.getPosition().x * Main.PPM, b2body.getPosition().y * Main.PPM);
-        // Constantly check for nearby signs and runes in EVERY frame
         WorldContactListener.sortSignsByDistance(pixelPos);
         WorldContactListener.sortRunesByDistance(pixelPos);
 
@@ -284,24 +302,20 @@ public class Player {
                 if (dist < 64f) {
                     interactedThisFrame = true;
                     return;
-                } else {
-                    Gdx.app.log("Player", "Too far from sign to read: " + dist);
                 }
             }
         }
 
-        // KEY 2: [E] for RUNES and TRANSFORMATION
+        // RUNES AND TRANSFORMATION INTERACTION
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             tilemapmanager.RuneData rune = WorldContactListener.closestRune;
             boolean processedRune = false;
-            // Calculate distance from Ezra's current pixel position to the rune
             float dist = -1;
             if (rune != null) {
                 dist = pixelPos.dst(rune.worldX * Main.PPM, rune.worldY * Main.PPM);
             }
 
-            // Only allow interaction if Ezra is within 64 pixels (2 tiles)
-            if (rune != null && dist < 64f && !rune.isContainer) {
+            if (rune != null && dist < 64f && !rune.isContainer && !rune.isConsumed) {
                 String type = rune.elementType != null ? rune.elementType.toUpperCase() : "NONE";
 
                 if (rune.isSpawner) {
@@ -315,38 +329,62 @@ public class Player {
                         if (match) {
                             sandMgr.toggleSpawner(rune);
                             processedRune = true;
-                        } else {
-                            Gdx.app.log("Player", "Wrong form! Need " + type + " (Dist: " + dist + ")");
                         }
                     }
+                    // Absorption
                 } else if (currentState == State.NORMAL) {
                     if (!type.equals("NONE")) {
-                        assimilationCharges = 3;
-                        storedElement = type;
-                        Gdx.app.log("Player", "Gained 3 " + storedElement + " charges!");
-                        processedRune = true;
+
+                        int existingSlot = -1;
+                        if (elementSlots[0].equals(type)) existingSlot = 0;
+                        else if (elementSlots[1].equals(type)) existingSlot = 1;
+
+                        if (existingSlot != -1) {
+                            chargeSlots[existingSlot] += 3;
+                            activeSlot = existingSlot;
+                            rune.isConsumed = true;
+                            processedRune = true;
+                        } else {
+                            int emptySlot = -1;
+                            if (elementSlots[activeSlot].equals("NONE")) emptySlot = activeSlot;
+                            else if (activeSlot == 0 && elementSlots[1].equals("NONE")) emptySlot = 1;
+                            else if (activeSlot == 1 && elementSlots[0].equals("NONE")) emptySlot = 0;
+
+                            if (emptySlot != -1) {
+                                chargeSlots[emptySlot] = 3;
+                                elementSlots[emptySlot] = type;
+                                activeSlot = emptySlot;
+                                rune.isConsumed = true;
+                                processedRune = true;
+                            }
+                        }
                     }
                 }
             }
 
-            // Handle Transformation if no rune was activated
-            // (This part stays the same so Ezra can still transform anywhere)
+            // Element Transformation
             if (!processedRune) {
-                if (assimilationCharges > 0 && currentState == State.NORMAL) {
-                    assimilationCharges--;
+                if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
+                    chargeSlots[activeSlot]--;
 
                     if (Main.assimilationIN != null) Main.assimilationIN.play(0.8f);
 
-                    switch (storedElement) {
-                        case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
-                        case "WATER" -> currentState = State.LIQUID_FORM;
-                        case "LAVA" -> currentState = State.LAVA_FORM;
+                    String currentActiveElement = elementSlots[activeSlot];
+
+                    if (currentActiveElement.equals("DIRT") || currentActiveElement.equals("SAND")) {
+                        currentState = State.DIRT_FORM;
+                    } else if (currentActiveElement.equals("WATER")) {
+                        currentState = State.LIQUID_FORM;
+                    } else if (currentActiveElement.equals("LAVA")) {
+                        currentState = State.LAVA_FORM;
                     }
                 } else if (currentState != State.NORMAL) {
                     if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
                         currentState = State.NORMAL;
-
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
+
+                        //if the element's charge has been exhausted, it will be dropped instantly
+                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
 
                     } else {
                         Vector2 vel = b2body.getLinearVelocity();
@@ -356,9 +394,66 @@ public class Player {
                         if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
                         currentState = State.NORMAL;
+
+                        //if the element's charge has been exhausted, it will be dropped instantly
+                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
                     }
                 }
             }
+        }
+    }
+
+    private void triggerPlayerAlchemy(PhysicSim sim) {
+        float worldX = b2body.getPosition().x * Main.PPM;
+        int gridX = (int) (worldX / CELL_SIZE);
+        int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
+        int radius = 12 / CELL_SIZE; // The size of Ezra's body
+
+        String myElement = "";
+        if (currentState == State.LIQUID_FORM) myElement = "WATER";
+        else if (currentState == State.LAVA_FORM) myElement = "LAVA";
+        else if (currentState == State.DIRT_FORM) myElement = "DIRT";
+
+        boolean reactedThisFrame = false;
+
+        for (int y = -radius; y <= radius; y++) {
+            for (int x = -radius; x <= radius; x++) {
+                if (x*x + y*y <= radius*radius) {
+                    int px = gridX + x;
+                    int py = gridY + y;
+                    Element e = getSafeElement(sim, px, py);
+
+                    if (e != null && !(e instanceof EmptyCell)) {
+                        String targetElement = e.getClass().getSimpleName().toUpperCase();
+
+                        // Alphabetize the combination to check the dictionary
+                        String key = myElement.compareTo(targetElement) < 0 ?
+                            myElement + "_" + targetElement :
+                            targetElement + "_" + myElement;
+
+                        ElementType resultType = sim.getAlchemyRecipe(key);
+
+                        if (resultType != null) {
+                            // Convert the terrain pixel if there is a chemical reaction
+                            sim.setElement(px, py, resultType.create(px, py));
+                            e.freeToPool();
+                            reactedThisFrame = true;
+
+                            // Spawn some steam/smoke off the reaction
+                            if (MathUtils.random(100) < 5) {
+                                Smoke smoke = SandManager.smokePool.obtain();
+                                smoke.init(px, py + 1);
+                                sim.setElement(px, py + 1, smoke);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // having a chemical reaction with the environment drains the player's energy quickly!
+        if (reactedThisFrame) {
+            assimilationMeter += 15.0f * Gdx.graphics.getDeltaTime();
         }
     }
 
@@ -369,8 +464,6 @@ public class Player {
 
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
             isFloatingInElement = true;
-            // If Ezra is moving, give him a tiny extra force to "push"
-            // through those invisible micro-corners of the sand pixels.
             Vector2 vel = b2body.getLinearVelocity();
             if (Math.abs(vel.x) > 0.1f) {
                 b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);

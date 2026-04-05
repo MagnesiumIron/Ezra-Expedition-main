@@ -3,6 +3,7 @@ package io.github.devsimulator;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -41,6 +42,7 @@ public class Main extends ApplicationAdapter {
 
     private Texture bgTexture, hpTexture, arTexture;
     private TextureRegion hpRegion, arRegion;
+    private Texture blankPixel;
     private pauseMenu pauseMenu;
     private io.github.devsimulator.helper.mainMenu mainMenu;
     private tutorialGUI tutorialGui;
@@ -48,15 +50,12 @@ public class Main extends ApplicationAdapter {
     public boolean isTutorialReading = false;
     private float stateTime = 0;
     private Texture hoverSheet;
-    private Animation<TextureRegion> hoverAnimation;
     private BitmapFont font;
 
-    // Physics Accumulator & UI
     private float accumulator = 0;
     private static final float TIME_STEP = 1/60f;
     private Matrix4 uiMatrix;
 
-    //Sounds & ambience
     public static Sound jumpSound;
     public static Music menuTheme;
     public static Music ambience;
@@ -66,7 +65,6 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
-
         jumpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/jump.wav"));
         assimilationIN  = Gdx.audio.newSound(Gdx.files.internal("sounds/assimilationIN.wav"));
         assimilationOUT = Gdx.audio.newSound(Gdx.files.internal("sounds/assimilationOUT.wav"));
@@ -109,9 +107,15 @@ public class Main extends ApplicationAdapter {
         hpRegion = new TextureRegion(hpTexture);
         arRegion = new TextureRegion(arTexture);
 
-        // Load Font and Tutorial GUI
+        Pixmap pix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pix.setColor(Color.WHITE);
+        pix.fill();
+        blankPixel = new Texture(pix);
+        pix.dispose();
+
         try {
             font = new BitmapFont(Gdx.files.internal("fantasyfontt.fnt"));
+            font.getRegion().getTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
             tutorialGui = new tutorialGUI(font);
         } catch (Exception e) {
             Gdx.app.error("Main", "Font/GUI initialization failed: " + e.getMessage());
@@ -119,14 +123,13 @@ public class Main extends ApplicationAdapter {
             tutorialGui = new tutorialGUI(font);
         }
 
-        // Load Hover Effect
         try {
             hoverSheet = new Texture("menubtn_hovereffect.png");
             int frameCount = hoverSheet.getWidth() / 14;
             TextureRegion[][] tmp = TextureRegion.split(hoverSheet, 14, 9);
             TextureRegion[] frames = new TextureRegion[frameCount];
             System.arraycopy(tmp[0], 0, frames, 0, frameCount);
-            hoverAnimation = new Animation<>(0.15f, frames);
+            Animation<TextureRegion> hoverAnimation = new Animation<>(0.15f, frames);
             hoverAnimation.setPlayMode(Animation.PlayMode.LOOP);
         } catch (Exception e) {
             Gdx.app.error("Main", "Hover animation failed: " + e.getMessage());
@@ -179,50 +182,45 @@ public class Main extends ApplicationAdapter {
             }
 
             AnimatedTiledMapTile.updateAnimationBaseTime();
-
-            // 1. Draw the actual Tiled map elements (This is what draws your configured runes!)
             mapMgr.renderBackground(camera);
 
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
-
-            // 2. Draw Cellular Automata
             sandManager.render(batch);
 
-            // 3. Draw Proximity UI Prompts (Hovering arrows/keys)
-            if (player != null && !isTutorialReading) {
-                Vector2 pPos = new Vector2(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
+            String currentPrompt = getString();
 
-                // Check Closest Sign
-                if (WorldContactListener.closestSign != null) {
-                    float distSign = pPos.dst(WorldContactListener.closestSign.worldX * PPM, WorldContactListener.closestSign.worldY * PPM);
-                    if (distSign < 64f) {
-                        drawInteractionPrompt(WorldContactListener.closestSign.worldX, WorldContactListener.closestSign.worldY,
-                            WorldContactListener.closestSign.width, WorldContactListener.closestSign.height);
+            if (font != null) {
+                for (tilemapmanager.RuneData rune : WorldContactListener.allRunes) {
+                    // ignore invisible spawners, we only need to add label for RUNE CHARGE
+                    if (!rune.isConsumed && !rune.elementType.equals("NONE") && !rune.isSpawner && !rune.isContainer) {
+
+                        float bobbingOffset = MathUtils.sin(stateTime * 4f) * 4f;
+                        float rX = (rune.worldX * PPM) + (rune.width * PPM / 2f);
+                        float rY = (rune.worldY * PPM) + (rune.height * PPM) + 25f + bobbingOffset;
+                        font.getData().setScale(0.5f); // Enlarged font
+
+                        String el = rune.elementType.toUpperCase();
+                        if (el.equals("WATER")) font.setColor(0.2f, 0.6f, 1.0f, 1f);
+                        else if (el.equals("LAVA")) font.setColor(1.0f, 0.4f, 0.0f, 1f);
+                        else font.setColor(0.6f, 0.4f, 0.2f, 1f);
+
+                        com.badlogic.gdx.graphics.g2d.GlyphLayout rLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, el);
+                        font.draw(batch, el, rX - (rLayout.width / 2f), rY);
                     }
                 }
-
-                // Check Closest Rune
-                if (WorldContactListener.closestRune != null) {
-                    float distRune = pPos.dst(WorldContactListener.closestRune.worldX * PPM, WorldContactListener.closestRune.worldY * PPM);
-                    if (distRune < 64f && !WorldContactListener.closestRune.isConsumed && !WorldContactListener.closestRune.isContainer) {
-                        drawInteractionPrompt(WorldContactListener.closestRune.worldX, WorldContactListener.closestRune.worldY,
-                            WorldContactListener.closestRune.width, WorldContactListener.closestRune.height);
-                    }
-                }
+                font.setColor(Color.WHITE);
+                font.getData().setScale(1.0f);
             }
 
-            // 4. Draw Player
             if (player != null) player.draw(batch);
             batch.end();
 
-            // 5. Draw HUD using Static Matrix
             batch.setProjectionMatrix(uiMatrix);
             batch.begin();
-            drawHUD();
+            drawHUD(currentPrompt);
             batch.end();
 
-            // 6. Draw Stages (Tutorials / Menus)
             if (isTutorialReading) {
                 tutorialGui.render(dt);
             }
@@ -230,36 +228,114 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    private void drawInteractionPrompt(float objWorldX, float objWorldY, float objWidth, float objHeight) {
-        if (hoverAnimation == null) return;
-        TextureRegion frame = hoverAnimation.getKeyFrame(stateTime, true);
-        float pulse = 0.8f + com.badlogic.gdx.math.MathUtils.sin(stateTime * 6f) * 0.2f;
-        float bobOffset = com.badlogic.gdx.math.MathUtils.sin(stateTime * 4f) * 4f;
+    private String getString() {
+        String currentPrompt = "";
+        if (player != null && !isTutorialReading) {
+            Vector2 pPos = new Vector2(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
+            if (WorldContactListener.closestSign != null) {
+                float distSign = pPos.dst(WorldContactListener.closestSign.worldX * PPM, WorldContactListener.closestSign.worldY * PPM);
+                if (distSign < 64f) currentPrompt = "Press [F] to read";
+            }
+            if (WorldContactListener.closestRune != null) {
+                float distRune = pPos.dst(WorldContactListener.closestRune.worldX * PPM, WorldContactListener.closestRune.worldY * PPM);
+                if (distRune < 64f && !WorldContactListener.closestRune.isConsumed && !WorldContactListener.closestRune.isContainer) {
 
-        batch.setColor(1f, 1f, 1f, pulse);
+                    tilemapmanager.RuneData rune = WorldContactListener.closestRune;
+                    if (rune.isSpawner) {
+                        currentPrompt = "Press [E] to trigger";
+                    } else {
+                        boolean hasType = player.elementSlots[0].equals(rune.elementType) || player.elementSlots[1].equals(rune.elementType);
+                        boolean isFull = !player.elementSlots[0].equals("NONE") && !player.elementSlots[1].equals("NONE");
 
-        float drawX = (objWorldX * PPM) + (objWidth * PPM / 2f) - (frame.getRegionWidth() / 2f);
-        float drawY = (objWorldY * PPM) + (objHeight * PPM) + 16f + bobOffset;
-
-        batch.draw(frame, drawX, drawY, frame.getRegionWidth() / 2f, frame.getRegionHeight() / 2f,
-            frame.getRegionWidth(), frame.getRegionHeight(), 1f, 1f, 180f);
-
-        batch.setColor(Color.WHITE);
+                        if (isFull && !hasType) {
+                            currentPrompt = "INVENTORY FULL [Press Q to Drop]";
+                        } else {
+                            currentPrompt = "Press [E] to absorb";
+                        }
+                    }
+                }
+            }
+        }
+        return currentPrompt;
     }
 
-    private void drawHUD() {
+    private void drawHUD(String currentPrompt) {
         if(player == null) return;
+        float hx = 20;
+        float hy = 380;
 
-        float x = 20;
-        float y = 380;
-
-        batch.draw(bgTexture, x, y);
+        batch.draw(bgTexture, hx, hy);
         float hpPercent = player.hp / player.MAX_HP;
         hpRegion.setRegion(0, 0, Math.round(154f * hpPercent), hpTexture.getHeight());
-        batch.draw(hpRegion, x + 101f, y + 43f);
+        batch.draw(hpRegion, hx + 101f, hy + 43f);
         float arPercent = player.getMassPercentage();
         arRegion.setRegion(0, 0, Math.round(154f * arPercent), arTexture.getHeight());
-        batch.draw(arRegion, x + 101f, y + 26f);
+        batch.draw(arRegion, hx + 101f, hy + 26f);
+
+        float startX = viewport.getWorldWidth() - 170f;
+        float topY = viewport.getWorldHeight() - 100f;
+
+        if (font != null && blankPixel != null) {
+            font.setColor(Color.LIGHT_GRAY);
+            font.getData().setScale(0.25f);
+            font.draw(batch, "[Q] TO DROP", startX + 15f, topY + 70f);
+            font.setColor(Color.WHITE);
+
+            for (int i = 0; i < 2; i++) {
+                String el = player.elementSlots[i].toUpperCase();
+                int charges = player.chargeSlots[i];
+                boolean isActive = (player.activeSlot == i);
+
+                float size = isActive ? 64f : 48f;
+                float x = startX + (i * 75f);
+                float y = topY - (isActive ? 8f : 0f);
+
+                batch.setColor(0.1f, 0.1f, 0.1f, 0.8f);
+                batch.draw(blankPixel, x, y, size, size);
+
+                Color elColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+                elColor = switch (el) {
+                    case "WATER" -> new Color(0.2f, 0.6f, 1.0f, 1f);
+                    case "LAVA" -> new Color(1.0f, 0.4f, 0.0f, 1f);
+                    case "DIRT", "SAND" -> new Color(0.6f, 0.4f, 0.2f, 1f);
+                    default -> elColor;
+                };
+
+                batch.setColor(elColor.r, elColor.g, elColor.b, 0.5f);
+                batch.draw(blankPixel, x + 4, y + 4, size - 8, size - 8);
+
+                batch.setColor(isActive ? Color.WHITE : Color.DARK_GRAY);
+                float borderThick = isActive ? 3f : 2f;
+                batch.draw(blankPixel, x, y, size, borderThick);
+                batch.draw(blankPixel, x, y + size - borderThick, size, borderThick);
+                batch.draw(blankPixel, x, y, borderThick, size);
+                batch.draw(blankPixel, x + size - borderThick, y, borderThick, size);
+
+                font.getData().setScale(0.3f);
+                font.setColor(isActive ? Color.WHITE : Color.LIGHT_GRAY);
+                font.draw(batch, String.valueOf(i + 1), x + 8, y + size - 8);
+
+                if (!el.equals("NONE")) {
+                    font.getData().setScale(isActive ? 0.6f : 0.4f);
+                    font.setColor(elColor);
+                    float numX = x + size - (isActive ? 22f : 16f);
+                    float numY = y + (isActive ? 24f : 18f);
+                    font.draw(batch, String.valueOf(charges), numX, numY);
+                }
+            }
+            batch.setColor(Color.WHITE);
+            font.getData().setScale(1.0f);
+        }
+
+        // center subtitle
+        if (currentPrompt != null && !currentPrompt.isEmpty() && font != null) {
+            font.getData().setScale(0.5f);
+            com.badlogic.gdx.graphics.g2d.GlyphLayout layout = new com.badlogic.gdx.graphics.g2d.GlyphLayout(font, currentPrompt);
+            float screenCenterX = viewport.getWorldWidth() / 2f;
+            float bottomY = 60f;
+            font.draw(batch, currentPrompt, screenCenterX - (layout.width / 2f), bottomY);
+            font.getData().setScale(1.0f);
+        }
     }
 
     private void updateCameraPosition(float dt) {
@@ -268,7 +344,6 @@ public class Main extends ApplicationAdapter {
         float targetY = player.b2body.getPosition().y * PPM;
 
         float lerpAlpha = 6.0f * dt;
-
         float newX = com.badlogic.gdx.math.MathUtils.lerp(camera.position.x, targetX, lerpAlpha);
         float newY = com.badlogic.gdx.math.MathUtils.lerp(camera.position.y, targetY, lerpAlpha);
 
@@ -311,5 +386,6 @@ public class Main extends ApplicationAdapter {
         if(menuTheme != null) menuTheme.dispose();
         if(ambience != null) ambience.dispose();
         if(level1Ambience != null) level1Ambience.dispose();
+        if(blankPixel != null) blankPixel.dispose();
     }
 }

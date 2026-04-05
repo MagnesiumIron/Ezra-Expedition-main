@@ -23,8 +23,16 @@ public enum ElementType {
             l.init(x, y);
             return l;
         }
+    },
+    OBSIDIAN {
+        @Override public Element create(int x, int y) { return new Obsidian(x, y); }
+    },
+    MUD {
+        @Override public Element create(int x, int y) { return new Mud(x, y); }
+    },
+    GLASS {
+        @Override public Element create(int x, int y) { return new Glass(x, y); }
     };
-
 
     public abstract Element create(int x, int y);
 }

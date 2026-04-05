@@ -13,7 +13,6 @@ import io.github.devsimulator.Main;
 
 public class tilemapmanager {
 
-    // --- DATA CLASSES ---
     public static class TransitionData {
         public String targetMap;
         public float spawnX, spawnY;
@@ -45,10 +44,10 @@ public class tilemapmanager {
         }
     }
 
-    // --- LAYER PARSING ---
     public static void createBoundaries(TiledMap map, World world) {
 
-        // 1. COLLISIONS LAYER
+        WorldContactListener.clearHashes();
+
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
             MapObjects objects = collisionLayer.getObjects();
@@ -77,7 +76,6 @@ public class tilemapmanager {
                 shape.dispose();
             }
 
-
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
 
@@ -100,7 +98,6 @@ public class tilemapmanager {
             }
         }
 
-        // 2. TRANSITIONS LAYER
         MapLayer transitionLayer = map.getLayers().get("transitions");
         if (transitionLayer != null) {
             for (MapObject object : transitionLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -127,7 +124,6 @@ public class tilemapmanager {
             }
         }
 
-        // 3. INTERACTABLES LAYER (Signs)
         MapLayer interactLayer = map.getLayers().get("interactables");
         if (interactLayer != null) {
             for (MapObject object : interactLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -155,14 +151,12 @@ public class tilemapmanager {
                 InteractableData data = new InteractableData(head, desc, hero, x, y, w, h);
                 body.createFixture(fdef).setUserData(data);
 
-                // ADD TO SORTING LIST
-                WorldContactListener.allSigns.add(data);
+                WorldContactListener.addSign(data);
 
                 shape.dispose();
             }
         }
 
-        // 4. RUNES LAYER
         MapLayer runeLayer = map.getLayers().get("runes");
         if (runeLayer != null) {
             for (MapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -191,8 +185,7 @@ public class tilemapmanager {
                 RuneData data = new RuneData(type, isSpawner, isContainer, runeID, worldX, worldY, w, h);
                 body.createFixture(fdef).setUserData(data);
 
-                // ADD TO SORTING LIST
-                WorldContactListener.allRunes.add(data);
+                WorldContactListener.addRune(data);
 
                 shape.dispose();
             }

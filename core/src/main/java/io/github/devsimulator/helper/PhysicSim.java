@@ -31,6 +31,7 @@ public class PhysicSim {
         alchemyRecipes.put("LAVA_WATER", ElementType.OBSIDIAN);
         alchemyRecipes.put("DIRT_WATER", ElementType.MUD);
         alchemyRecipes.put("LAVA_SAND", ElementType.GLASS);
+        alchemyRecipes.put("SAND_WATER", ElementType.MUD);
 
         // Initialize Chunks
         // use integer division + 1 to ensure we cover the edges if not divisible

@@ -54,6 +54,7 @@ public class Player {
     public String[] elementSlots = {"NONE", "NONE"};
     public int[] chargeSlots = {0, 0};
     public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
+    public String currentTransformElement = "NONE";
 
     private boolean isGrounded = false;
     private boolean isSubmergedNormal = false;
@@ -370,6 +371,7 @@ public class Player {
                     if (Main.assimilationIN != null) Main.assimilationIN.play(0.8f);
 
                     String currentActiveElement = elementSlots[activeSlot];
+                    currentTransformElement = currentActiveElement;
 
                     if (currentActiveElement.equals("DIRT") || currentActiveElement.equals("SAND")) {
                         currentState = State.DIRT_FORM;
@@ -381,8 +383,8 @@ public class Player {
                 } else if (currentState != State.NORMAL) {
                     if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
                         currentState = State.NORMAL;
+                        currentTransformElement = "NONE";
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
-
                         //if the element's charge has been exhausted, it will be dropped instantly
                         if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
 
@@ -394,6 +396,7 @@ public class Player {
                         if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
                         currentState = State.NORMAL;
+                        currentTransformElement = "NONE";
 
                         //if the element's charge has been exhausted, it will be dropped instantly
                         if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
@@ -407,12 +410,10 @@ public class Player {
         float worldX = b2body.getPosition().x * Main.PPM;
         int gridX = (int) (worldX / CELL_SIZE);
         int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
-        int radius = 12 / CELL_SIZE; // The size of Ezra's body
+        int radius = 12 / CELL_SIZE; // player size
 
-        String myElement = "";
-        if (currentState == State.LIQUID_FORM) myElement = "WATER";
-        else if (currentState == State.LAVA_FORM) myElement = "LAVA";
-        else if (currentState == State.DIRT_FORM) myElement = "DIRT";
+        String myElement = currentTransformElement.toUpperCase();
+        if (myElement.equals("NONE")) return;
 
         boolean reactedThisFrame = false;
 

@@ -14,7 +14,6 @@ import io.github.devsimulator.elements.*;
 import io.github.devsimulator.helper.PhysicSim;
 import io.github.devsimulator.helper.WorldContactListener;
 import io.github.devsimulator.helper.tilemapmanager;
-import io.github.devsimulator.helper.tilemapmanager.RuneData;
 
 public class Player {
 
@@ -56,6 +55,10 @@ public class Player {
     public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
     public String currentTransformElement = "NONE";
 
+    //COMBAT AND HAZARD Vars
+    public float invincibilityTimer = 0f;
+    public float stunTimer = 0f;
+
     private boolean isGrounded = false;
     private boolean isSubmergedNormal = false;
     private boolean isFloatingInElement = false;
@@ -68,8 +71,7 @@ public class Player {
     private final float RECOVERY_RATE = 10.0f;
 
     private float stepTimer = 0f;
-    public String currentSurface = "default";
-
+    //public String currentSurface = "default";
     private float lastYpos = 0f;
     private int verticalRestFrames = 0;
     private boolean hasUsedElementBoost = false;
@@ -138,6 +140,8 @@ public class Player {
         isSubmergedNormal = false;
         isFloatingInElement = false;
 
+        if (invincibilityTimer > 0) invincibilityTimer -= dt;
+
         if (isGrounded) coyoteTimer = coyoteTime;
         else coyoteTimer -= dt;
 
@@ -150,13 +154,17 @@ public class Player {
         }
 
         interactWithEnvironment(sandMgr);
-        handleMovement();
+        handleMovement(dt);
         applyVariableGravity();
-        updateStats(dt);
+        updateStats(dt, sandMgr);
         playFootstep(dt);
     }
 
-    private void handleMovement() {
+    private void handleMovement(float dt) {
+        if (stunTimer > 0) { //added a stun lock so if player is hit by a hazard it'll prevent their movement
+            stunTimer -= dt;
+            return;
+        }
         Vector2 vel = b2body.getLinearVelocity();
         float targetX = 0;
         float desiredY = vel.y;
@@ -196,18 +204,36 @@ public class Player {
                 coyoteTimer = 0;
                 jumpCounter = 1;
                 verticalRestFrames = 0;
-                float volume = 0.9f + (float)Math.random() * 0.2f;
-                float pitch  = 0.9f + (float)Math.random() * 0.3f;
-                if (Main.jumpSound != null) Main.jumpSound.play(volume, pitch, 0f);
+                if (Main.jumpSound != null) Main.jumpSound.play(0.9f + (float)Math.random() * 0.2f, 0.9f + (float)Math.random() * 0.3f, 0f);
             } else if (jumpBufferTimer > 0 && jumpCounter < MAX_JUMPS && coyoteTimer <= 0) {
                 desiredY = currentJumpSpeed;
                 jumpBufferTimer = 0;
                 jumpCounter++;
-                float volume = 0.9f + (float)Math.random() * 0.2f;
-                float pitch  = 0.9f + (float)Math.random() * 0.3f;
-                if (Main.jumpSound != null) Main.jumpSound.play(volume, pitch, 0f);
+                if (Main.jumpSound != null) Main.jumpSound.play(0.9f + (float)Math.random() * 0.2f, 0.9f + (float)Math.random() * 0.3f, 0f);
             }
             b2body.setLinearVelocity(desiredX, desiredY);
+        }
+    }
+        //NEW COMBAT SYSTEM
+    public void takeDamage(float amount, float knockbackDirX, SandManager sandMgr) {
+        if (invincibilityTimer > 0) return; // Immune to damage while flashing
+
+        hp -= amount;
+        invincibilityTimer = 1.5f; // 1.5 seconds of invincibility
+        stunTimer = 0.3f; // 0.3 seconds of losing keyboard control
+
+        // will go back to previous form if he takes damage
+        if (currentState != State.NORMAL) {
+            currentState = State.NORMAL;
+            currentTransformElement = "NONE";
+            if (Main.assimilationOUT != null) Main.assimilationOUT.play(1.2f, 0.7f, 0f); // Play high pitch error
+        }
+
+        if (hp <= 0) {
+            triggerDeath("Hazard", sandMgr);
+        } else {
+            // Apply physical knockback bounce
+            b2body.setLinearVelocity(knockbackDirX, JUMP_SPEED * 0.7f);
         }
     }
 
@@ -251,6 +277,7 @@ public class Player {
                 elementSlots[activeSlot] = "NONE";
                 chargeSlots[activeSlot] = 0;
                 currentState = State.NORMAL;
+                currentTransformElement = "NONE";
             }
         }
 
@@ -287,7 +314,7 @@ public class Player {
 
         Element center = getSafeElement(sim, simX, simY);
         if (center != null && !(center instanceof EmptyCell)) {
-            applyElementEffects(center);
+            applyElementEffects(center, sandMgr);
         }
 
         Vector2 pixelPos = new Vector2(b2body.getPosition().x * Main.PPM, b2body.getPosition().y * Main.PPM);
@@ -320,9 +347,8 @@ public class Player {
                 String type = rune.elementType != null ? rune.elementType.toUpperCase() : "NONE";
 
                 if (rune.isSpawner) {
-                    if (sandMgr.completedGeysers.contains(rune.runeID, false)) {
+                    if (!sandMgr.completedGeysers.contains(rune.runeID, false) && currentState != State.NORMAL) {
                         Gdx.app.log("Player", "This geyser is exhausted.");
-                    } else if (currentState != State.NORMAL) {
                         boolean match = (currentState == State.DIRT_FORM && (type.equals("DIRT") || type.equals("SAND"))) ||
                             (currentState == State.LIQUID_FORM && type.equals("WATER")) ||
                             (currentState == State.LAVA_FORM && type.equals("LAVA"));
@@ -368,17 +394,16 @@ public class Player {
                 if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
                     chargeSlots[activeSlot]--;
 
-                    if (Main.assimilationIN != null) Main.assimilationIN.play(0.8f);
-
+                    if (Main.assimilationIN != null) {
+                        Main.assimilationIN.play(0.8f);
+                    }
                     String currentActiveElement = elementSlots[activeSlot];
                     currentTransformElement = currentActiveElement;
 
-                    if (currentActiveElement.equals("DIRT") || currentActiveElement.equals("SAND")) {
-                        currentState = State.DIRT_FORM;
-                    } else if (currentActiveElement.equals("WATER")) {
-                        currentState = State.LIQUID_FORM;
-                    } else if (currentActiveElement.equals("LAVA")) {
-                        currentState = State.LAVA_FORM;
+                    switch (currentActiveElement) {
+                        case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
+                        case "WATER" -> currentState = State.LIQUID_FORM;
+                        case "LAVA" -> currentState = State.LAVA_FORM;
                     }
                 } else if (currentState != State.NORMAL) {
                     if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
@@ -387,7 +412,6 @@ public class Player {
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
                         //if the element's charge has been exhausted, it will be dropped instantly
                         if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
-
                     } else {
                         Vector2 vel = b2body.getLinearVelocity();
                         b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
@@ -397,7 +421,6 @@ public class Player {
                         if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
                         currentState = State.NORMAL;
                         currentTransformElement = "NONE";
-
                         //if the element's charge has been exhausted, it will be dropped instantly
                         if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
                     }
@@ -433,7 +456,6 @@ public class Player {
                             targetElement + "_" + myElement;
 
                         ElementType resultType = sim.getAlchemyRecipe(key);
-
                         if (resultType != null) {
                             // Convert the terrain pixel if there is a chemical reaction
                             sim.setElement(px, py, resultType.create(px, py));
@@ -451,14 +473,13 @@ public class Player {
                 }
             }
         }
-
         // having a chemical reaction with the environment drains the player's energy quickly!
         if (reactedThisFrame) {
             assimilationMeter += 15.0f * Gdx.graphics.getDeltaTime();
         }
     }
 
-    private void applyElementEffects(Element e) {
+    private void applyElementEffects(Element e, SandManager sandMgr) {
         // Reset flags
         isSubmergedNormal = false;
         isFloatingInElement = false;
@@ -466,28 +487,28 @@ public class Player {
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
             isFloatingInElement = true;
             Vector2 vel = b2body.getLinearVelocity();
-            if (Math.abs(vel.x) > 0.1f) {
-                b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
-            }
-        }
-        else if (currentState == State.LIQUID_FORM && e instanceof Water) {
+            if (Math.abs(vel.x) > 0.1f) b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
+        } else if (currentState == State.LIQUID_FORM && e instanceof Water) {
             isFloatingInElement = true;
         } else if (currentState == State.LAVA_FORM && e instanceof Lava) {
             isFloatingInElement = true;
-        }
-        else {
+        } else if (e instanceof Lava) { //HAZARD DETECTION
+            // If the player touches Lava and is NOT in their Lava Form, they'll get burned and knocked back
+            float knockbackDir = (b2body.getLinearVelocity().x > 0) ? -5f : 5f;
+            takeDamage(25f, knockbackDir, sandMgr);
+        } else {
             isSubmergedNormal = true;
         }
     }
 
-    private void updateStats(float dt) {
+    private void updateStats(float dt, SandManager sandMgr) {
         boolean isOverloaded = false;
         if (currentState != State.NORMAL) {
             assimilationMeter = Math.min(MAX_ASSIMILATION, assimilationMeter + (ASSIMILATION_RATE * dt));
             if (assimilationMeter >= MAX_ASSIMILATION) {
                 isOverloaded = true;
                 hp -= (SUFFOCATION_RATE * 0.5f) * dt;
-                if (hp <= 0) triggerDeath("Overload");
+                if (hp <= 0) triggerDeath("Overload", sandMgr);
             }
         } else {
             assimilationMeter = Math.max(0, assimilationMeter - (RECOVERY_RATE * dt));
@@ -495,8 +516,8 @@ public class Player {
 
         if (isSubmergedNormal) {
             hp -= SUFFOCATION_RATE * dt;
-            if (hp <= 0) triggerDeath("Suffocated / Drowned");
-        } else if (currentState == State.NORMAL && !isOverloaded) {
+            if (hp <= 0) triggerDeath("Suffocated / Drowned", sandMgr);
+        } else if (currentState == State.NORMAL && !isOverloaded && invincibilityTimer <= 0) {
             hp = Math.min(MAX_HP, hp + (RECOVERY_RATE * 0.5f * dt));
         }
     }
@@ -523,13 +544,32 @@ public class Player {
         }
     }
 
-    public void triggerDeath(String reason) {
+    public void triggerDeath(String reason, SandManager sandMgr) {
+        if (sandMgr != null && sandMgr.sim != null) {
+            int gridX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
+            int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
+
+            // 5x5 cloud of smoke will show where the player died
+            for(int i = -2; i <= 2; i++) {
+                for(int j = -2; j <= 2; j++) {
+                    if (sandMgr.sim.isEmpty(gridX + i, gridY + j)) {
+                        Smoke smoke = SandManager.smokePool.obtain();
+                        smoke.init(gridX + i, gridY + j);
+                        sandMgr.sim.setElement(gridX + i, gridY + j, smoke);
+                    }
+                }
+            }
+        }
+
         isAlive = false;
         b2body.setTransform(100/Main.PPM, 200/Main.PPM, 0);
         b2body.setLinearVelocity(0,0);
         assimilationMeter = 0;
         hp = MAX_HP;
         currentState = State.NORMAL;
+        currentTransformElement = "NONE";
+        invincibilityTimer = 0;
+        stunTimer = 0;
         isAlive = true;
     }
 
@@ -544,11 +584,15 @@ public class Player {
 
     public void draw(SpriteBatch batch) {
         if (texture == null) return;
-        switch (currentState) {
-            case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
-            case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
-            case LAVA_FORM: batch.setColor(1.0f, 0.4f, 0.0f, 1f); break;
-            default: batch.setColor(1, 1, 1, 1); break;
+        if (invincibilityTimer > 0 && (invincibilityTimer % 0.2f < 0.1f)) {
+            batch.setColor(1.0f, 0.2f, 0.2f, 0.6f);
+        } else {
+            switch (currentState) {
+                case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
+                case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
+                case LAVA_FORM: batch.setColor(1.0f, 0.4f, 0.0f, 1f); break;
+                default: batch.setColor(1, 1, 1, 1); break;
+            }
         }
         batch.draw(texture, b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f, b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f);
         batch.setColor(1, 1, 1, 1);

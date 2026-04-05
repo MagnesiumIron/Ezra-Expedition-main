@@ -2,8 +2,10 @@ package io.github.devsimulator.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.devsimulator.Main;
@@ -56,14 +58,17 @@ public class Player {
     private int jumpCounter = 0;
     private final int MAX_JUMPS = 2;
 
-    //added element jump midair lock
-    public boolean hasUsedElementBoost = false;
+    private final float ASSIMILATION_RATE = 15.0f;
+    private final float RECOVERY_RATE = 10.0f;
+
+    private float stepTimer = 0f;
+    public String currentSurface = "default";
 
     private float lastYpos = 0f;
     private int verticalRestFrames = 0;
+    private boolean hasUsedElementBoost = false;
 
-    private final float ASSIMILATION_RATE = 15.0f;
-    private final float RECOVERY_RATE = 10.0f;
+    public Sound[] stoneSteps;
 
     public Player(World world) {
         definePlayer(world);
@@ -72,6 +77,12 @@ public class Player {
         } catch (Exception e) {
             Gdx.app.error("Player", "Texture missing");
         }
+
+        stoneSteps = new Sound[] {
+            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step1.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step2.wav")),
+            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step3.wav"))
+        };
     }
 
     private void definePlayer(World world) {
@@ -101,6 +112,21 @@ public class Player {
 
         b2body.setGravityScale(GRAVITY_NORMAL);
     }
+    private void playFootstep(float dt) {
+        // no sound if it's within the element zone
+        if (!isGrounded || isFloatingInElement) return;
+
+        // will only play if the player is moving horizontally
+        if (Math.abs(b2body.getLinearVelocity().x) < 0.1f) return;
+
+        stepTimer += dt;
+        if (stepTimer >= 0.35f) { //timing between the steps
+            stepTimer = 0;
+            // Play a random stone step sound
+            int index = MathUtils.random(0, stoneSteps.length - 1);
+            stoneSteps[index].play(0.3f);
+        }
+    }
 
     public void update(float dt, SandManager sandMgr) {
         if (!isAlive || sandMgr == null) return;
@@ -123,6 +149,7 @@ public class Player {
         handleMovement();
         applyVariableGravity();
         updateStats(dt);
+        playFootstep(dt);
     }
 
     private void handleMovement() {
@@ -165,15 +192,18 @@ public class Player {
                 coyoteTimer = 0;
                 jumpCounter = 1;
                 verticalRestFrames = 0;
+                float volume = 0.9f + (float)Math.random() * 0.2f;
+                float pitch  = 0.9f + (float)Math.random() * 0.3f;
+                if (Main.jumpSound != null) Main.jumpSound.play(volume, pitch, 0f);
             } else if (jumpBufferTimer > 0 && jumpCounter < MAX_JUMPS && coyoteTimer <= 0) {
-                if (currentState == State.NORMAL) {
-                    desiredY = currentJumpSpeed;
-                    jumpBufferTimer = 0;
-                    jumpCounter++;
-                } else {
-                    jumpBufferTimer = 0; //cancels normal double jump in Normal State
-                }
+                desiredY = currentJumpSpeed;
+                jumpBufferTimer = 0;
+                jumpCounter++;
+                float volume = 0.9f + (float)Math.random() * 0.2f;
+                float pitch  = 0.9f + (float)Math.random() * 0.3f;
+                if (Main.jumpSound != null) Main.jumpSound.play(volume, pitch, 0f);
             }
+
             b2body.setLinearVelocity(desiredX, desiredY);
         }
     }
@@ -304,24 +334,31 @@ public class Player {
             if (!processedRune) {
                 if (assimilationCharges > 0 && currentState == State.NORMAL) {
                     assimilationCharges--;
-                    if (storedElement.equals("DIRT") || storedElement.equals("SAND")) {
-                        currentState = State.DIRT_FORM;
-                    } else if (storedElement.equals("WATER")) {
-                        currentState = State.LIQUID_FORM;
-                    } else if (storedElement.equals("LAVA")) {
-                        currentState = State.LAVA_FORM; // Or whatever state you want Lava to use
+
+                    if (Main.assimilationIN != null) Main.assimilationIN.play(0.8f);
+
+                    switch (storedElement) {
+                        case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
+                        case "WATER" -> currentState = State.LIQUID_FORM;
+                        case "LAVA" -> currentState = State.LAVA_FORM;
                     }
                 } else if (currentState != State.NORMAL) {
                     if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
                         currentState = State.NORMAL;
+
+                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
+
                     } else {
                         Vector2 vel = b2body.getLinearVelocity();
                         b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
                         hasUsedElementBoost = true;
+
+                        if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
+                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
+                        currentState = State.NORMAL;
                     }
                 }
             }
-
         }
     }
 

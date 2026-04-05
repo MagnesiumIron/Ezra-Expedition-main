@@ -1,6 +1,8 @@
 package io.github.devsimulator;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -54,8 +56,35 @@ public class Main extends ApplicationAdapter {
     private static final float TIME_STEP = 1/60f;
     private Matrix4 uiMatrix;
 
+    //Sounds & ambience
+    public static Sound jumpSound;
+    public static Music menuTheme;
+    public static Music ambience;
+    public static Sound assimilationIN;
+    public static Sound assimilationOUT;
+    public static Music level1Ambience;
+
     @Override
     public void create() {
+
+        jumpSound = Gdx.audio.newSound(Gdx.files.internal("sounds/jump.wav"));
+        assimilationIN  = Gdx.audio.newSound(Gdx.files.internal("sounds/assimilationIN.wav"));
+        assimilationOUT = Gdx.audio.newSound(Gdx.files.internal("sounds/assimilationOUT.wav"));
+
+        menuTheme = Gdx.audio.newMusic(Gdx.files.internal("music/menu_theme.mp3"));
+        menuTheme.setLooping(true);
+        menuTheme.setVolume(0.4f);
+
+        ambience = Gdx.audio.newMusic(Gdx.files.internal("music/caveambience.mp3"));
+        ambience.setLooping(true);
+        ambience.setVolume(0.4f);
+
+        level1Ambience = Gdx.audio.newMusic(Gdx.files.internal("music/level1ambience.mp3"));
+        level1Ambience.setLooping(true);
+        level1Ambience.setVolume(0.3f);
+
+        menuTheme.play();
+
         batch = new SpriteBatch();
         world = new World(new Vector2(0, -9.8f), true);
         world.setContactListener(new WorldContactListener());
@@ -276,5 +305,11 @@ public class Main extends ApplicationAdapter {
         if(tutorialGui != null) tutorialGui.dispose();
         if(hoverSheet != null) hoverSheet.dispose();
         if(font != null) font.dispose();
+        if(jumpSound != null) jumpSound.dispose();
+        if(assimilationIN != null) assimilationIN.dispose();
+        if(assimilationOUT != null) assimilationOUT.dispose();
+        if(menuTheme != null) menuTheme.dispose();
+        if(ambience != null) ambience.dispose();
+        if(level1Ambience != null) level1Ambience.dispose();
     }
 }

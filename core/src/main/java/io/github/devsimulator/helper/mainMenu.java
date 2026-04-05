@@ -28,7 +28,7 @@ public class mainMenu {
     private BitmapFont font;
     private Player player;
 
-    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet;
+    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet, menuBg;
     private Animation<TextureRegion> hoverAnimation;
     private float stateTime = 0f;
     private Actor hoveredButton = null;
@@ -45,6 +45,7 @@ public class mainMenu {
         stage = new Stage(new FitViewport(360, 240));
         font = new BitmapFont(Gdx.files.internal("fantasyfontt.fnt"));
 
+        menuBg = new Texture(Gdx.files.internal("bg_menu.png"));
         continueTex = new Texture("menubtn_continue.png");
         saveLoadTex = new Texture("menubtn_saveload.png");
         withdrawTex = new Texture("menubtn_withdraw.png");
@@ -127,12 +128,6 @@ public class mainMenu {
         mainTable = new Table();
         mainTable.setFillParent(true);
 
-        Pixmap bgPix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        bgPix.setColor(0.1f, 0.1f, 0.15f, 1f);
-        bgPix.fill();
-        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture(bgPix))));
-        bgPix.dispose();
-
         title = new Label("EZRA'S EXPEDITION", new Label.LabelStyle(font, Color.WHITE));
 
         mainTable.add(title).padBottom(30).row();
@@ -174,7 +169,20 @@ public class mainMenu {
 
     public void render(float dt) {
         if (!isStarted) {
+
             stage.act(dt);
+
+            stage.getViewport().apply();
+
+            stage.getBatch().begin();
+            stage.getBatch().draw(
+                menuBg,
+                0, 0,
+                stage.getViewport().getWorldWidth(),
+                stage.getViewport().getWorldHeight()
+            );
+            stage.getBatch().end();
+
             stage.draw();
 
             if (hoveredButton != null && mainTable.isVisible()) {
@@ -211,6 +219,7 @@ public class mainMenu {
         saveLoadTex.dispose();
         withdrawTex.dispose();
         hoverSheet.dispose();
+        menuBg.dispose();
         if(saveManager != null) saveManager.dispose();
     }
 

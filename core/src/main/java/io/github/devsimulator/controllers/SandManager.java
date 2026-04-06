@@ -6,14 +6,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.PolygonMapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Pool;
 import io.github.devsimulator.elements.*;
 import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.PhysicSim;
@@ -22,8 +19,7 @@ import io.github.devsimulator.Main;
 
 public class SandManager {
     public PhysicSim sim;
-    private Pixmap fluidPixmap;
-    private Texture fluidTexture;
+    private Texture whitePixel;
     private int simW;
     private int simH;
     private final float CELL_SIZE = 4f;
@@ -34,28 +30,11 @@ public class SandManager {
 
     public Player player;
 
-    public static final Pool<Sand> sandPool = new Pool<Sand>(2000, 15000) {
-        @Override protected Sand newObject() { return new Sand(-1, -1); }
-    };
-
-    public static final Pool<Water> waterPool = new Pool<Water>(2000, 15000) {
-        @Override protected Water newObject() { return new Water(-1, -1); }
-    };
-
-    public static final Pool<Lava> lavaPool = new Pool<Lava>(2000, 15000) {
-        @Override protected Lava newObject() { return new Lava(-1, -1); }
-    };
-
-    public static final Pool<Smoke> smokePool = new Pool<Smoke>(2000, 15000) {
-        @Override protected Smoke newObject() { return new Smoke(-1, -1); }
-    };
+    public SandManager() {
+        createTexture();
+    }
 
     public void initLevel(TiledMap map) {
-        //Recycle the old map first before creating a new one
-        if (sim != null) {
-            sim.clearToPool();
-        }
-
         int tilesX = map.getProperties().get("width", Integer.class);
         int tilesY = map.getProperties().get("height", Integer.class);
         int tileW = map.getProperties().get("tilewidth", Integer.class);
@@ -65,19 +44,11 @@ public class SandManager {
         simH = (int) ((tilesY * tileH) / CELL_SIZE);
         sim = new PhysicSim(simW, simH);
 
-        if (fluidPixmap != null) fluidPixmap.dispose();
-        if (fluidTexture != null) fluidTexture.dispose();
-        fluidPixmap = new Pixmap(simW, simH, Pixmap.Format.RGBA8888);
-        fluidPixmap.setBlending(Pixmap.Blending.None);
-        fluidTexture = new Texture(simW, simH, Pixmap.Format.RGBA8888);
-
         // Initialize Collisions
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
-
-            // Rectangle for tile
-            for (RectangleMapObject object : collisionLayer.getObjects().getByType(RectangleMapObject.class)) {
-                Rectangle rect = object.getRectangle();
+            for (MapObject object : collisionLayer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 int startX = Math.max(0, (int) (rect.x / CELL_SIZE));
                 int endX = Math.min(simW, (int) Math.ceil((rect.x + rect.width) / CELL_SIZE));
                 int startY = Math.max(0, (int) (rect.y / CELL_SIZE));
@@ -86,27 +57,6 @@ public class SandManager {
                 for (int x = startX; x < endX; x++) {
                     for (int y = startY; y < endY; y++) {
                         sim.setWall(x, y, true);
-                    }
-                }
-            }
-
-            // polygon tile
-            for (PolygonMapObject object : collisionLayer.getObjects().getByType(PolygonMapObject.class)) {
-                Polygon polygon = object.getPolygon();
-                Rectangle bounds = polygon.getBoundingRectangle();
-
-                int startX = Math.max(0, (int) (bounds.x / CELL_SIZE));
-                int endX = Math.min(simW, (int) Math.ceil((bounds.x + bounds.width) / CELL_SIZE));
-                int startY = Math.max(0, (int) (bounds.y / CELL_SIZE));
-                int endY = Math.min(simH, (int) Math.ceil((bounds.y + bounds.height) / CELL_SIZE));
-
-                for (int x = startX; x < endX; x++) {
-                    for (int y = startY; y < endY; y++) {
-                        float pixelX = (x * CELL_SIZE) + (CELL_SIZE / 2f);
-                        float pixelY = (y * CELL_SIZE) + (CELL_SIZE / 2f);
-                        if (polygon.contains(pixelX, pixelY)) {
-                            sim.setWall(x, y, true);
-                        }
                     }
                 }
             }
@@ -119,30 +69,21 @@ public class SandManager {
         // Initialize Runes
         MapLayer runeLayer = map.getLayers().get("runes");
         if (runeLayer != null) {
-            for (RectangleMapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
+            for (MapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
                 String rawType = object.getProperties().get("elementType", "SAND", String.class).toUpperCase().trim();
                 boolean isSpawner = object.getProperties().get("isSpawner", false, Boolean.class);
                 boolean isContainer = object.getProperties().get("isContainer", false, Boolean.class);
                 int id = object.getProperties().get("runeID", 0, Integer.class);
 
-                Rectangle r = object.getRectangle();
+                Rectangle r = ((RectangleMapObject) object).getRectangle();
                 allRunes.add(new RuneData(rawType, isSpawner, isContainer, id, r.x, r.y, r.width, r.height));
             }
-
-            for (PolygonMapObject object : runeLayer.getObjects().getByType(PolygonMapObject.class)) {
-                String rawType = object.getProperties().get("elementType", "SAND", String.class).toUpperCase().trim();
-                boolean isSpawner = object.getProperties().get("isSpawner", false, Boolean.class);
-                boolean isContainer = object.getProperties().get("isContainer", false, Boolean.class);
-                int id = object.getProperties().get("runeID", 0, Integer.class);
-
-                Rectangle r = object.getPolygon().getBoundingRectangle();
-                allRunes.add(new RuneData(rawType, isSpawner, isContainer, id, r.x, r.y, r.width, r.height));
-            }
-
         }
+
+        // --- THE MISSING RENDER FIX ---
+        // We MUST call these at the end of initLevel to populate the starting zones!
         spawnLayer(map, "sand_zones", ElementType.SAND);
         spawnLayer(map, "water_zones", ElementType.WATER);
-        spawnLayer(map, "lava_zones", ElementType.LAVA);
 
         Gdx.app.log("SandManager", "Level Initialized: Zones spawned.");
     }
@@ -179,14 +120,7 @@ public class SandManager {
             int botY = (int) (container.worldY / CELL_SIZE) + 1;
             int topY = (int) ((container.worldY + container.height) / CELL_SIZE);
 
-            ElementType type;
-            if (container.elementType.equalsIgnoreCase("WATER")) {
-                type = ElementType.WATER;
-            } else if (container.elementType.equalsIgnoreCase("LAVA")) {
-                type = ElementType.LAVA;
-            } else {
-                type = ElementType.SAND;
-            }
+            ElementType type = container.elementType.equalsIgnoreCase("WATER") ? ElementType.WATER : ElementType.SAND;
 
             int count = 2;
             boolean spawnedAtLeastOne = false;
@@ -229,41 +163,47 @@ public class SandManager {
     }
 
     private Element createElement(int x, int y, ElementType type) {
-        if (type == null) return null;
-        return type.create(x, y);
+        switch (type) {
+            case SAND:  return new Sand(x, y);
+            case WATER: return new Water(x, y);
+            default:    return null;
+        }
     }
 
     public void spawnLayer(TiledMap map, String layerName, ElementType type) {
         MapLayer layer = map.getLayers().get(layerName);
         if (layer != null) {
-            for (RectangleMapObject object : layer.getObjects().getByType(RectangleMapObject.class)) {
-                Rectangle rect = object.getRectangle();
+            for (MapObject object : layer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 sim.fillArea((int)(rect.x/CELL_SIZE), (int)(rect.y/CELL_SIZE),
                     (int)(rect.width/CELL_SIZE), (int)(rect.height/CELL_SIZE), type);
             }
         }
     }
 
-    public void render(SpriteBatch batch) {
-        if (sim == null || fluidPixmap == null) return;
-        fluidPixmap.setColor(0, 0, 0, 0); // Transparent
-        fluidPixmap.fill();
+    private void createTexture() {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(1f, 1f, 1f, 1f);
+        pixmap.fill();
+        whitePixel = new Texture(pixmap);
+        pixmap.dispose();
+    }
 
+    public void render(SpriteBatch batch) {
+        if (sim == null || whitePixel == null) return;
         for (int y = 0; y < simH; y++) {
             for (int x = 0; x < simW; x++) {
                 Element e = sim.getElement(x, y);
                 if (e != null && !(e instanceof EmptyCell)) {
-                    int rgba = com.badlogic.gdx.graphics.Color.rgba8888(e.color);
-                    fluidPixmap.drawPixel(x, simH - 1 - y, rgba);
+                    batch.setColor(e.color != null ? e.color : com.badlogic.gdx.graphics.Color.WHITE);
+                    batch.draw(whitePixel, x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
         }
-        fluidTexture.draw(fluidPixmap, 0, 0);
-        batch.draw(fluidTexture, 0, 0, simW * CELL_SIZE, simH * CELL_SIZE);
+        batch.setColor(1, 1, 1, 1);
     }
 
     public void dispose() {
-        if (fluidPixmap != null) fluidPixmap.dispose();
-        if (fluidTexture != null) fluidTexture.dispose();
+        if (whitePixel != null) whitePixel.dispose();
     }
 }

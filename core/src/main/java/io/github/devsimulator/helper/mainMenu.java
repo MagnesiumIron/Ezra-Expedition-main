@@ -27,7 +27,7 @@ public class mainMenu {
     private BitmapFont font;
     private Player player;
 
-    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet, menuBg;
+    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet;
     private Animation<TextureRegion> hoverAnimation;
     private float stateTime = 0f;
     private Actor hoveredButton = null;
@@ -41,16 +41,16 @@ public class mainMenu {
         stage = new Stage(new FitViewport(360, 240));
         font = new BitmapFont(Gdx.files.internal("fantasyfontt.fnt"));
 
-        menuBg = new Texture(Gdx.files.internal("bg_menu.png"));
         continueTex = new Texture("menubtn_continue.png");
         saveLoadTex = new Texture("menubtn_saveload.png");
         withdrawTex = new Texture("menubtn_withdraw.png");
+
         hoverSheet = new Texture("menubtn_hovereffect.png");
         int frameCount = hoverSheet.getWidth() / 14;
         TextureRegion[][] tmp = TextureRegion.split(hoverSheet, 14, 9);
         TextureRegion[] frames = new TextureRegion[frameCount];
-        System.arraycopy(tmp[0], 0, frames, 0, frameCount);
-        hoverAnimation = new Animation<>(0.15f, frames);
+        for (int i = 0; i < frameCount; i++) frames[i] = tmp[0][i];
+        hoverAnimation = new Animation<TextureRegion>(0.15f, frames);
         hoverAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
         ImageButton continueBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(continueTex)));
@@ -104,7 +104,11 @@ public class mainMenu {
         mainTable = new Table();
         mainTable.setFillParent(true);
 
-        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(menuBg)));
+        Pixmap bgPix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        bgPix.setColor(0.1f, 0.1f, 0.15f, 1f);
+        bgPix.fill();
+        mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture(bgPix))));
+        bgPix.dispose();
 
         title = new Label("EZRA'S EXPEDITION", new Label.LabelStyle(font, Color.WHITE));
 
@@ -132,13 +136,7 @@ public class mainMenu {
         player.hp = player.MAX_HP;
         player.assimilationMeter = 0;
 
-        //Wipe all the data if new game is pressed
-        player.elementSlots[0] = "NONE";
-        player.elementSlots[1] = "NONE";
-        player.chargeSlots[0] = 0;
-        player.chargeSlots[1] = 0;
-        player.activeSlot = 0;
-
+        // FIXED: Tell the menu to start the game at the Prologue
         io.github.devsimulator.helper.WorldContactListener.pendingTransition =
             new io.github.devsimulator.helper.tilemapmanager.TransitionData("prologuespawn.tmx", spawnX, spawnY);
 
@@ -170,7 +168,6 @@ public class mainMenu {
         saveLoadTex.dispose();
         withdrawTex.dispose();
         hoverSheet.dispose();
-        menuBg.dispose();
         if(saveManager != null) saveManager.dispose();
     }
 }

@@ -2,10 +2,8 @@ package io.github.devsimulator.entities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import io.github.devsimulator.Main;
@@ -14,6 +12,7 @@ import io.github.devsimulator.elements.*;
 import io.github.devsimulator.helper.PhysicSim;
 import io.github.devsimulator.helper.WorldContactListener;
 import io.github.devsimulator.helper.tilemapmanager;
+import io.github.devsimulator.helper.tilemapmanager.RuneData;
 
 public class Player {
 
@@ -31,7 +30,7 @@ public class Player {
     private float coyoteTimer = 0;
     private float jumpBufferTimer = 0;
 
-    public enum State { NORMAL, DIRT_FORM, LIQUID_FORM, GAS_FORM, LAVA_FORM }
+    public enum State { NORMAL, DIRT_FORM, LIQUID_FORM, GAS_FORM }
 
     public Body b2body;
     private Texture texture;
@@ -43,21 +42,11 @@ public class Player {
 
     public float hp = 100.0f;
     public final float MAX_HP = 100.0f;
-    private final float SUFFOCATION_RATE = 6.0f;
+    private final float SUFFOCATION_RATE = 25.0f;
 
-    /* --- RUNE SYSTEM VARIABLES ---
+    // --- RUNE SYSTEM VARIABLES ---
     public int assimilationCharges = 0;
-    public String storedElement = "NONE";*/
-
-    //NEW RUNE SYSTEM: Can have Two Slots
-    public String[] elementSlots = {"NONE", "NONE"};
-    public int[] chargeSlots = {0, 0};
-    public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
-    public String currentTransformElement = "NONE";
-
-    //COMBAT AND HAZARD Vars
-    public float invincibilityTimer = 0f;
-    public float stunTimer = 0f;
+    public String storedElement = "NONE";
 
     private boolean isGrounded = false;
     private boolean isSubmergedNormal = false;
@@ -70,14 +59,6 @@ public class Player {
     private final float ASSIMILATION_RATE = 15.0f;
     private final float RECOVERY_RATE = 10.0f;
 
-    private float stepTimer = 0f;
-    //public String currentSurface = "default";
-    private float lastYpos = 0f;
-    private int verticalRestFrames = 0;
-    private boolean hasUsedElementBoost = false;
-
-    public Sound[] stoneSteps;
-
     public Player(World world) {
         definePlayer(world);
         try {
@@ -85,12 +66,6 @@ public class Player {
         } catch (Exception e) {
             Gdx.app.error("Player", "Texture missing");
         }
-
-        stoneSteps = new Sound[] {
-            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step1.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step2.wav")),
-            Gdx.audio.newSound(Gdx.files.internal("sounds/stone_step3.wav"))
-        };
     }
 
     private void definePlayer(World world) {
@@ -101,6 +76,7 @@ public class Player {
         b2body = world.createBody(bdef);
 
         FixtureDef fdef = new FixtureDef();
+
         CircleShape shape = new CircleShape();
         shape.setRadius(9 / Main.PPM);
         fdef.shape = shape;
@@ -119,28 +95,12 @@ public class Player {
 
         b2body.setGravityScale(GRAVITY_NORMAL);
     }
-    private void playFootstep(float dt) {
-        // no sound if it's within the element zone
-        if (!isGrounded || isFloatingInElement) return;
-        // will only play if the player is moving horizontally
-        if (Math.abs(b2body.getLinearVelocity().x) < 0.1f) return;
-
-        stepTimer += dt;
-        if (stepTimer >= 0.35f) { //timing between the steps
-            stepTimer = 0;
-            // Play a random stone step sound
-            int index = MathUtils.random(0, stoneSteps.length - 1);
-            stoneSteps[index].play(0.3f);
-        }
-    }
 
     public void update(float dt, SandManager sandMgr) {
         if (!isAlive || sandMgr == null) return;
 
         isSubmergedNormal = false;
         isFloatingInElement = false;
-
-        if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
         if (isGrounded) coyoteTimer = coyoteTime;
         else coyoteTimer -= dt;
@@ -154,17 +114,12 @@ public class Player {
         }
 
         interactWithEnvironment(sandMgr);
-        handleMovement(dt);
+        handleMovement();
         applyVariableGravity();
-        updateStats(dt, sandMgr);
-        playFootstep(dt);
+        updateStats(dt);
     }
 
-    private void handleMovement(float dt) {
-        if (stunTimer > 0) { //added a stun lock so if player is hit by a hazard it'll prevent their movement
-            stunTimer -= dt;
-            return;
-        }
+    private void handleMovement() {
         Vector2 vel = b2body.getLinearVelocity();
         float targetX = 0;
         float desiredY = vel.y;
@@ -203,37 +158,13 @@ public class Player {
                 jumpBufferTimer = 0;
                 coyoteTimer = 0;
                 jumpCounter = 1;
-                verticalRestFrames = 0;
-                if (Main.jumpSound != null) Main.jumpSound.play(0.9f + (float)Math.random() * 0.2f, 0.9f + (float)Math.random() * 0.3f, 0f);
             } else if (jumpBufferTimer > 0 && jumpCounter < MAX_JUMPS && coyoteTimer <= 0) {
                 desiredY = currentJumpSpeed;
                 jumpBufferTimer = 0;
                 jumpCounter++;
-                if (Main.jumpSound != null) Main.jumpSound.play(0.9f + (float)Math.random() * 0.2f, 0.9f + (float)Math.random() * 0.3f, 0f);
             }
+
             b2body.setLinearVelocity(desiredX, desiredY);
-        }
-    }
-        //NEW COMBAT SYSTEM
-    public void takeDamage(float amount, float knockbackDirX, SandManager sandMgr) {
-        if (invincibilityTimer > 0) return; // Immune to damage while flashing
-
-        hp -= amount;
-        invincibilityTimer = 1.5f; // 1.5 seconds of invincibility
-        stunTimer = 0.3f; // 0.3 seconds of losing keyboard control
-
-        // will go back to previous form if he takes damage
-        if (currentState != State.NORMAL) {
-            currentState = State.NORMAL;
-            currentTransformElement = "NONE";
-            if (Main.assimilationOUT != null) Main.assimilationOUT.play(1.2f, 0.7f, 0f); // Play high pitch error
-        }
-
-        if (hp <= 0) {
-            triggerDeath("Hazard", sandMgr);
-        } else {
-            // Apply physical knockback bounce
-            b2body.setLinearVelocity(knockbackDirX, JUMP_SPEED * 0.7f);
         }
     }
 
@@ -263,252 +194,144 @@ public class Player {
         int simX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
         int simY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
-            activeSlot = 0;
-            Gdx.app.log("Player", "Switched to Slot 1: " + elementSlots[activeSlot]);
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
-            activeSlot = 1;
-            Gdx.app.log("Player", "Switched to Slot 2: " + elementSlots[activeSlot]);
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
-            if (!elementSlots[activeSlot].equals("NONE")) {
-                Gdx.app.log("Player", "Dropped " + elementSlots[activeSlot] + " from Slot " + (activeSlot + 1));
-                elementSlots[activeSlot] = "NONE";
-                chargeSlots[activeSlot] = 0;
-                currentState = State.NORMAL;
-                currentTransformElement = "NONE";
-            }
-        }
-
+        // 1. Grounding Logic
         boolean standingOnWall = WorldContactListener.footContacts > 0;
         Element feet = getSafeElement(sim, simX, simY - RADIUS_OFFSET);
         boolean standingOnElement = (feet != null && !(feet instanceof EmptyCell));
 
-        float currentY = b2body.getPosition().y;
-        if(Math.abs(currentY - lastYpos) < 0.005f) {
-            verticalRestFrames++;
-        } else {
-            verticalRestFrames = 0;
-        }
-        lastYpos = currentY;
-
-        boolean isTrulyResting = verticalRestFrames >= 2;
-
         if (currentState == State.DIRT_FORM || currentState == State.LIQUID_FORM) {
-            isGrounded = standingOnWall && isTrulyResting;
+            isGrounded = standingOnWall;
         } else {
-            isGrounded = (standingOnWall || standingOnElement) && isTrulyResting;
+            isGrounded = standingOnWall || standingOnElement;
         }
 
-        if (isGrounded) {
-            hasUsedElementBoost = false;
+        boolean isResting = Math.abs(b2body.getLinearVelocity().y) < 0.05f;
+        if (isGrounded && isResting) {
             jumpCounter = 0;
         }
 
         if (currentState == State.NORMAL) {
             displaceTerrain(sim);
-        } else {
-            triggerPlayerAlchemy(sim);
         }
 
         Element center = getSafeElement(sim, simX, simY);
         if (center != null && !(center instanceof EmptyCell)) {
-            applyElementEffects(center, sandMgr);
+            applyElementEffects(center);
         }
 
+        // --- INTERACTION LOGIC ---
         Vector2 pixelPos = new Vector2(b2body.getPosition().x * Main.PPM, b2body.getPosition().y * Main.PPM);
+
+        // FIX: Constantly check for nearby signs and runes EVERY frame!
         WorldContactListener.sortSignsByDistance(pixelPos);
         WorldContactListener.sortRunesByDistance(pixelPos);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             if (WorldContactListener.closestSign != null) {
+
+                // --- NEW DISTANCE CHECK ---
+                // Calculate how far Ezra is from the sign in pixels
                 float dist = pixelPos.dst(
                     WorldContactListener.closestSign.worldX * Main.PPM,
                     WorldContactListener.closestSign.worldY * Main.PPM
                 );
+
+                // 64 pixels is about 2 tiles. If further than that, ignore the press!
                 if (dist < 64f) {
                     interactedThisFrame = true;
                     return;
+                } else {
+                    Gdx.app.log("Player", "Too far from sign to read: " + dist);
                 }
             }
         }
 
-        // RUNES AND TRANSFORMATION INTERACTION
+        // KEY 2: [E] for RUNES and TRANSFORMATION
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             tilemapmanager.RuneData rune = WorldContactListener.closestRune;
             boolean processedRune = false;
+
+            // --- NEW DISTANCE CHECK ---
+            // Calculate distance from Ezra's current pixel position to the rune
             float dist = -1;
             if (rune != null) {
                 dist = pixelPos.dst(rune.worldX * Main.PPM, rune.worldY * Main.PPM);
             }
 
-            if (rune != null && dist < 64f && !rune.isContainer && !rune.isConsumed) {
+            // Only allow interaction if Ezra is within 64 pixels (2 tiles)
+            if (rune != null && dist < 64f && !rune.isContainer) {
                 String type = rune.elementType != null ? rune.elementType.toUpperCase() : "NONE";
 
                 if (rune.isSpawner) {
-                    if (!sandMgr.completedGeysers.contains(rune.runeID, false) && currentState != State.NORMAL) {
+                    if (sandMgr.completedGeysers.contains(rune.runeID, false)) {
                         Gdx.app.log("Player", "This geyser is exhausted.");
+                    } else if (currentState != State.NORMAL) {
                         boolean match = (currentState == State.DIRT_FORM && (type.equals("DIRT") || type.equals("SAND"))) ||
-                            (currentState == State.LIQUID_FORM && type.equals("WATER")) ||
-                            (currentState == State.LAVA_FORM && type.equals("LAVA"));
+                            (currentState == State.LIQUID_FORM && type.equals("WATER"));
 
                         if (match) {
                             sandMgr.toggleSpawner(rune);
                             processedRune = true;
+                        } else {
+                            Gdx.app.log("Player", "Wrong form! Need " + type + " (Dist: " + dist + ")");
                         }
                     }
-                    // Absorption
                 } else if (currentState == State.NORMAL) {
                     if (!type.equals("NONE")) {
-
-                        int existingSlot = -1;
-                        if (elementSlots[0].equals(type)) existingSlot = 0;
-                        else if (elementSlots[1].equals(type)) existingSlot = 1;
-
-                        if (existingSlot != -1) {
-                            chargeSlots[existingSlot] += 3;
-                            activeSlot = existingSlot;
-                            rune.isConsumed = true;
-                            processedRune = true;
-                        } else {
-                            int emptySlot = -1;
-                            if (elementSlots[activeSlot].equals("NONE")) emptySlot = activeSlot;
-                            else if (activeSlot == 0 && elementSlots[1].equals("NONE")) emptySlot = 1;
-                            else if (activeSlot == 1 && elementSlots[0].equals("NONE")) emptySlot = 0;
-
-                            if (emptySlot != -1) {
-                                chargeSlots[emptySlot] = 3;
-                                elementSlots[emptySlot] = type;
-                                activeSlot = emptySlot;
-                                rune.isConsumed = true;
-                                processedRune = true;
-                            }
-                        }
+                        assimilationCharges = 3;
+                        storedElement = type;
+                        Gdx.app.log("Player", "Gained 3 " + storedElement + " charges!");
+                        processedRune = true;
                     }
                 }
             }
 
-            // Element Transformation
+            // Handle Transformation if no rune was activated
+            // (This part stays the same so Ezra can still transform anywhere)
             if (!processedRune) {
-                if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
-                    chargeSlots[activeSlot]--;
-
-                    if (Main.assimilationIN != null) {
-                        Main.assimilationIN.play(0.8f);
-                    }
-                    String currentActiveElement = elementSlots[activeSlot];
-                    currentTransformElement = currentActiveElement;
-
-                    switch (currentActiveElement) {
-                        case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
-                        case "WATER" -> currentState = State.LIQUID_FORM;
-                        case "LAVA" -> currentState = State.LAVA_FORM;
+                if (assimilationCharges > 0 && currentState == State.NORMAL) {
+                    assimilationCharges--;
+                    if (storedElement.equals("DIRT") || storedElement.equals("SAND")) {
+                        currentState = State.DIRT_FORM;
+                    } else if (storedElement.equals("WATER")) {
+                        currentState = State.LIQUID_FORM;
                     }
                 } else if (currentState != State.NORMAL) {
-                    if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
-                        currentState = State.NORMAL;
-                        currentTransformElement = "NONE";
-                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
-                        //if the element's charge has been exhausted, it will be dropped instantly
-                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
-                    } else {
-                        Vector2 vel = b2body.getLinearVelocity();
-                        b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
-                        hasUsedElementBoost = true;
-
-                        if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
-                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
-                        currentState = State.NORMAL;
-                        currentTransformElement = "NONE";
-                        //if the element's charge has been exhausted, it will be dropped instantly
-                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
-                    }
+                    currentState = State.NORMAL;
                 }
             }
         }
     }
 
-    private void triggerPlayerAlchemy(PhysicSim sim) {
-        float worldX = b2body.getPosition().x * Main.PPM;
-        int gridX = (int) (worldX / CELL_SIZE);
-        int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
-        int radius = 12 / CELL_SIZE; // player size
-
-        String myElement = currentTransformElement.toUpperCase();
-        if (myElement.equals("NONE")) return;
-
-        boolean reactedThisFrame = false;
-
-        for (int y = -radius; y <= radius; y++) {
-            for (int x = -radius; x <= radius; x++) {
-                if (x*x + y*y <= radius*radius) {
-                    int px = gridX + x;
-                    int py = gridY + y;
-                    Element e = getSafeElement(sim, px, py);
-
-                    if (e != null && !(e instanceof EmptyCell)) {
-                        String targetElement = e.getClass().getSimpleName().toUpperCase();
-
-                        // Alphabetize the combination to check the dictionary
-                        String key = myElement.compareTo(targetElement) < 0 ?
-                            myElement + "_" + targetElement :
-                            targetElement + "_" + myElement;
-
-                        ElementType resultType = sim.getAlchemyRecipe(key);
-                        if (resultType != null) {
-                            // Convert the terrain pixel if there is a chemical reaction
-                            sim.setElement(px, py, resultType.create(px, py));
-                            e.freeToPool();
-                            reactedThisFrame = true;
-
-                            // Spawn some steam/smoke off the reaction
-                            if (MathUtils.random(100) < 5) {
-                                Smoke smoke = SandManager.smokePool.obtain();
-                                smoke.init(px, py + 1);
-                                sim.setElement(px, py + 1, smoke);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // having a chemical reaction with the environment drains the player's energy quickly!
-        if (reactedThisFrame) {
-            assimilationMeter += 15.0f * Gdx.graphics.getDeltaTime();
-        }
-    }
-
-    private void applyElementEffects(Element e, SandManager sandMgr) {
+    private void applyElementEffects(Element e) {
         // Reset flags
         isSubmergedNormal = false;
         isFloatingInElement = false;
 
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
             isFloatingInElement = true;
+            // --- THE "NUDGE" FIX ---
+            // If Ezra is moving, give him a tiny extra force to "push"
+            // through those invisible micro-corners of the sand pixels.
             Vector2 vel = b2body.getLinearVelocity();
-            if (Math.abs(vel.x) > 0.1f) b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
-        } else if (currentState == State.LIQUID_FORM && e instanceof Water) {
+            if (Math.abs(vel.x) > 0.1f) {
+                b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
+            }
+        }
+        else if (currentState == State.LIQUID_FORM && e instanceof Water) {
             isFloatingInElement = true;
-        } else if (currentState == State.LAVA_FORM && e instanceof Lava) {
-            isFloatingInElement = true;
-        } else if (e instanceof Lava) { //HAZARD DETECTION
-            // If the player touches Lava and is NOT in their Lava Form, they'll get burned and knocked back
-            float knockbackDir = (b2body.getLinearVelocity().x > 0) ? -5f : 5f;
-            takeDamage(25f, knockbackDir, sandMgr);
-        } else {
+        }
+        else {
             isSubmergedNormal = true;
         }
     }
 
-    private void updateStats(float dt, SandManager sandMgr) {
-        boolean isOverloaded = false;
+    private void updateStats(float dt) {
         if (currentState != State.NORMAL) {
             assimilationMeter = Math.min(MAX_ASSIMILATION, assimilationMeter + (ASSIMILATION_RATE * dt));
             if (assimilationMeter >= MAX_ASSIMILATION) {
-                isOverloaded = true;
-                hp -= (SUFFOCATION_RATE * 0.5f) * dt;
-                if (hp <= 0) triggerDeath("Overload", sandMgr);
+                hp -= SUFFOCATION_RATE * dt;
+                if (hp <= 0) triggerDeath("Overload");
             }
         } else {
             assimilationMeter = Math.max(0, assimilationMeter - (RECOVERY_RATE * dt));
@@ -516,8 +339,8 @@ public class Player {
 
         if (isSubmergedNormal) {
             hp -= SUFFOCATION_RATE * dt;
-            if (hp <= 0) triggerDeath("Suffocated / Drowned", sandMgr);
-        } else if (currentState == State.NORMAL && !isOverloaded && invincibilityTimer <= 0) {
+            if (hp <= 0) triggerDeath("Suffocated / Drowned");
+        } else {
             hp = Math.min(MAX_HP, hp + (RECOVERY_RATE * 0.5f * dt));
         }
     }
@@ -544,32 +367,13 @@ public class Player {
         }
     }
 
-    public void triggerDeath(String reason, SandManager sandMgr) {
-        if (sandMgr != null && sandMgr.sim != null) {
-            int gridX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
-            int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
-
-            // 5x5 cloud of smoke will show where the player died
-            for(int i = -2; i <= 2; i++) {
-                for(int j = -2; j <= 2; j++) {
-                    if (sandMgr.sim.isEmpty(gridX + i, gridY + j)) {
-                        Smoke smoke = SandManager.smokePool.obtain();
-                        smoke.init(gridX + i, gridY + j);
-                        sandMgr.sim.setElement(gridX + i, gridY + j, smoke);
-                    }
-                }
-            }
-        }
-
+    public void triggerDeath(String reason) {
         isAlive = false;
         b2body.setTransform(100/Main.PPM, 200/Main.PPM, 0);
         b2body.setLinearVelocity(0,0);
         assimilationMeter = 0;
         hp = MAX_HP;
         currentState = State.NORMAL;
-        currentTransformElement = "NONE";
-        invincibilityTimer = 0;
-        stunTimer = 0;
         isAlive = true;
     }
 
@@ -578,21 +382,17 @@ public class Player {
         try { return sim.getElement(x, y); } catch (Exception e) { return null; }
     }
 
+    // --- HUD HELPER METHOD (FIXED) ---
     public float getMassPercentage() {
         return assimilationMeter / MAX_ASSIMILATION;
     }
 
     public void draw(SpriteBatch batch) {
         if (texture == null) return;
-        if (invincibilityTimer > 0 && (invincibilityTimer % 0.2f < 0.1f)) {
-            batch.setColor(1.0f, 0.2f, 0.2f, 0.6f);
-        } else {
-            switch (currentState) {
-                case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
-                case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
-                case LAVA_FORM: batch.setColor(1.0f, 0.4f, 0.0f, 1f); break;
-                default: batch.setColor(1, 1, 1, 1); break;
-            }
+        switch (currentState) {
+            case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
+            case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
+            default: batch.setColor(1, 1, 1, 1); break;
         }
         batch.draw(texture, b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f, b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f);
         batch.setColor(1, 1, 1, 1);

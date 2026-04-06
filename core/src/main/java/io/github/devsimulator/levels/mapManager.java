@@ -1,7 +1,6 @@
 package io.github.devsimulator.levels;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -31,8 +30,6 @@ public class mapManager {
         else if (targetMapName.contains("prologue2.tmx")) nextLevel = new prologue2();
         else if (targetMapName.contains("prologueend.tmx")) nextLevel = new prologueend();
         else if (targetMapName.contains("level1fr.tmx") || targetMapName.equals("level1")) nextLevel = new level1();
-        else if (targetMapName.contains("level1fr2.tmx")) nextLevel = new level1fr2();
-        else if (targetMapName.contains("level2.tmx")) nextLevel = new level2();
 
         if (nextLevel != null) {
             changeLevel(nextLevel, spawnX, spawnY);
@@ -46,10 +43,14 @@ public class mapManager {
             currentLevel.dispose();
         }
 
-        WorldContactListener.clearHashes();
+        // --- FIXED: CLEAR GHOSTS ---
+        // We use allSigns and allRunes now. nearbyRunes was removed.
+        WorldContactListener.allSigns.clear();
+        WorldContactListener.allRunes.clear();
         WorldContactListener.closestSign = null;
         WorldContactListener.closestRune = null;
 
+        // 1. Clear out old physics bodies
         Array<Body> bodies = new Array<>();
         world.getBodies(bodies);
         for (Body b : bodies) {
@@ -60,27 +61,26 @@ public class mapManager {
         }
 
         currentLevel = newLevel;
-        // load level
+        // 2. Load the level (This calls tilemapmanager.createBoundaries)
         currentLevel.loadLevel(world, player, sandManager);
         currentMapPath = newLevel.mapPath;
 
-        // call sandmanager to update the tile map
+        // 3. Update SandManager with the new map's data
         if (sandManager != null && currentLevel.map != null) {
             sandManager.initLevel(currentLevel.map);
         }
 
-        // reset player position
+        // 4. Reset Player Position
         player.b2body.setTransform(spawnX, spawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
 
-        // reset physics contacts
+        // Reset physics contacts
         WorldContactListener.footContacts = 0;
     }
 
     public void update(float dt) {
         if (currentLevel != null) {
             currentLevel.update(dt);
-            AnimatedTiledMapTile.updateAnimationBaseTime();
         }
     }
 

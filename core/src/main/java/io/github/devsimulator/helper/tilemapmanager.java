@@ -13,6 +13,7 @@ import io.github.devsimulator.Main;
 
 public class tilemapmanager {
 
+    // --- DATA CLASSES ---
     public static class TransitionData {
         public String targetMap;
         public float spawnX, spawnY;
@@ -44,10 +45,10 @@ public class tilemapmanager {
         }
     }
 
+    // --- LAYER PARSING ---
     public static void createBoundaries(TiledMap map, World world) {
 
-        WorldContactListener.clearHashes();
-
+        // 1. COLLISIONS LAYER
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
             MapObjects objects = collisionLayer.getObjects();
@@ -78,26 +79,21 @@ public class tilemapmanager {
 
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
-
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(polygon.getX() / Main.PPM, polygon.getY() / Main.PPM);
                 Body body = world.createBody(bdef);
-
                 float[] vertices = polygon.getVertices();
                 float[] worldVertices = new float[vertices.length];
-                for (int i = 0; i < vertices.length; ++i) {
-                    worldVertices[i] = vertices[i] / Main.PPM;
-                }
-
+                for (int i = 0; i < vertices.length; ++i) worldVertices[i] = vertices[i] / Main.PPM;
                 PolygonShape shape = new PolygonShape();
                 shape.set(worldVertices);
-
                 body.createFixture(shape, 0).setUserData("GROUND");
                 shape.dispose();
             }
         }
 
+        // 2. TRANSITIONS LAYER
         MapLayer transitionLayer = map.getLayers().get("transitions");
         if (transitionLayer != null) {
             for (MapObject object : transitionLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -124,6 +120,7 @@ public class tilemapmanager {
             }
         }
 
+        // 3. INTERACTABLES LAYER (Signs)
         MapLayer interactLayer = map.getLayers().get("interactables");
         if (interactLayer != null) {
             for (MapObject object : interactLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -151,12 +148,14 @@ public class tilemapmanager {
                 InteractableData data = new InteractableData(head, desc, hero, x, y, w, h);
                 body.createFixture(fdef).setUserData(data);
 
-                WorldContactListener.addSign(data);
+                // ADD TO SORTING LIST
+                WorldContactListener.allSigns.add(data);
 
                 shape.dispose();
             }
         }
 
+        // 4. RUNES LAYER
         MapLayer runeLayer = map.getLayers().get("runes");
         if (runeLayer != null) {
             for (MapObject object : runeLayer.getObjects().getByType(RectangleMapObject.class)) {
@@ -185,7 +184,8 @@ public class tilemapmanager {
                 RuneData data = new RuneData(type, isSpawner, isContainer, runeID, worldX, worldY, w, h);
                 body.createFixture(fdef).setUserData(data);
 
-                WorldContactListener.addRune(data);
+                // ADD TO SORTING LIST
+                WorldContactListener.allRunes.add(data);
 
                 shape.dispose();
             }

@@ -41,9 +41,6 @@ public abstract class Liquid extends Element {
                 // Empty spot found - Move there!
                 sim.moveElement(x, y, targetX, y);
                 return;
-            } else if (sim.processAlchemy(this, neighbor)) {
-                // --- ALCHEMY CHECK (SIDEWAYS) ---
-                return;
             } else if (!neighbor.isSolid && this.density > neighbor.density) {
                 // Lighter liquid/gas found - Swap!
                 swapPositions(sim, neighbor);
@@ -63,12 +60,7 @@ public abstract class Liquid extends Element {
             sim.moveElement(x, y, tx, ty);
             return true;
         }
-        //chemical reaction checker
-        if (sim.processAlchemy(this, neighbor)) {
-            return true;
-        }
-
-        // Swap if we are heavier water sinks in oil or gas
+        // Swap if we are heavier (Water sinks in Oil/Gas)
         if (!neighbor.isSolid && this.density > neighbor.density) {
             swapPositions(sim, neighbor);
             return true;

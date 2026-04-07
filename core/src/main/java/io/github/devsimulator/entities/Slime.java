@@ -142,11 +142,10 @@ public class Slime extends Enemy {
     @Override
     public void resetState() {
         this.isAlive = true;
-        this.health = 3;  // Reset HP
-        this.timer = 0;   // Reset jump cycle
+        this.health = 3;
+        this.timer = 0;
         this.isJumping = false;
 
-        // Instantly teleport the Box2D body back to spawn without destroying it!
         this.b2body.setTransform(spawnX, spawnY, 0);
         this.b2body.setLinearVelocity(0, 0);
         this.b2body.setAwake(true);

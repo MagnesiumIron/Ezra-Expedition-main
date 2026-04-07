@@ -144,10 +144,11 @@ public class Slime extends Enemy {
     @Override
     public void resetState() {
         this.isAlive = true;
-        this.health = 3;
+        this.hp = 50f;
         this.timer = 0;
         this.isJumping = false;
 
+        this.b2body.setActive(true);
         this.b2body.setTransform(spawnX, spawnY, 0);
         this.b2body.setLinearVelocity(0, 0);
         this.b2body.setAwake(true);

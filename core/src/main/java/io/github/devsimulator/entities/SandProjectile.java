@@ -1,5 +1,7 @@
 package io.github.devsimulator.entities;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -13,33 +15,63 @@ public class SandProjectile {
     private float lifeTimer = 0;
     private float maxLife = 2.0f;
 
-    public SandProjectile(World world, float x, float y, Vector2 target) {
+    public String element;
+    public boolean isMega;
+    public int pierceCount = 1;
+
+    public SandProjectile(World world, float x, float y, Vector2 target, String element, boolean isMega) {
         tex = new Texture("Comun_slime.png");
+        this.element = element;
+        this.isMega = isMega;
+
+        int size = isMega ? 16 : 8;
+        Pixmap pix = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        if(element.equals("WATER")) pix.setColor(0.2f, 0.6f, 1.0f, 1f);
+        else if(element.equals("LAVA")) pix.setColor(1.0f, 0.4f, 0.0f, 1f);
+        else pix.setColor(0.94f, 0.76f, 0.5f, 1f);
+
+        pix.fillCircle(size/2, size/2, size/2);
+        pix.setColor(Color.WHITE);
+        pix.fillCircle(size/2, size/2, size/4);
+
+        tex = new Texture(pix);
+        pix.dispose();
+
+        float dx = target.x - x;
+        float dy = target.y - y;
+        Vector2 dir = new Vector2(dx, dy).nor();
 
         BodyDef bdef = new BodyDef();
-        bdef.position.set(x, y);
+        bdef.position.set(x + (dir.x * 0.8f), y + (dir.y * 0.8f));
         bdef.type = BodyDef.BodyType.DynamicBody;
         b2body = world.createBody(bdef);
 
         CircleShape shape = new CircleShape();
-        shape.setRadius(4 / Main.PPM);
+        float radius = isMega ? 12f : 4f;
+        shape.setRadius(radius / Main.PPM);
 
         FixtureDef fdef = new FixtureDef();
         fdef.shape = shape;
-        fdef.density = 0.5f;
-        fdef.isSensor = false;
+        fdef.density = isMega ? 2.0f : 0.5f;
+        fdef.restitution = element.equals("LAVA") ? 0.2f : 0.4f;
+        fdef.isSensor = true;
 
         b2body.createFixture(fdef).setUserData(this);
         shape.dispose();
 
-        float dx = target.x - x;
-        float dy = target.y - y;
+        float speed = isMega ? 8f : 12f;
+        if(element.equals("WATER")) {
+            speed = 22f;
+            b2body.setGravityScale(0);
+            pierceCount = isMega ? 99 : 2;
+        } else if (element.equals("LAVA")) {
+            b2body.setGravityScale(1.8f);
+            speed = 10f;
+        } else {
+            b2body.setGravityScale(1.2f);
+        }
 
-        float forceX = dx * 0.05f;
-        float forceY = 0.01f;
-
-        b2body.applyLinearImpulse(new Vector2(forceX, forceY), b2body.getWorldCenter(), true);
-        b2body.setGravityScale(1.8f);
+        b2body.setLinearVelocity(dir.scl(speed));
     }
 
     public void update(float dt) {
@@ -51,7 +83,8 @@ public class SandProjectile {
 
     public void draw(SpriteBatch batch) {
         if (!isDestroyed) {
-            batch.draw(tex, (b2body.getPosition().x * Main.PPM) - 8, (b2body.getPosition().y * Main.PPM) - 8, 16, 16);
+            float drawSize = isMega ? 24f : 12f;
+            batch.draw(tex, (b2body.getPosition().x * Main.PPM) - drawSize / 2, (b2body.getPosition().y * Main.PPM) - drawSize/2, drawSize, drawSize);
         }
     }
 

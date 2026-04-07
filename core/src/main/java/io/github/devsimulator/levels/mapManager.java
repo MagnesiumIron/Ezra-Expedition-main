@@ -70,6 +70,12 @@ public class mapManager {
             sandManager.initLevel(currentLevel.map);
         }
 
+        player.saveRoomCheckpoint(spawnX, spawnY);
+
+        // reset player position
+        player.b2body.setTransform(spawnX, spawnY, 0);
+        player.b2body.setLinearVelocity(0, 0);
+
         if (currentLevel.map != null) {
             com.badlogic.gdx.maps.MapLayer enemyLayer = currentLevel.map.getLayers().get("enemies");
             if (enemyLayer != null) {
@@ -92,6 +98,37 @@ public class mapManager {
 
         // reset physics contacts
         WorldContactListener.footContacts = 0;
+    }
+
+    public void fastRoomReload() {
+        // reset elements present
+        if (sandManager != null && sandManager.sim != null) {
+            sandManager.sim.clearToPool();
+            sandManager.completedGeysers.clear(); //
+
+            if (currentLevel != null && currentLevel.map != null) {
+                sandManager.spawnLayer(currentLevel.map, "sand_zones", io.github.devsimulator.elements.ElementType.SAND);
+                sandManager.spawnLayer(currentLevel.map, "water_zones", io.github.devsimulator.elements.ElementType.WATER);
+                sandManager.spawnLayer(currentLevel.map, "lava_zones", io.github.devsimulator.elements.ElementType.LAVA);
+            }
+        }
+
+        // unconsume runes
+        for (io.github.devsimulator.helper.tilemapmanager.RuneData rune : io.github.devsimulator.helper.WorldContactListener.allRunes) {
+            rune.isConsumed = false;
+        }
+
+        // revive and teleport enemies
+        if (currentLevel != null) {
+            for (io.github.devsimulator.entities.Enemy e : currentLevel.enemies) {
+                e.resetState();
+            }
+        }
+
+        player.loadRoomCheckpoint();
+        player.b2body.setTransform(player.chkSpawnX, player.chkSpawnY, 0);
+        player.b2body.setLinearVelocity(0, 0);
+        player.b2body.setAwake(true);
     }
 
     public void update(float dt) {

@@ -14,9 +14,16 @@ public abstract class Enemy {
     public float hp;
     protected boolean isAlive = true;
 
+    //initial coordinates
+    public float spawnX;
+    public float spawnY;
+
     public Enemy(World world, float x, float y) {
         this.world = world;
         this.hp = 50f;
+
+        this.spawnX = x / Main.PPM;
+        this.spawnY = y / Main.PPM;
 
         BodyDef bdef = new BodyDef();
         bdef.position.set(x / Main.PPM, y / Main.PPM);
@@ -29,4 +36,5 @@ public abstract class Enemy {
     public abstract void update(float dt, SandManager sandMgr);
     public abstract void draw(SpriteBatch batch);
     public abstract void dispose();
+    public abstract void resetState();
 }

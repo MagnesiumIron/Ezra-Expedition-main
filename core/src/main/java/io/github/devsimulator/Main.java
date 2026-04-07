@@ -166,6 +166,11 @@ public class Main extends ApplicationAdapter {
                     WorldContactListener.pendingTransition = null;
                 }
 
+                if (WorldContactListener.pendingFastReload) {
+                    mapMgr.fastRoomReload();
+                    WorldContactListener.pendingFastReload = false;
+                }
+
                 mapMgr.update(dt);
                 sandManager.update();
 

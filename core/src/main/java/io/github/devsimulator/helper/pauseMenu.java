@@ -125,22 +125,7 @@
         }
 
         private void retryRoom() {
-            // 1. Reset Player Stats
-            player.hp = player.MAX_HP;
-            player.assimilationMeter = 0;
-
-            // 2. Set the default room start coordinates
-            float spawnX = 100 / Main.PPM;
-            float spawnY = 200 / Main.PPM;
-
-            // 3. Teleport Ezra back to the start of the CURRENT map and stop his momentum
-            player.b2body.setTransform(spawnX, spawnY, 0);
-            player.b2body.setLinearVelocity(0, 0);
-
-            // We REMOVED the pendingTransition line here!
-            // No map loading means it won't accidentally jump to Level 1 anymore.
-
-            // 4. Close the pause menu and resume the game
+            io.github.devsimulator.helper.WorldContactListener.pendingFastReload = true;
             togglePause();
         }
         public void update() {

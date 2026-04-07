@@ -24,6 +24,7 @@ public class WorldContactListener implements ContactListener {
     public static int footContacts = 0;
     public static Array<Body> bodiesToDestroy = new Array<>();
     public static tilemapmanager.TransitionData pendingTransition = null;
+    public static boolean pendingFastReload = false;
 
     private static long getBucketKey(float x, float y) {
         int bx = (int) (x / BUCKET_SIZE);

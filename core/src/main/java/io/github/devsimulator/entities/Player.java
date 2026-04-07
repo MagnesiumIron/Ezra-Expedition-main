@@ -76,6 +76,15 @@ public class Player {
     private int verticalRestFrames = 0;
     private boolean hasUsedElementBoost = false;
 
+    //checkpoint
+    private float chkHp;
+    private float chkAssimilation;
+    private String[] chkElementSlots = {"NONE", "NONE"};
+    private int[] chkChargeSlots = {0, 0};
+    private int chkActiveSlot;
+    public float chkSpawnX;
+    public float chkSpawnY;
+
     public Sound[] stoneSteps;
 
     public Player(World world) {
@@ -537,12 +546,35 @@ public class Player {
         }
     }
 
+    public void saveRoomCheckpoint(float spawnX, float spawnY) {
+        this.chkHp = this.hp;
+        this.chkAssimilation = this.assimilationMeter;
+        this.chkElementSlots[0] = this.elementSlots[0];
+        this.chkElementSlots[1] = this.elementSlots[1];
+        this.chkChargeSlots[0] = this.chargeSlots[0];
+        this.chkChargeSlots[1] = this.chargeSlots[1];
+        this.chkActiveSlot = this.activeSlot;
+        this.chkSpawnX = spawnX;
+        this.chkSpawnY = spawnY;
+    }
+
+    public void loadRoomCheckpoint() {
+        this.hp = this.chkHp;
+        this.assimilationMeter = this.chkAssimilation;
+        this.elementSlots[0] = this.chkElementSlots[0];
+        this.elementSlots[1] = this.chkElementSlots[1];
+        this.chargeSlots[0] = this.chkChargeSlots[0];
+        this.chargeSlots[1] = this.chkChargeSlots[1];
+        this.activeSlot = this.chkActiveSlot;
+        this.currentState = State.NORMAL;
+        this.currentTransformElement = "NONE";
+    }
+
     public void triggerDeath(String reason, SandManager sandMgr) {
         if (sandMgr != null && sandMgr.sim != null) {
             int gridX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
             int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
 
-            // 5x5 cloud of smoke will show where the player died
             for(int i = -2; i <= 2; i++) {
                 for(int j = -2; j <= 2; j++) {
                     if (sandMgr.sim.isEmpty(gridX + i, gridY + j)) {
@@ -555,14 +587,7 @@ public class Player {
         }
 
         isAlive = false;
-        b2body.setTransform(100/Main.PPM, 200/Main.PPM, 0);
-        b2body.setLinearVelocity(0,0);
-        assimilationMeter = 0;
-        hp = MAX_HP;
-        currentState = State.NORMAL;
-        currentTransformElement = "NONE";
-        invincibilityTimer = 0;
-        stunTimer = 0;
+        io.github.devsimulator.helper.WorldContactListener.pendingFastReload = true;
         isAlive = true;
     }
 

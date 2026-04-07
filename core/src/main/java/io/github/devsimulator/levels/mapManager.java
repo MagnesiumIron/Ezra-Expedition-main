@@ -5,6 +5,7 @@ import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
+import io.github.devsimulator.Main;
 import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.WorldContactListener;
@@ -69,6 +70,22 @@ public class mapManager {
             sandManager.initLevel(currentLevel.map);
         }
 
+        if (currentLevel.map != null) {
+            com.badlogic.gdx.maps.MapLayer enemyLayer = currentLevel.map.getLayers().get("enemies");
+            if (enemyLayer != null) {
+                for (com.badlogic.gdx.maps.MapObject object : enemyLayer.getObjects().getByType(com.badlogic.gdx.maps.objects.RectangleMapObject.class)) {
+                    com.badlogic.gdx.math.Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+                    String type = object.getProperties().get("enemyType", "slime", String.class);
+
+                    if (type.equalsIgnoreCase("slime")) {
+                        currentLevel.enemies.add(new io.github.devsimulator.entities.Slime(world, player, rect.getX(), rect.getY()));
+                    } else if (type.equalsIgnoreCase("gasSlime")) {
+                        currentLevel.enemies.add(new io.github.devsimulator.entities.GasSlime(world, player, rect.getX(), rect.getY()));
+                    }
+                }
+            }
+        }
+
         // reset player position
         player.b2body.setTransform(spawnX, spawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
@@ -80,6 +97,7 @@ public class mapManager {
     public void update(float dt) {
         if (currentLevel != null) {
             currentLevel.update(dt);
+            currentLevel.updateEntities(dt);
             AnimatedTiledMapTile.updateAnimationBaseTime();
         }
     }

@@ -337,7 +337,6 @@ public class Player {
         // RUNES AND TRANSFORMATION INTERACTION
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             tilemapmanager.RuneData rune = WorldContactListener.closestRune;
-            boolean processedRune = false;
             float dist = -1;
             if (rune != null) {
                 dist = pixelPos.dst(rune.worldX * Main.PPM, rune.worldY * Main.PPM);
@@ -355,10 +354,8 @@ public class Player {
 
                         if (match) {
                             sandMgr.toggleSpawner(rune);
-                            processedRune = true;
                         }
                     }
-                    // Absorption
                 } else if (currentState == State.NORMAL) {
                     if (!type.equals("NONE")) {
 
@@ -370,7 +367,6 @@ public class Player {
                             chargeSlots[existingSlot] += 3;
                             activeSlot = existingSlot;
                             rune.isConsumed = true;
-                            processedRune = true;
                         } else {
                             int emptySlot = -1;
                             if (elementSlots[activeSlot].equals("NONE")) emptySlot = activeSlot;
@@ -382,48 +378,45 @@ public class Player {
                                 elementSlots[emptySlot] = type;
                                 activeSlot = emptySlot;
                                 rune.isConsumed = true;
-                                processedRune = true;
                             }
                         }
                     }
                 }
             }
+        }
 
-            // Element Transformation
-            if (!processedRune) {
-                if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
-                    chargeSlots[activeSlot]--;
+        // LEFT SHIFT KEY to USE ELEMENTAL ABILITY
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
+            if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
+                chargeSlots[activeSlot]--;
 
-                    if (Main.assimilationIN != null) {
-                        Main.assimilationIN.play(0.8f);
-                    }
-                    String currentActiveElement = elementSlots[activeSlot];
-                    currentTransformElement = currentActiveElement;
+                if (Main.assimilationIN != null) {
+                    Main.assimilationIN.play(0.8f);
+                }
+                String currentActiveElement = elementSlots[activeSlot];
+                currentTransformElement = currentActiveElement;
 
-                    switch (currentActiveElement) {
-                        case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
-                        case "WATER" -> currentState = State.LIQUID_FORM;
-                        case "LAVA" -> currentState = State.LAVA_FORM;
-                    }
-                } else if (currentState != State.NORMAL) {
-                    if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
-                        currentState = State.NORMAL;
-                        currentTransformElement = "NONE";
-                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
-                        //if the element's charge has been exhausted, it will be dropped instantly
-                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
-                    } else {
-                        Vector2 vel = b2body.getLinearVelocity();
-                        b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
-                        hasUsedElementBoost = true;
+                switch (currentActiveElement) {
+                    case "DIRT", "SAND" -> currentState = State.DIRT_FORM;
+                    case "WATER" -> currentState = State.LIQUID_FORM;
+                    case "LAVA" -> currentState = State.LAVA_FORM;
+                }
+            } else if (currentState != State.NORMAL) {
+                if (isGrounded || isFloatingInElement || hasUsedElementBoost) {
+                    currentState = State.NORMAL;
+                    currentTransformElement = "NONE";
+                    if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
+                    if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
+                } else {
+                    Vector2 vel = b2body.getLinearVelocity();
+                    b2body.setLinearVelocity(vel.x, JUMP_SPEED * 1.6f);
+                    hasUsedElementBoost = true;
 
-                        if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
-                        if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
-                        currentState = State.NORMAL;
-                        currentTransformElement = "NONE";
-                        //if the element's charge has been exhausted, it will be dropped instantly
-                        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
-                    }
+                    if (Main.jumpSound != null) Main.jumpSound.play(1f, 1.3f, 0f);
+                    if (Main.assimilationOUT != null) Main.assimilationOUT.play(0.8f);
+                    currentState = State.NORMAL;
+                    currentTransformElement = "NONE";
+                    if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
                 }
             }
         }

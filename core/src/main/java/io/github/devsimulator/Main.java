@@ -96,6 +96,7 @@ public class Main extends ApplicationAdapter {
 
         sandManager = new SandManager();
         player = new Player(world);
+        WorldContactListener.playerInstance = player;
         sharedLayout = new com.badlogic.gdx.graphics.g2d.GlyphLayout();
         cachedPlayerPos = new Vector2();
 
@@ -191,6 +192,10 @@ public class Main extends ApplicationAdapter {
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
             sandManager.render(batch);
+
+            if (mapMgr.currentLevel != null) {
+                mapMgr.currentLevel.renderEntities(batch);
+            }
 
             String currentPrompt = getString();
 

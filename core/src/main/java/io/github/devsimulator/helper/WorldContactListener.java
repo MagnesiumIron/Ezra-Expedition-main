@@ -5,11 +5,14 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.LongMap;
 import io.github.devsimulator.Main;
+import io.github.devsimulator.entities.Enemy;
+import io.github.devsimulator.entities.Player;
 import io.github.devsimulator.helper.tilemapmanager.InteractableData;
 import io.github.devsimulator.helper.tilemapmanager.RuneData;
 
 public class WorldContactListener implements ContactListener {
 
+    public static Player playerInstance;
     public static final float BUCKET_SIZE = 8f;
     public static LongMap<Array<InteractableData>> signHash = new LongMap<>();
     public static LongMap<Array<RuneData>> runeHash = new LongMap<>();
@@ -118,7 +121,21 @@ public class WorldContactListener implements ContactListener {
             footContacts++;
         }
 
+        //ENEMY COLLISION  checker
+        Object dataA = fa.getUserData();
+        Object dataB = fb.getUserData();
+
+        if ("PLAYER".equals(dataA) && dataB instanceof Enemy) handleEnemyHit((Enemy) dataB);
+        else if ("PLAYER".equals(dataB) && dataA instanceof Enemy) handleEnemyHit((Enemy) dataA);
+
         checkSensor(fa, fb);
+    }
+
+    private void handleEnemyHit(Enemy enemy) {
+        if (playerInstance != null) {
+            float knockbackDir = (playerInstance.b2body.getPosition().x < enemy.b2body.getPosition().x) ? -4f : 4f;
+            playerInstance.takeDamage(15f, knockbackDir, null); // Pass null for sandMgr, it resolves safely
+        }
     }
 
     private void checkSensor(Fixture a, Fixture b) {
@@ -131,20 +148,14 @@ public class WorldContactListener implements ContactListener {
 
     @Override
     public void endContact(Contact contact) {
-        Fixture fa = contact.getFixtureA();
-        Fixture fb = contact.getFixtureB();
-        if ("FOOT_SENSOR".equals(fa.getUserData()) || "FOOT_SENSOR".equals(fb.getUserData())) {
-            footContacts--;
-        }
+        if ("FOOT_SENSOR".equals(contact.getFixtureA().getUserData()) || "FOOT_SENSOR".equals(contact.getFixtureB().getUserData())) footContacts--;
     }
 
     private void processSensorData(Object data, Body body) {
         if (data == null) return;
-
         if (data instanceof tilemapmanager.TransitionData) {
             pendingTransition = (tilemapmanager.TransitionData) data;
         }
-
         if ("KEY".equals(data)) {
             bodiesToDestroy.add(body);
         }

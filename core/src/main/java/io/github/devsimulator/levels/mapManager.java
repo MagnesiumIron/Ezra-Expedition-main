@@ -105,18 +105,11 @@ public class mapManager {
         if (sandManager != null && sandManager.sim != null) {
             sandManager.sim.clearToPool();
             sandManager.completedGeysers.clear(); //
-            sandManager.initLevel(currentLevel.map);
-        }
 
-        if (currentLevel != null) {
-            for (io.github.devsimulator.entities.SandProjectile p : currentLevel.projectiles) {
-                p.isDestroyed = true;
-            }
-            for (io.github.devsimulator.entities.ItemDrop d : currentLevel.drops) {
-                d.isDestroyed = true;
-            }
-            for (io.github.devsimulator.entities.Enemy e : currentLevel.enemies) {
-                e.resetState();
+            if (currentLevel != null && currentLevel.map != null) {
+                sandManager.spawnLayer(currentLevel.map, "sand_zones", io.github.devsimulator.elements.ElementType.SAND);
+                sandManager.spawnLayer(currentLevel.map, "water_zones", io.github.devsimulator.elements.ElementType.WATER);
+                sandManager.spawnLayer(currentLevel.map, "lava_zones", io.github.devsimulator.elements.ElementType.LAVA);
             }
         }
 

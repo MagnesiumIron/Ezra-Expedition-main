@@ -54,10 +54,6 @@ public class Main extends ApplicationAdapter {
     private Texture hoverSheet;
     private BitmapFont font;
 
-    //shooter mechanism
-    private float combatChargeTimer = 0f;
-    private boolean isChargingCombat = false;
-
     private float accumulator = 0;
     private static final float TIME_STEP = 1/60f;
     private Matrix4 uiMatrix;
@@ -180,32 +176,6 @@ public class Main extends ApplicationAdapter {
 
                 if (player != null) {
                     player.update(dt, sandManager);
-
-                    if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && mapMgr.currentLevel != null) {
-                        if (player.currentState == Player.State.NORMAL && player.chargeSlots[player.activeSlot] > 0 && !player.elementSlots[player.activeSlot].equals("NONE")) {
-                            isChargingCombat = true;
-                            combatChargeTimer += dt;
-
-                            //  player will become colour red when featured shot is ready to shoot
-                            if (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3) {
-                                player.invincibilityTimer = 0.1f;
-                            }
-                        } else {
-                            isChargingCombat = false; combatChargeTimer = 0f;
-                        }
-                    } else if (isChargingCombat) {
-                        // charged button release
-                        boolean isMega = (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3);
-                        com.badlogic.gdx.math.Vector3 mousePos = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-                        viewport.unproject(mousePos);
-
-                        player.executeShoot(mousePos.x / PPM, mousePos.y / PPM, mapMgr.currentLevel.projectiles, world, isMega);
-
-                        isChargingCombat = false;
-                        combatChargeTimer = 0f;
-                        player.chargeProgress = 0f;
-                    }
-
                     if (player.hasJustInteractedWithSign()) {
                         tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
                         if (sign != null) {

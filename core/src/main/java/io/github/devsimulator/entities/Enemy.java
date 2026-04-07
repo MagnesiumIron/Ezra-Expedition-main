@@ -12,7 +12,7 @@ public abstract class Enemy {
     public Body b2body;
 
     public float hp;
-    public boolean isAlive = true;
+    protected boolean isAlive = true;
 
     //initial coordinates
     public float spawnX;
@@ -30,18 +30,6 @@ public abstract class Enemy {
         bdef.type = BodyDef.BodyType.DynamicBody;
         bdef.fixedRotation = true;
         b2body = world.createBody(bdef);
-    }
-
-    public void takeDamage(float damage, float knockbackDir) {
-        if (!isAlive) return;
-        this.hp -= damage;
-        if (this.hp <= 0) {
-            this.isAlive = false;
-            this.b2body.setLinearVelocity(0, 0);
-        } else {
-            this.b2body.setLinearVelocity(0, this.b2body.getLinearVelocity().y);
-            this.b2body.applyLinearImpulse(new com.badlogic.gdx.math.Vector2(knockbackDir, 3f), this.b2body.getWorldCenter(), true);
-        }
     }
 
     // enemies will displace the terrain

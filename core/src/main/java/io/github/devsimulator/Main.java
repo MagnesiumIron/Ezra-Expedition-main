@@ -341,23 +341,48 @@ public class Main extends ApplicationAdapter {
             shapeRenderer.end();
             Gdx.gl.glDisable(GL20.GL_BLEND);
 
-            batch.setProjectionMatrix(camera.combined); // Lock text to camera!
+            batch.setProjectionMatrix(camera.combined);
             batch.begin();
 
-            font.getData().setScale(1.2f); // Scaled for the game world
-            font.setColor(1.0f, 0.2f, 0.2f, 1f);
-            sharedLayout.setText(font, "Y O U   D I E D");
-            font.draw(batch, "Y O U   D I E D", centerX - (sharedLayout.width / 2f), centerY + (vHeight * 0.08f));
-            font.getData().setScale(0.6f);
-            font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+            // --- 1. "YOU DIED" TITLE WITH DROP SHADOW ---
+            font.getData().setScale(1.2f);
+            String titleText = "Y O U   D I E D";
+            sharedLayout.setText(font, titleText);
+            float titleX = centerX - (sharedLayout.width / 2f);
+            float titleY = centerY + (vHeight * 0.08f);
 
-            String promptF = "Press [F] to Respawn";
+            font.setColor(0f, 0f, 0f, 0.8f); // Thick Black Shadow
+            font.draw(batch, titleText, titleX + 2f, titleY - 2f);
+
+            font.setColor(1.0f, 0.2f, 0.2f, 1f); // Blood Red
+            font.draw(batch, titleText, titleX, titleY);
+
+            // --- 2. SUBTITLES WITH DROP SHADOW (NO BRACKETS!) ---
+            font.getData().setScale(0.5f);
+
+            String promptF = "PRESS F TO RESPAWN";
             sharedLayout.setText(font, promptF);
-            font.draw(batch, promptF, centerX - (sharedLayout.width / 2f), centerY - (vHeight * 0.04f));
+            float fX = centerX - (sharedLayout.width / 2f);
+            float fY = centerY - (vHeight * 0.04f);
 
-            String promptEsc = "Press [ESC] to Withdraw";
+            font.setColor(0f, 0f, 0f, 0.8f); // Black Shadow
+            font.draw(batch, promptF, fX + 1f, fY - 1f);
+
+            font.setColor(com.badlogic.gdx.graphics.Color.WHITE); // White Text
+            font.draw(batch, promptF, fX, fY);
+
+            String promptEsc = "PRESS ESC TO WITHDRAW";
             sharedLayout.setText(font, promptEsc);
-            font.draw(batch, promptEsc, centerX - (sharedLayout.width / 2f), centerY - (vHeight * 0.1f));
+            float escX = centerX - (sharedLayout.width / 2f);
+            float escY = centerY - (vHeight * 0.1f);
+
+            font.setColor(0f, 0f, 0f, 0.8f); // Black Shadow
+            font.draw(batch, promptEsc, escX + 1f, escY - 1f);
+
+            font.setColor(com.badlogic.gdx.graphics.Color.WHITE); // White Text
+            font.draw(batch, promptEsc, escX, escY);
+
+            // Reset scale
             font.getData().setScale(1.0f);
 
             batch.end();

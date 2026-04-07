@@ -3,13 +3,10 @@ package io.github.devsimulator;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -18,6 +15,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -62,6 +60,13 @@ public class Main extends ApplicationAdapter {
     private static final float TIME_STEP = 1/60f;
     private Matrix4 uiMatrix;
 
+    //transition
+    private com.badlogic.gdx.graphics.glutils.ShapeRenderer shapeRenderer;
+    private float fadeAlpha = 0f;
+    private boolean fadingOut = false;
+    private boolean fadingIn = false;
+    private io.github.devsimulator.helper.tilemapmanager.TransitionData queuedTransition = null;
+
     public static Sound jumpSound;
     public static Music menuTheme;
     public static Music ambience;
@@ -90,6 +95,7 @@ public class Main extends ApplicationAdapter {
         menuTheme.play();
 
         batch = new SpriteBatch();
+        shapeRenderer = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
         world = new World(new Vector2(0, -9.8f), true);
         world.setContactListener(new WorldContactListener());
 
@@ -158,62 +164,96 @@ public class Main extends ApplicationAdapter {
             if (!pauseMenu.isPaused && !isTutorialReading) {
                 stateTime += dt;
 
-                accumulator += Math.min(dt, 0.25f);
-                while (accumulator >= TIME_STEP) {
-                    world.step(TIME_STEP, 6, 2);
-                    accumulator -= TIME_STEP;
-                }
-
-                if (WorldContactListener.pendingTransition != null) {
-                    tilemapmanager.TransitionData data = WorldContactListener.pendingTransition;
-                    mapMgr.transitionToMap(data.targetMap, data.spawnX, data.spawnY);
+                if (WorldContactListener.pendingTransition != null && !fadingOut && !fadingIn) {
+                    queuedTransition = WorldContactListener.pendingTransition;
                     WorldContactListener.pendingTransition = null;
+                    fadingOut = true;
+                    player.b2body.setLinearVelocity(0, 0);
                 }
 
-                if (WorldContactListener.pendingFastReload) {
-                    mapMgr.fastRoomReload();
-                    WorldContactListener.pendingFastReload = false;
+                if (fadingOut) {
+                    fadeAlpha += dt * 2.5f;
+                    if (fadeAlpha >= 1f) {
+                        fadeAlpha = 1f;
+                        mapMgr.transitionToMap(queuedTransition.targetMap, queuedTransition.spawnX, queuedTransition.spawnY);
+                        fadingOut = false;
+                        fadingIn = true;
+                    }
+                } else if (fadingIn) {
+                    fadeAlpha -= dt * 2.5f;
+                    if (fadeAlpha <= 0f) {
+                        fadeAlpha = 0f;
+                        fadingIn = false;
+                    }
                 }
 
-                mapMgr.update(dt);
-                sandManager.update();
+                boolean isCinematicPlaying = fadingOut || fadingIn;
+                boolean isPlayerDead = (player != null && player.hp <= 0);
 
-                if (player != null) {
-                    player.update(dt, sandManager);
+                if (!isCinematicPlaying && !isPlayerDead) {
+                    accumulator += Math.min(dt, 0.25f);
+                    while (accumulator >= TIME_STEP) {
+                        world.step(TIME_STEP, 6, 2);
+                        accumulator -= TIME_STEP;
+                    }
 
-                    if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && mapMgr.currentLevel != null) {
-                        if (player.currentState == Player.State.NORMAL && player.chargeSlots[player.activeSlot] > 0 && !player.elementSlots[player.activeSlot].equals("NONE")) {
-                            isChargingCombat = true;
-                            combatChargeTimer += dt;
+                    if (WorldContactListener.pendingFastReload) {
+                        mapMgr.fastRoomReload();
+                        WorldContactListener.pendingFastReload = false;
+                    }
 
-                            //  player will become colour red when featured shot is ready to shoot
-                            if (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3) {
-                                player.invincibilityTimer = 0.1f;
+                    mapMgr.update(dt);
+                    sandManager.update();
+
+                    if (player != null) {
+                        player.update(dt, sandManager);
+
+                        if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && mapMgr.currentLevel != null) {
+                            if (player.currentState == Player.State.NORMAL && player.chargeSlots[player.activeSlot] > 0 && !player.elementSlots[player.activeSlot].equals("NONE")) {
+                                isChargingCombat = true;
+                                combatChargeTimer += dt;
+                                player.chargeProgress = combatChargeTimer;
+
+                                if (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3) {
+                                    player.invincibilityTimer = 0.1f;
+                                }
+                            } else {
+                                isChargingCombat = false;
+                                combatChargeTimer = 0f;
+                                player.chargeProgress = 0f;
                             }
-                        } else {
-                            isChargingCombat = false; combatChargeTimer = 0f;
+                        } else if (isChargingCombat) {
+                            boolean isMega = (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3);
+                            com.badlogic.gdx.math.Vector3 mousePos = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+                            viewport.unproject(mousePos);
+
+                            player.executeShoot(mousePos.x / PPM, mousePos.y / PPM, mapMgr.currentLevel.projectiles, world, isMega);
+
+                            isChargingCombat = false;
+                            combatChargeTimer = 0f;
+                            player.chargeProgress = 0f;
                         }
-                    } else if (isChargingCombat) {
-                        // charged button release
-                        boolean isMega = (combatChargeTimer >= 1.0f && player.chargeSlots[player.activeSlot] >= 3);
-                        com.badlogic.gdx.math.Vector3 mousePos = new com.badlogic.gdx.math.Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
-                        viewport.unproject(mousePos);
 
-                        player.executeShoot(mousePos.x / PPM, mousePos.y / PPM, mapMgr.currentLevel.projectiles, world, isMega);
-
-                        isChargingCombat = false;
-                        combatChargeTimer = 0f;
-                        player.chargeProgress = 0f;
-                    }
-
-                    if (player.hasJustInteractedWithSign()) {
-                        tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
-                        if (sign != null) {
-                            tutorialGui.show(sign.header, sign.description);
-                            isTutorialReading = true;
+                        if (player.hasJustInteractedWithSign()) {
+                            tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
+                            if (sign != null) {
+                                tutorialGui.show(sign.header, sign.description);
+                                isTutorialReading = true;
+                            }
                         }
                     }
                 }
+
+                if (isPlayerDead) {
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+                        mapMgr.fastRoomReload();
+                        player.hp = 100f;
+                    } else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+                        mainMenu.isStarted = false;
+                        player.hp = 100f;
+                    }
+                }
+
                 updateCameraPosition(dt);
             } else if (isTutorialReading) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
@@ -236,7 +276,6 @@ public class Main extends ApplicationAdapter {
 
             if (font != null) {
                 for (tilemapmanager.RuneData rune : WorldContactListener.allRunes) {
-                    // ignore invisible spawners, we only need to add label for RUNE CHARGE
                     if (!rune.isConsumed && !rune.elementType.equals("NONE") && !rune.isSpawner && !rune.isContainer) {
 
                         float bobbingOffset = MathUtils.sin(stateTime * 4f) * 4f;
@@ -245,12 +284,18 @@ public class Main extends ApplicationAdapter {
                         font.getData().setScale(0.5f);
 
                         String el = rune.elementType;
+                        float textX = rX - (sharedLayout.width / 2f);
+
+                        // DRAW BLACK DROP SHADOW FIRST
+                        font.setColor(0f, 0f, 0f, 0.8f);
+                        font.draw(batch, el, textX + 2f, rY - 2f); // Offset by 2 pixels
+
+                        // DRAW THE MAIN COLOR
                         if (el.equals("WATER")) font.setColor(0.2f, 0.6f, 1.0f, 1f);
                         else if (el.equals("LAVA")) font.setColor(1.0f, 0.4f, 0.0f, 1f);
                         else font.setColor(0.6f, 0.4f, 0.2f, 1f);
 
-                        sharedLayout.setText(font, el);
-                        font.draw(batch, el, rX - (sharedLayout.width / 2f), rY);
+                        font.draw(batch, el, textX, rY);
                     }
                 }
                 font.setColor(Color.WHITE);
@@ -269,6 +314,69 @@ public class Main extends ApplicationAdapter {
                 tutorialGui.render(dt);
             }
             pauseMenu.render(dt);
+        }
+
+        if (player != null && player.hp <= 0) {
+            // Calculate screen boundaries based on the actual camera viewport
+            float viewX = camera.position.x - viewport.getWorldWidth() / 2f;
+            float viewY = camera.position.y - viewport.getWorldHeight() / 2f;
+            float vWidth = viewport.getWorldWidth();
+            float vHeight = viewport.getWorldHeight();
+            float centerX = camera.position.x;
+            float centerY = camera.position.y;
+
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+
+            shapeRenderer.setColor(0, 0, 0, 0.85f);
+            shapeRenderer.rect(viewX, viewY, vWidth, vHeight);
+
+            shapeRenderer.setColor(0.6f, 0.0f, 0.0f, 0.4f);
+            float bannerHeight = vHeight * 0.3f;
+            shapeRenderer.rect(viewX, centerY - (bannerHeight / 2f), vWidth, bannerHeight);
+
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            batch.setProjectionMatrix(camera.combined); // Lock text to camera!
+            batch.begin();
+
+            font.getData().setScale(1.2f); // Scaled for the game world
+            font.setColor(1.0f, 0.2f, 0.2f, 1f);
+            sharedLayout.setText(font, "Y O U   D I E D");
+            font.draw(batch, "Y O U   D I E D", centerX - (sharedLayout.width / 2f), centerY + (vHeight * 0.08f));
+            font.getData().setScale(0.6f);
+            font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+
+            String promptF = "Press [F] to Respawn";
+            sharedLayout.setText(font, promptF);
+            font.draw(batch, promptF, centerX - (sharedLayout.width / 2f), centerY - (vHeight * 0.04f));
+
+            String promptEsc = "Press [ESC] to Withdraw";
+            sharedLayout.setText(font, promptEsc);
+            font.draw(batch, promptEsc, centerX - (sharedLayout.width / 2f), centerY - (vHeight * 0.1f));
+            font.getData().setScale(1.0f);
+
+            batch.end();
+        }
+
+        if (fadeAlpha > 0f) {
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.setProjectionMatrix(camera.combined);
+            shapeRenderer.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0, 0, 0, fadeAlpha);
+
+            float viewX = camera.position.x - viewport.getWorldWidth() / 2f;
+            float viewY = camera.position.y - viewport.getWorldHeight() / 2f;
+            shapeRenderer.rect(viewX, viewY, viewport.getWorldWidth(), viewport.getWorldHeight());
+
+            shapeRenderer.end();
+            Gdx.gl.glDisable(GL20.GL_BLEND);
         }
     }
 

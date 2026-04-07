@@ -173,15 +173,17 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx": {
             "expandedObjectLayers": [
+                9,
+                7,
+                8,
                 6,
-                4,
-                8
+                4
             ],
-            "scale": 1,
-            "selectedLayer": 6,
+            "scale": 1.5,
+            "selectedLayer": 7,
             "viewCenter": {
-                "x": 259.5,
-                "y": 400.5
+                "x": 391,
+                "y": 270
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#CastleTiles": {
@@ -201,8 +203,8 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 319.3333333333333,
-                "y": 191.33333333333331
+                "x": 532.6666666666665,
+                "y": 332
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {

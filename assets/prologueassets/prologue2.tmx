@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="8" nextobjectid="36">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="9" nextobjectid="40">
  <tileset firstgid="1" name="CastleTiles" tilewidth="32" tileheight="32" tilecount="56" columns="8">
   <image source="tilesets/CastleTiles.png" width="256" height="224"/>
  </tileset>
@@ -140,6 +140,11 @@
     <property name="runeID" type="int" value="5"/>
    </properties>
   </object>
+  <object id="39" x="394.667" y="144">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="7" name="water_zones">
   <object id="28" x="128" y="192" width="64" height="160"/>
@@ -159,6 +164,18 @@
     <property name="description" value="ADDITIONALLY YOU CAN CHANGE ELEMENTS THROUGH DIFFERENT RUNES BUT TAKE EXTRA CARE FOR YOU CAN ONLY ACTIVATE THE ABILITY THREE TIMES THEN YOU NEED TO RECHARGE AT THE RUNE AGAIN"/>
     <property name="header" value="ELEMENTS"/>
     <property name="isHero" type="bool" value="false"/>
+   </properties>
+  </object>
+ </objectgroup>
+ <objectgroup id="8" name="enemies">
+  <object id="37" x="267.242" y="341.818">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="38" x="454.833" y="340">
+   <properties>
+    <property name="enemyType" value="slime"/>
    </properties>
   </object>
  </objectgroup>

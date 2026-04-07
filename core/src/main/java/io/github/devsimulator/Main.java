@@ -214,7 +214,7 @@ public class Main extends ApplicationAdapter {
                         float rY = (rune.worldY * PPM) + (rune.height * PPM) + 25f + bobbingOffset;
                         font.getData().setScale(0.5f);
 
-                        String el = rune.elementType.toUpperCase();
+                        String el = rune.elementType;
                         if (el.equals("WATER")) font.setColor(0.2f, 0.6f, 1.0f, 1f);
                         else if (el.equals("LAVA")) font.setColor(1.0f, 0.4f, 0.0f, 1f);
                         else font.setColor(0.6f, 0.4f, 0.2f, 1f);
@@ -298,7 +298,7 @@ public class Main extends ApplicationAdapter {
             font.setColor(Color.WHITE);
 
             for (int i = 0; i < 2; i++) {
-                String el = player.elementSlots[i].toUpperCase();
+                String el = player.elementSlots[i];
                 int charges = player.chargeSlots[i];
                 boolean isActive = (player.activeSlot == i);
 

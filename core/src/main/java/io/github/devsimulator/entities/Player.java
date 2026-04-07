@@ -84,6 +84,7 @@ public class Player {
     private int chkActiveSlot;
     public float chkSpawnX;
     public float chkSpawnY;
+    private final Vector2 impulseVec = new Vector2();
 
     public Sound[] stoneSteps;
 
@@ -437,7 +438,7 @@ public class Player {
         int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
         int radius = 12 / CELL_SIZE; // player size
 
-        String myElement = currentTransformElement.toUpperCase();
+        String myElement = currentTransformElement;
         if (myElement.equals("NONE")) return;
 
         boolean reactedThisFrame = false;
@@ -489,7 +490,10 @@ public class Player {
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
             isFloatingInElement = true;
             Vector2 vel = b2body.getLinearVelocity();
-            if (Math.abs(vel.x) > 0.1f) b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
+            if (Math.abs(vel.x) > 0.1f) {
+                impulseVec.set(vel.x * 0.01f, 0);
+                b2body.applyLinearImpulse(impulseVec, b2body.getWorldCenter(), true);
+            }
         } else if (currentState == State.LIQUID_FORM && e instanceof Water) {
             isFloatingInElement = true;
         } else if (currentState == State.LAVA_FORM && e instanceof Lava) {

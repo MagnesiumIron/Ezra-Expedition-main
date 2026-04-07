@@ -177,7 +177,7 @@ public class tilemapmanager {
                 fdef.shape = shape;
                 fdef.isSensor = true;
 
-                String type = object.getProperties().get("elementType", "NONE", String.class);
+                String type = object.getProperties().get("elementType", "NONE", String.class).toUpperCase();;
                 boolean isSpawner = object.getProperties().get("isSpawner", false, Boolean.class);
                 boolean isContainer = object.getProperties().get("isContainer", false, Boolean.class);
                 int runeID = object.getProperties().get("runeID", 0, Integer.class);

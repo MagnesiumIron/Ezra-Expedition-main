@@ -52,12 +52,14 @@ public class Player {
     //NEW RUNE SYSTEM: Can have Two Slots
     public String[] elementSlots = {"NONE", "NONE"};
     public int[] chargeSlots = {0, 0};
+    public int maxCharges = 6;
     public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
     public String currentTransformElement = "NONE";
 
     //COMBAT AND HAZARD Vars
     public float invincibilityTimer = 0f;
     public float stunTimer = 0f;
+    public float chargeProgress = 0f;
 
     private boolean isGrounded = false;
     private boolean isSubmergedNormal = false;
@@ -528,6 +530,44 @@ public class Player {
         }
     }
 
+    public void executeShoot(float targetX, float targetY, com.badlogic.gdx.utils.Array<SandProjectile> projList, World world, boolean isMega) {
+        if (currentState != State.NORMAL || chargeSlots[activeSlot] <= 0 || elementSlots[activeSlot].equals("NONE")) return;
+
+        String el = elementSlots[activeSlot];
+        int cost = isMega ? 3 : 1;
+        if (chargeSlots[activeSlot] < cost) { isMega = false; cost = 1; } // for failsafe
+
+        chargeSlots[activeSlot] -= cost;
+        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
+
+        float px = b2body.getPosition().x;
+        float py = b2body.getPosition().y;
+
+        // sand blast
+        if ((el.equals("DIRT") || el.equals("SAND")) && !isMega) {
+            for(int i = -1; i <= 1; i++) {
+                float angleOffset = i * 0.2f;
+                float dx = targetX - px; float dy = targetY - py;
+                float dist = (float)Math.sqrt(dx*dx + dy*dy);
+                float angle = (float)Math.atan2(dy, dx) + angleOffset;
+
+                Vector2 spreadTarget = new Vector2(px + (float)Math.cos(angle)*dist, py + (float)Math.sin(angle)*dist);
+                projList.add(new SandProjectile(world, px, py, spreadTarget, el, false));
+            }
+        } else {
+            // 2 shots: standard or mega (feature shot)
+            projList.add(new SandProjectile(world, px, py, new Vector2(targetX, targetY), el, isMega));
+        }
+
+        // recoil knockback to the player
+        float selfKnock = isMega ? -6f : -2f;
+        float dirX = (targetX > px) ? 1 : -1;
+        impulseVec.set(dirX * selfKnock, 0);
+        b2body.applyLinearImpulse(impulseVec, b2body.getWorldCenter(), true);
+
+        if (Main.jumpSound != null) Main.jumpSound.play(isMega ? 0.6f : 1.2f, isMega ? 0.5f : 2.0f, 0f);
+    }
+
     private void displaceTerrain(PhysicSim sim) {
         float worldX = b2body.getPosition().x * Main.PPM;
         int gridX = (int) (worldX / CELL_SIZE);
@@ -606,6 +646,17 @@ public class Player {
 
     public void draw(SpriteBatch batch) {
         if (texture == null) return;
+        float offsetX = 0;
+        float offsetY = 0;
+
+        if (chargeProgress > 0 && chargeSlots[activeSlot] >= 3) {
+            offsetX = (MathUtils.random() - 0.5f) * (chargeProgress * 4f);
+            offsetY = (MathUtils.random() - 0.5f) * (chargeProgress * 4f);
+            if (chargeProgress >= 1.0f && (chargeProgress % 0.2f < 0.1f)) {
+                batch.setColor(1.0f, 1.0f, 0.4f, 1f);
+            }
+        }
+
         if (invincibilityTimer > 0 && (invincibilityTimer % 0.2f < 0.1f)) {
             batch.setColor(1.0f, 0.2f, 0.2f, 0.6f);
         } else {
@@ -616,7 +667,9 @@ public class Player {
                 default: batch.setColor(1, 1, 1, 1); break;
             }
         }
-        batch.draw(texture, b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f, b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f);
+        batch.draw(texture,
+            (b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f) + offsetX,
+            (b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f) + offsetY);
         batch.setColor(1, 1, 1, 1);
     }
 }

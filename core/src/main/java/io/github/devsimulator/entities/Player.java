@@ -227,27 +227,28 @@ public class Player {
         }
     }
         //NEW COMBAT SYSTEM
-    public void takeDamage(float amount, float knockbackDirX, SandManager sandMgr) {
-        if (invincibilityTimer > 0) return; // Immune to damage while flashing
+        public void takeDamage(float damage, float knockbackDir, SandManager sandMgr) {
+            // 1. Ignore damage if we are already dead or invincible
+            if (invincibilityTimer > 0 || hp <= 0) return;
 
-        hp -= amount;
-        invincibilityTimer = 1.5f; // 1.5 seconds of invincibility
-        stunTimer = 0.3f; // 0.3 seconds of losing keyboard control
+            hp -= damage;
+            invincibilityTimer = 1.0f; // Give Ezra 1 second of invincibility frames
 
-        // will go back to previous form if he takes damage
-        if (currentState != State.NORMAL) {
-            currentState = State.NORMAL;
-            currentTransformElement = "NONE";
-            if (Main.assimilationOUT != null) Main.assimilationOUT.play(1.2f, 0.7f, 0f); // Play high pitch error
+            if (hp <= 0) {
+                hp = 0; // Lock HP at exactly zero
+
+                // WE DO NOT RELOAD THE ROOM HERE ANYMORE!
+                // We just stop his movement and let Main.java draw the Death Screen.
+                b2body.setLinearVelocity(0, 0);
+            } else {
+                // 2. Ezra survived the hit! Apply knockback physics.
+                b2body.setLinearVelocity(0, b2body.getLinearVelocity().y);
+
+                // Reuse your zero-allocation vector
+                impulseVec.set(knockbackDir, 4f);
+                b2body.applyLinearImpulse(impulseVec, b2body.getWorldCenter(), true);
+            }
         }
-
-        if (hp <= 0) {
-            triggerDeath("Hazard", sandMgr);
-        } else {
-            // Apply physical knockback bounce
-            b2body.setLinearVelocity(knockbackDirX, JUMP_SPEED * 0.7f);
-        }
-    }
 
     private void applyVariableGravity() {
         if (isFloatingInElement) {
@@ -485,7 +486,6 @@ public class Player {
     }
 
     private void applyElementEffects(Element e, SandManager sandMgr) {
-        // Reset flags
         isSubmergedNormal = false;
         isFloatingInElement = false;
 
@@ -500,8 +500,7 @@ public class Player {
             isFloatingInElement = true;
         } else if (currentState == State.LAVA_FORM && e instanceof Lava) {
             isFloatingInElement = true;
-        } else if (e instanceof Lava) { //HAZARD DETECTION
-            // If the player touches Lava and is NOT in their Lava Form, they'll get burned and knocked back
+        } else if (e instanceof Lava) {
             float knockbackDir = (b2body.getLinearVelocity().x > 0) ? -5f : 5f;
             takeDamage(25f, knockbackDir, sandMgr);
         } else {
@@ -516,7 +515,12 @@ public class Player {
             if (assimilationMeter >= MAX_ASSIMILATION) {
                 isOverloaded = true;
                 hp -= (SUFFOCATION_RATE * 0.5f) * dt;
-                if (hp <= 0) triggerDeath("Overload", sandMgr);
+
+                // Let Main.java handle the cinematic death!
+                if (hp <= 0) {
+                    hp = 0;
+                    b2body.setLinearVelocity(0, 0);
+                }
             }
         } else {
             assimilationMeter = Math.max(0, assimilationMeter - (RECOVERY_RATE * dt));
@@ -524,26 +528,32 @@ public class Player {
 
         if (isSubmergedNormal) {
             hp -= SUFFOCATION_RATE * dt;
-            if (hp <= 0) triggerDeath("Suffocated / Drowned", sandMgr);
+
+            if (hp <= 0) {
+                hp = 0;
+                b2body.setLinearVelocity(0, 0);
+            }
         } else if (currentState == State.NORMAL && !isOverloaded && invincibilityTimer <= 0) {
             hp = Math.min(MAX_HP, hp + (RECOVERY_RATE * 0.5f * dt));
         }
     }
 
     public void executeShoot(float targetX, float targetY, com.badlogic.gdx.utils.Array<SandProjectile> projList, World world, boolean isMega) {
-        if (currentState != State.NORMAL || chargeSlots[activeSlot] <= 0 || elementSlots[activeSlot].equals("NONE")) return;
+        if (currentState != State.NORMAL || elementSlots[activeSlot].equals("NONE")) return;
 
         String el = elementSlots[activeSlot];
-        int cost = isMega ? 3 : 1;
-        if (chargeSlots[activeSlot] < cost) { isMega = false; cost = 1; } // for failsafe
+        int cost = isMega ? 1 : 0;
+
+        if (chargeSlots[activeSlot] < cost) {
+            isMega = false;
+            cost = 0;
+        }
 
         chargeSlots[activeSlot] -= cost;
-        if (chargeSlots[activeSlot] <= 0) elementSlots[activeSlot] = "NONE";
 
         float px = b2body.getPosition().x;
         float py = b2body.getPosition().y;
 
-        // sand blast
         if ((el.equals("DIRT") || el.equals("SAND")) && !isMega) {
             for(int i = -1; i <= 1; i++) {
                 float angleOffset = i * 0.2f;
@@ -555,11 +565,9 @@ public class Player {
                 projList.add(new SandProjectile(world, px, py, spreadTarget, el, false));
             }
         } else {
-            // 2 shots: standard or mega (feature shot)
             projList.add(new SandProjectile(world, px, py, new Vector2(targetX, targetY), el, isMega));
         }
 
-        // recoil knockback to the player
         float selfKnock = isMega ? -6f : -2f;
         float dirX = (targetX > px) ? 1 : -1;
         impulseVec.set(dirX * selfKnock, 0);
@@ -614,7 +622,7 @@ public class Player {
         this.currentTransformElement = "NONE";
     }
 
-    public void triggerDeath(String reason, SandManager sandMgr) {
+    /*public void triggerDeath(String reason, SandManager sandMgr) {
         if (sandMgr != null && sandMgr.sim != null) {
             int gridX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
             int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
@@ -633,7 +641,7 @@ public class Player {
         isAlive = false;
         io.github.devsimulator.helper.WorldContactListener.pendingFastReload = true;
         isAlive = true;
-    }
+    }*/
 
     private Element getSafeElement(PhysicSim sim, int x, int y) {
         if (sim == null) return null;
@@ -649,7 +657,7 @@ public class Player {
         float offsetX = 0;
         float offsetY = 0;
 
-        if (chargeProgress > 0 && chargeSlots[activeSlot] >= 3) {
+        if (chargeProgress > 0 && chargeSlots[activeSlot] >= 1) {
             offsetX = (MathUtils.random() - 0.5f) * (chargeProgress * 4f);
             offsetY = (MathUtils.random() - 0.5f) * (chargeProgress * 4f);
             if (chargeProgress >= 1.0f && (chargeProgress % 0.2f < 0.1f)) {
@@ -659,7 +667,7 @@ public class Player {
 
         if (invincibilityTimer > 0 && (invincibilityTimer % 0.2f < 0.1f)) {
             batch.setColor(1.0f, 0.2f, 0.2f, 0.6f);
-        } else {
+        } else if (chargeProgress < 1.0f) {
             switch (currentState) {
                 case DIRT_FORM: batch.setColor(0.6f, 0.4f, 0.2f, 1f); break;
                 case LIQUID_FORM: batch.setColor(0.2f, 0.2f, 0.8f, 1f); break;
@@ -667,6 +675,7 @@ public class Player {
                 default: batch.setColor(1, 1, 1, 1); break;
             }
         }
+
         batch.draw(texture,
             (b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f) + offsetX,
             (b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f) + offsetY);

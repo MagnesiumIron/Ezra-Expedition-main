@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="17" nextobjectid="79">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="17" nextobjectid="88">
  <tileset firstgid="1" source="../runes/runesOnline.tsx"/>
  <tileset firstgid="181" source="tilesets/terrainground/Level1_terrain.tsx"/>
  <group id="2" name="parallax">
-  <imagelayer id="4" name="backdrop" repeatx="1">
+  <imagelayer id="4" name="backdrop" parallaxx="0.01" repeatx="1">
    <image source="parralax/1.png" width="576" height="324"/>
   </imagelayer>
-  <imagelayer id="3" name="background" repeatx="1">
+  <imagelayer id="3" name="background" parallaxx="0.25" repeatx="1">
    <image source="parralax/2.png" width="576" height="324"/>
   </imagelayer>
-  <imagelayer id="5" name="middleground" repeatx="1">
+  <imagelayer id="5" name="middleground" parallaxx="0.6" repeatx="1">
    <image source="parralax/3.png" width="576" height="324"/>
   </imagelayer>
-  <imagelayer id="6" name="middlemiddleground" offsetx="10" offsety="2" repeatx="1">
+  <imagelayer id="6" name="middlemiddleground" offsetx="10" offsety="2" parallaxx="0.65" repeatx="1">
    <image source="parralax/4.png" width="576" height="324"/>
   </imagelayer>
-  <imagelayer id="7" name="foreground" repeatx="1">
+  <imagelayer id="7" name="foreground" parallaxx="0.8" repeatx="1">
    <image source="parralax/5.png" width="576" height="324"/>
   </imagelayer>
  </group>
@@ -38,17 +38,17 @@
  <layer id="1" name="terrain" width="40" height="12">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,229,230,230,231,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,229,230,230,231,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,215,216,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,223,183,0,182,182,182,182,182,183,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,223,235,246,184,217,217,217,219,219,219,245,210,191,222,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,181,235,194,221,200,1073742058,3221225706,217,242,184,184,245,210,241,234,222,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,193,195,195,196,207,234,235,198,242,184,219,194,210,241,204,234,202,202,202,202,202,202,202,202,202,202,202,203,
-0,0,0,0,0,0,0,0,0,0,0,0,241,184,184,184,224,225,225,225,225,225,225,225,203,215,216,184,184,184,184,184,184,184,184,184,184,184,184,221,
-202,202,202,202,202,202,202,202,202,202,202,202,191,191,191,191,191,191,191,191,191,191,191,191,191,236,237,237,237,237,237,237,237,237,237,237,237,237,237,238
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,215,216,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,224,228,226,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,240,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,223,183,0,182,182,182,182,182,183,0,0,0,0,0,0,0,0,0,0,0,0,0,0,240,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,223,235,246,184,217,217,217,219,219,219,245,210,191,222,0,0,0,0,0,0,0,0,0,0,240,256,258,
+0,0,0,0,0,0,0,0,0,0,0,0,181,235,194,221,200,1073742058,3221225706,217,242,184,184,245,210,241,234,222,0,0,0,0,0,0,0,0,0,240,253,255,
+0,0,0,0,0,0,0,0,0,0,0,0,193,195,195,196,207,234,235,198,242,184,219,194,210,241,204,234,202,202,202,202,202,202,202,202,202,250,275,253,
+0,0,0,0,0,0,0,0,0,0,0,0,241,184,184,184,224,225,225,225,225,225,225,225,203,215,216,184,184,184,184,184,184,184,184,184,184,250,253,260,
+202,202,202,202,202,202,202,202,202,202,202,202,191,191,191,191,191,191,191,191,191,191,191,191,191,236,237,237,237,237,237,237,237,237,237,237,237,250,253,253
 </data>
  </layer>
  <layer id="13" name="runes_visual" width="40" height="12">
@@ -94,13 +94,16 @@
    <polygon points="0,-31.9896 0.0078125,-63.9961 32.0011,-32.0021"/>
   </object>
   <object id="69" x="831.994" y="256.006" width="32.0178" height="32.0036"/>
-  <object id="77" x="1279.89" y="148.285" width="47" height="140"/>
+  <object id="80" x="1280" y="-203" width="32" height="587"/>
+  <object id="84" x="1152" y="32" width="128" height="32"/>
+  <object id="85" x="1152" y="128" width="96" height="32"/>
+  <object id="86" x="1184" y="160" width="32" height="128"/>
  </objectgroup>
  <objectgroup id="16" name="transitions">
-  <object id="78" x="1247.99" y="32" width="32" height="255.915">
+  <object id="78" x="1215.66" y="269.333" width="63.6667" height="16.915">
    <properties>
     <property name="spawnX" type="float" value="100"/>
-    <property name="spawnY" type="float" value="200"/>
+    <property name="spawnY" type="float" value="400"/>
     <property name="targetMap" value="level2.tmx"/>
    </properties>
   </object>
@@ -156,13 +159,21 @@
     <property name="runeID" type="int" value="1"/>
    </properties>
   </object>
-  <object id="71" x="896.004" y="224">
+  <object id="71" x="910.504" y="223">
    <properties>
     <property name="elementType" value="WATER"/>
     <property name="isContainer" type="bool" value="true"/>
     <property name="runeID" type="int" value="3"/>
    </properties>
-   <polygon points="0,0 54.8568,64.0078 383.997,64.0078 383.997,0"/>
+   <polygon points="0,0 38.6425,64.0078 270.497,64.0078 270.497,0"/>
+  </object>
+  <object id="87" x="1118.33" y="0.666667">
+   <properties>
+    <property name="elementType" value="WATER"/>
+    <property name="isContainer" type="bool" value="true"/>
+    <property name="runeID" type="int" value="3"/>
+   </properties>
+   <polygon points="0,0 22.9282,30.3411 160.497,30.3411 160.497,0"/>
   </object>
  </objectgroup>
 </map>

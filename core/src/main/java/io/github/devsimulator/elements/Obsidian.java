@@ -1,9 +1,20 @@
 package io.github.devsimulator.elements;
-import com.badlogic.gdx.graphics.Color;
 
-public class Obsidian extends MovableSolid {
+import com.badlogic.gdx.graphics.Color;
+import io.github.devsimulator.helper.PhysicSim;
+
+public class Obsidian extends Element {
+
     public Obsidian(int x, int y) {
-        super(x, y, 50); // very heavy and sinks almost in everything
-        this.color = new Color(0.15f, 0.05f, 0.2f, 1f); //colour is deep dark purple
+        super(x, y);
+        this.isSolid = true;
+        this.isStatic = true;
+        this.isFreeFalling = false;
+        this.density = 50;
+        this.color = new Color(0.15f, 0.05f, 0.2f, 1f); // Deep dark purple
+    }
+
+    @Override
+    public void step(PhysicSim sim) {
     }
 }

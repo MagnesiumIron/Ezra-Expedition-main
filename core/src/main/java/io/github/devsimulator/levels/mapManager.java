@@ -34,6 +34,8 @@ public class mapManager {
         else if (targetMapName.contains("level1fr.tmx") || targetMapName.equals("level1")) nextLevel = new level1();
         else if (targetMapName.contains("level1fr2.tmx")) nextLevel = new level1fr2();
         else if (targetMapName.contains("level2.tmx")) nextLevel = new level2();
+        else if (targetMapName.contains("level2-1.tmx")) nextLevel = new level2_1();
+        else if (targetMapName.contains("level2end.tmx")) nextLevel = new level2end();
 
         if (nextLevel != null) {
             changeLevel(nextLevel, spawnX, spawnY);
@@ -41,7 +43,6 @@ public class mapManager {
             System.err.println("WARNING: mapManager doesn't know how to route: " + targetMapName);
         }
     }
-
     public void changeLevel(baseLevel newLevel, float spawnX, float spawnY) {
         if (currentLevel != null) {
             currentLevel.dispose();
@@ -54,7 +55,6 @@ public class mapManager {
         Array<Body> bodies = new Array<>();
         world.getBodies(bodies);
         for (Body b : bodies) {
-            // Keep Ezra, destroy everything else
             if (b != player.b2body) {
                 world.destroyBody(b);
             }

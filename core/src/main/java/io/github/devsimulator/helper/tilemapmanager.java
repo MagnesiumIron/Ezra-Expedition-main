@@ -51,6 +51,8 @@ public class tilemapmanager {
         MapLayer collisionLayer = map.getLayers().get("collisions");
         if (collisionLayer != null) {
             MapObjects objects = collisionLayer.getObjects();
+
+            // --- 1. RECTANGLE COLLISIONS ---
             for (MapObject object : objects.getByType(RectangleMapObject.class)) {
                 Rectangle rect = ((RectangleMapObject) object).getRectangle();
                 BodyDef bdef = new BodyDef();
@@ -76,15 +78,25 @@ public class tilemapmanager {
                 shape.dispose();
             }
 
+            // --- 2. POLYGON COLLISIONS (WITH CRASH FIX) ---
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
+                float[] vertices = polygon.getVertices();
+
+                // FIX: Box2D crashes if a polygon has < 3 or > 8 vertices.
+                // Since vertices array holds X,Y pairs, 3 vertices = length 6, and 8 vertices = length 16.
+                if (vertices.length < 6 || vertices.length > 16) {
+                    System.err.println("WARNING: Invalid Polygon found in Tiled Map!");
+                    System.err.println("It has " + (vertices.length / 2) + " vertices. Box2D requires between 3 and 8.");
+                    System.err.println("Skipping this shape to prevent a game crash.");
+                    continue; // Skip this bad shape and move to the next one
+                }
 
                 BodyDef bdef = new BodyDef();
                 bdef.type = BodyDef.BodyType.StaticBody;
                 bdef.position.set(polygon.getX() / Main.PPM, polygon.getY() / Main.PPM);
                 Body body = world.createBody(bdef);
 
-                float[] vertices = polygon.getVertices();
                 float[] worldVertices = new float[vertices.length];
                 for (int i = 0; i < vertices.length; ++i) {
                     worldVertices[i] = vertices[i] / Main.PPM;

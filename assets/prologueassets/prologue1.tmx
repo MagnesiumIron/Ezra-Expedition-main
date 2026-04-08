@@ -85,7 +85,7 @@
  <objectgroup id="5" name="interactables">
   <object id="6" x="64" y="224" width="32" height="32">
    <properties>
-    <property name="description" value="YOU HAVE BEEN GIVEN THE POWER TO ABSORB ELEMENTS THROUGH THE RUNE  BY PRESSING E BUT BE WARNED IF YOU ABUSE THIS ABILITY TOO MUCH YOU MAY DIE"/>
+    <property name="description" value="YOU HAVE BEEN GIVEN THE POWER TO ABSORB ELEMENTS THROUGH THE RUNE  BY PRESSING SHIFT BUT BE WARNED IF YOU ABUSE THIS ABILITY TOO MUCH YOU MAY DIE. YOU CAN ALSO USE THIS ELEMENT TO FIGHT OFF ENEMIES"/>
     <property name="header" value="RUNE SYSTEM"/>
     <property name="isHero" type="bool" value="false"/>
    </properties>

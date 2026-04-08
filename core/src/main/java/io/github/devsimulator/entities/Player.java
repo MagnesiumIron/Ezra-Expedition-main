@@ -4,10 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.utils.Array;
 import io.github.devsimulator.Main;
 import io.github.devsimulator.controllers.SandManager;
 import io.github.devsimulator.elements.*;
@@ -34,7 +37,22 @@ public class Player {
     public enum State { NORMAL, DIRT_FORM, LIQUID_FORM, GAS_FORM, LAVA_FORM }
 
     public Body b2body;
-    private Texture texture;
+
+    // --- ANIMATION VARIABLES ---
+    private Texture idleTexture;
+    private TextureRegion idleFrame;
+
+    private Texture playerSheetWalk;
+    private Animation<TextureRegion> walkAnimationRight;
+
+    private Texture playerSheet;
+    private TextureRegion[] jumpFrames;
+
+    private boolean facingRight = true;
+    private boolean wasGrounded = false;
+    private boolean isLanding = false;
+    private float landingTimer = 0f;
+    private float stateTime = 0f;
 
     public State currentState = State.NORMAL;
     public float assimilationMeter = 0.0f;
@@ -45,17 +63,11 @@ public class Player {
     public final float MAX_HP = 100.0f;
     private final float SUFFOCATION_RATE = 6.0f;
 
-    /* --- RUNE SYSTEM VARIABLES ---
-    public int assimilationCharges = 0;
-    public String storedElement = "NONE";*/
-
-    //NEW RUNE SYSTEM: Can have Two Slots
     public String[] elementSlots = {"NONE", "NONE"};
     public int[] chargeSlots = {0, 0};
-    public int activeSlot = 0; // 0 = Slot 1, 1 = Slot 2 (0-indexing concept)
+    public int activeSlot = 0;
     public String currentTransformElement = "NONE";
 
-    //COMBAT AND HAZARD Vars
     public float invincibilityTimer = 0f;
     public float stunTimer = 0f;
 
@@ -64,6 +76,9 @@ public class Player {
     private boolean isFloatingInElement = false;
     private boolean interactedThisFrame = false;
 
+    private boolean standingOnElement = false;
+    private boolean deeplyEmbedded = false;
+
     private int jumpCounter = 0;
     private final int MAX_JUMPS = 2;
 
@@ -71,9 +86,6 @@ public class Player {
     private final float RECOVERY_RATE = 10.0f;
 
     private float stepTimer = 0f;
-    //public String currentSurface = "default";
-    private float lastYpos = 0f;
-    private int verticalRestFrames = 0;
     private boolean hasUsedElementBoost = false;
 
     //checkpoint
@@ -89,10 +101,29 @@ public class Player {
 
     public Player(World world) {
         definePlayer(world);
+
         try {
-            texture = new Texture("player.png");
+            idleTexture = new Texture("player.png");
+            idleFrame = new TextureRegion(idleTexture);
+
+            playerSheetWalk = new Texture("player_walk.png");
+            TextureRegion[][] tmpWalk = TextureRegion.split(playerSheetWalk, 18, 27);
+
+            Array<TextureRegion> framesWalk = new Array<>();
+            for (int i = 0; i < 4; i++) {
+                framesWalk.add(tmpWalk[i][0]);
+            }
+            walkAnimationRight = new Animation<>(0.1f, framesWalk);
+
+            playerSheet = new Texture("player_jump.png");
+            TextureRegion[][] tmp = TextureRegion.split(playerSheet, 43, 27);
+
+            jumpFrames = new TextureRegion[7];
+            for (int i = 0; i < 7; i++) {
+                jumpFrames[i] = tmp[i][0];
+            }
         } catch (Exception e) {
-            Gdx.app.error("Player", "Texture missing");
+            Gdx.app.error("Player", "Texture missing: " + e.getMessage());
         }
 
         stoneSteps = new Sound[] {
@@ -128,16 +159,14 @@ public class Player {
 
         b2body.setGravityScale(GRAVITY_NORMAL);
     }
+
     private void playFootstep(float dt) {
-        // no sound if it's within the element zone
         if (!isGrounded || isFloatingInElement) return;
-        // will only play if the player is moving horizontally
         if (Math.abs(b2body.getLinearVelocity().x) < 0.1f) return;
 
         stepTimer += dt;
-        if (stepTimer >= 0.35f) { //timing between the steps
+        if (stepTimer >= 0.35f) {
             stepTimer = 0;
-            // Play a random stone step sound
             int index = MathUtils.random(0, stoneSteps.length - 1);
             stoneSteps[index].play(0.3f);
         }
@@ -163,14 +192,23 @@ public class Player {
         }
 
         interactWithEnvironment(sandMgr);
-        handleMovement(dt);
+
+        if (isGrounded && !wasGrounded) {
+            isLanding = true;
+            landingTimer = 0f;
+        }
+        wasGrounded = isGrounded;
+
+        // Passed sandMgr into handleMovement so it can scan the pixels
+        handleMovement(dt, sandMgr);
         applyVariableGravity();
         updateStats(dt, sandMgr);
         playFootstep(dt);
     }
 
-    private void handleMovement(float dt) {
-        if (stunTimer > 0) { //added a stun lock so if player is hit by a hazard it'll prevent their movement
+    // --- UPDATED: Horizontal Collision ---
+    private void handleMovement(float dt, SandManager sandMgr) {
+        if (stunTimer > 0) {
             stunTimer -= dt;
             return;
         }
@@ -178,12 +216,26 @@ public class Player {
         float targetX = 0;
         float desiredY = vel.y;
 
-        if (isFloatingInElement) {
-            // Horizontal Movement
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) targetX = -MOVE_SPEED;
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) targetX = MOVE_SPEED;
+        int simX = (int) (b2body.getPosition().x * Main.PPM / CELL_SIZE);
+        int simY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
 
-            if (Gdx.input.isKeyPressed(Input.Keys.W) /*|| Gdx.input.isKeyPressed(Input.Keys.UP)*/) {
+        boolean blockedLeft = false;
+        boolean blockedRight = false;
+
+        // Scan the pixels directly left and right of Ezra's torso and head
+        for (int y = 0; y <= 3; y++) {
+            if (isFirmGround(getSafeElement(sandMgr.sim, simX - 2, simY + y))) blockedLeft = true;
+            if (isFirmGround(getSafeElement(sandMgr.sim, simX + 2, simY + y))) blockedRight = true;
+        }
+
+        if (isFloatingInElement) {
+            jumpBufferTimer = 0;
+
+            // Only allow movement if there isn't a solid wall of Obsidian/Mud in the way!
+            if (Gdx.input.isKeyPressed(Input.Keys.A) && !blockedLeft) targetX = -MOVE_SPEED;
+            if (Gdx.input.isKeyPressed(Input.Keys.D) && !blockedRight) targetX = MOVE_SPEED;
+
+            if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 desiredY = JUMP_SPEED * 0.5f;
             } else if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
                 desiredY = -JUMP_SPEED * 0.5f;
@@ -197,9 +249,20 @@ public class Player {
             float currentMoveSpeed = isSubmergedNormal ? MOVE_SPEED * 0.3f : MOVE_SPEED;
             float currentJumpSpeed = isSubmergedNormal ? JUMP_SPEED * 0.4f : JUMP_SPEED;
 
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) targetX = -currentMoveSpeed;
-            if (Gdx.input.isKeyPressed(Input.Keys.D)) targetX = currentMoveSpeed;
-            //float lerpFactor = isGrounded ? 0.12f : 0.05f;
+            // Only allow movement if there isn't a solid wall of Obsidian/Mud in the way!
+            if (Gdx.input.isKeyPressed(Input.Keys.A) && !blockedLeft) targetX = -currentMoveSpeed;
+            if (Gdx.input.isKeyPressed(Input.Keys.D) && !blockedRight) targetX = currentMoveSpeed;
+
+            if (WorldContactListener.footContacts == 0 && desiredY <= 0) {
+                if (deeplyEmbedded && currentState == State.NORMAL) {
+                    b2body.setTransform(b2body.getPosition().x, b2body.getPosition().y + (CELL_SIZE / Main.PPM), 0);
+                    desiredY = 0;
+                }
+                else if (standingOnElement && currentState == State.NORMAL) {
+                    desiredY = 0;
+                }
+            }
+
             float lerpFactor = isGrounded ? 0.30f : 0.05f;
             if (targetX == 0 && isGrounded) {
                 lerpFactor = 0.60f;
@@ -212,7 +275,6 @@ public class Player {
                 jumpBufferTimer = 0;
                 coyoteTimer = 0;
                 jumpCounter = 1;
-                verticalRestFrames = 0;
                 if (Main.jumpSound != null) Main.jumpSound.play(0.9f + (float)Math.random() * 0.2f, 0.9f + (float)Math.random() * 0.3f, 0f);
             } else if (jumpBufferTimer > 0 && jumpCounter < MAX_JUMPS && coyoteTimer <= 0) {
                 desiredY = currentJumpSpeed;
@@ -223,34 +285,33 @@ public class Player {
             b2body.setLinearVelocity(desiredX, desiredY);
         }
     }
-        //NEW COMBAT SYSTEM
+
     public void takeDamage(float amount, float knockbackDirX, SandManager sandMgr) {
-        if (invincibilityTimer > 0) return; // Immune to damage while flashing
+        if (invincibilityTimer > 0) return;
 
         hp -= amount;
-        invincibilityTimer = 1.5f; // 1.5 seconds of invincibility
-        stunTimer = 0.3f; // 0.3 seconds of losing keyboard control
+        invincibilityTimer = 1.5f;
+        stunTimer = 0.3f;
 
-        // will go back to previous form if he takes damage
         if (currentState != State.NORMAL) {
             currentState = State.NORMAL;
             currentTransformElement = "NONE";
-            if (Main.assimilationOUT != null) Main.assimilationOUT.play(1.2f, 0.7f, 0f); // Play high pitch error
+            if (Main.assimilationOUT != null) Main.assimilationOUT.play(1.2f, 0.7f, 0f);
         }
 
         if (hp <= 0) {
             triggerDeath("Hazard", sandMgr);
         } else {
-            // Apply physical knockback bounce
             b2body.setLinearVelocity(knockbackDirX, JUMP_SPEED * 0.7f);
         }
     }
 
     private void applyVariableGravity() {
-        if (isFloatingInElement) {
+        if (isFloatingInElement || ((standingOnElement || deeplyEmbedded) && WorldContactListener.footContacts == 0 && b2body.getLinearVelocity().y <= 0.1f)) {
             b2body.setGravityScale(0);
             return;
         }
+
         Vector2 vel = b2body.getLinearVelocity();
         boolean holdingJump = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyPressed(Input.Keys.UP);
 
@@ -263,8 +324,19 @@ public class Player {
 
     public boolean hasJustInteractedWithSign() {
         boolean val = interactedThisFrame;
-        interactedThisFrame = false; // Reset it immediately after Main reads it
+        interactedThisFrame = false;
         return val;
+    }
+
+    private boolean isFirmGround(Element e) {
+        if (e == null || !e.isSolid || e instanceof EmptyCell) return false;
+        if (e instanceof Sand || e instanceof Dirt) return false;
+
+        // Mud is swimmable in Dirt form, but Obsidian is ALWAYS solid rock.
+        if (currentState == State.DIRT_FORM && e instanceof Mud) return false;
+        if (e instanceof Obsidian) return true;
+
+        return true;
     }
 
     private void interactWithEnvironment(SandManager sandMgr) {
@@ -274,15 +346,12 @@ public class Player {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) {
             activeSlot = 0;
-            Gdx.app.log("Player", "Switched to Slot 1: " + elementSlots[activeSlot]);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) {
             activeSlot = 1;
-            Gdx.app.log("Player", "Switched to Slot 2: " + elementSlots[activeSlot]);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
             if (!elementSlots[activeSlot].equals("NONE")) {
-                Gdx.app.log("Player", "Dropped " + elementSlots[activeSlot] + " from Slot " + (activeSlot + 1));
                 elementSlots[activeSlot] = "NONE";
                 chargeSlots[activeSlot] = 0;
                 currentState = State.NORMAL;
@@ -290,24 +359,48 @@ public class Player {
             }
         }
 
-        boolean standingOnWall = WorldContactListener.footContacts > 0;
-        Element feet = getSafeElement(sim, simX, simY - RADIUS_OFFSET);
-        boolean standingOnElement = (feet != null && !(feet instanceof EmptyCell));
-
-        float currentY = b2body.getPosition().y;
-        if(Math.abs(currentY - lastYpos) < 0.005f) {
-            verticalRestFrames++;
-        } else {
-            verticalRestFrames = 0;
+        if (b2body.getLinearVelocity().y > 0.5f) {
+            WorldContactListener.footContacts = 0;
         }
-        lastYpos = currentY;
 
-        boolean isTrulyResting = verticalRestFrames >= 2;
+        boolean standingOnWall = WorldContactListener.footContacts > 0;
+        standingOnElement = false;
+
+        if (b2body.getLinearVelocity().y <= 0.1f) {
+            int highestFirmGridY = -1;
+
+            for (int xOffset = -1; xOffset <= 1; xOffset++) {
+                for (int yOffset = -1; yOffset >= -4; yOffset--) {
+                    Element check = getSafeElement(sim, simX + xOffset, simY + yOffset);
+                    if (isFirmGround(check)) {
+                        highestFirmGridY = Math.max(highestFirmGridY, simY + yOffset);
+                    }
+                }
+            }
+
+            if (highestFirmGridY != -1 && currentState == State.NORMAL) {
+                float targetPixelY = (highestFirmGridY * CELL_SIZE) + CELL_SIZE + 9f;
+                float targetSurfaceB2DY = targetPixelY / Main.PPM;
+
+                if (b2body.getPosition().y <= targetSurfaceB2DY + 0.05f) {
+                    standingOnElement = true;
+                    b2body.setTransform(b2body.getPosition().x, targetSurfaceB2DY, 0);
+                    b2body.setLinearVelocity(b2body.getLinearVelocity().x, 0);
+
+                    simY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
+                }
+            }
+        }
+
+        Element feet = getSafeElement(sim, simX, simY - 2);
+        boolean touchingSolidPixels = (feet != null && feet.isSolid && !(feet instanceof EmptyCell));
+
+        boolean notRising = b2body.getLinearVelocity().y <= 0.1f;
 
         if (currentState == State.DIRT_FORM || currentState == State.LIQUID_FORM) {
-            isGrounded = standingOnWall && isTrulyResting;
+            isGrounded = standingOnWall && notRising;
         } else {
-            isGrounded = (standingOnWall || standingOnElement) && isTrulyResting;
+            isGrounded = (standingOnWall || standingOnElement || touchingSolidPixels) && notRising;
         }
 
         if (isGrounded) {
@@ -343,7 +436,6 @@ public class Player {
             }
         }
 
-        // RUNES AND TRANSFORMATION INTERACTION
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             tilemapmanager.RuneData rune = WorldContactListener.closestRune;
             float dist = -1;
@@ -356,7 +448,6 @@ public class Player {
 
                 if (rune.isSpawner) {
                     if (!sandMgr.completedGeysers.contains(rune.runeID, false) && currentState != State.NORMAL) {
-                        Gdx.app.log("Player", "This geyser is exhausted.");
                         boolean match = (currentState == State.DIRT_FORM && (type.equals("DIRT") || type.equals("SAND"))) ||
                             (currentState == State.LIQUID_FORM && type.equals("WATER")) ||
                             (currentState == State.LAVA_FORM && type.equals("LAVA"));
@@ -394,7 +485,6 @@ public class Player {
             }
         }
 
-        // LEFT SHIFT KEY to USE ELEMENTAL ABILITY
         if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
             if (chargeSlots[activeSlot] > 0 && currentState == State.NORMAL) {
                 chargeSlots[activeSlot]--;
@@ -435,58 +525,48 @@ public class Player {
         float worldX = b2body.getPosition().x * Main.PPM;
         int gridX = (int) (worldX / CELL_SIZE);
         int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
-        int radius = 12 / CELL_SIZE; // player size
 
+        int radius = 12 / CELL_SIZE;
         String myElement = currentTransformElement.toUpperCase();
         if (myElement.equals("NONE")) return;
 
         boolean reactedThisFrame = false;
 
-        for (int y = -radius; y <= radius; y++) {
+        // FIX: We scan 4 pixels deeper (y-4) than Ezra's center
+        // to turn lava into obsidian BEFORE he falls into it.
+        for (int y = -radius - 4; y <= radius; y++) {
             for (int x = -radius; x <= radius; x++) {
-                if (x*x + y*y <= radius*radius) {
+                if (x*x + y*y <= (radius+4)*(radius+4)) {
                     int px = gridX + x;
                     int py = gridY + y;
                     Element e = getSafeElement(sim, px, py);
 
                     if (e != null && !(e instanceof EmptyCell)) {
                         String targetElement = e.getClass().getSimpleName().toUpperCase();
-
-                        // Alphabetize the combination to check the dictionary
                         String key = myElement.compareTo(targetElement) < 0 ?
                             myElement + "_" + targetElement :
                             targetElement + "_" + myElement;
 
                         ElementType resultType = sim.getAlchemyRecipe(key);
                         if (resultType != null) {
-                            // Convert the terrain pixel if there is a chemical reaction
                             sim.setElement(px, py, resultType.create(px, py));
                             e.freeToPool();
                             reactedThisFrame = true;
-
-                            // Spawn some steam/smoke off the reaction
-                            if (MathUtils.random(100) < 5) {
-                                Smoke smoke = SandManager.smokePool.obtain();
-                                smoke.init(px, py + 1);
-                                sim.setElement(px, py + 1, smoke);
-                            }
                         }
                     }
                 }
             }
         }
-        // having a chemical reaction with the environment drains the player's energy quickly!
         if (reactedThisFrame) {
             assimilationMeter += 15.0f * Gdx.graphics.getDeltaTime();
         }
     }
 
     private void applyElementEffects(Element e, SandManager sandMgr) {
-        // Reset flags
         isSubmergedNormal = false;
         isFloatingInElement = false;
 
-        if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt)) {
+        if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt || e instanceof Mud)) {
             isFloatingInElement = true;
             Vector2 vel = b2body.getLinearVelocity();
             if (Math.abs(vel.x) > 0.1f) b2body.applyLinearImpulse(new Vector2(vel.x * 0.01f, 0), b2body.getWorldCenter(), true);
@@ -494,11 +574,10 @@ public class Player {
             isFloatingInElement = true;
         } else if (currentState == State.LAVA_FORM && e instanceof Lava) {
             isFloatingInElement = true;
-        } else if (e instanceof Lava) { //HAZARD DETECTION
-            // If the player touches Lava and is NOT in their Lava Form, they'll get burned and knocked back
+        } else if (e instanceof Lava) {
             float knockbackDir = (b2body.getLinearVelocity().x > 0) ? -5f : 5f;
             takeDamage(25f, knockbackDir, sandMgr);
-        } else {
+        } else if (!e.isSolid) {
             isSubmergedNormal = true;
         }
     }
@@ -530,16 +609,30 @@ public class Player {
         int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
         int radius = 10 / CELL_SIZE;
 
-        for (int y = -radius; y <= radius; y++) {
+        // If in Form, don't displace anything below the waist at all!
+        int startY = (currentState == State.NORMAL) ? -radius : 0;
+
+        for (int y = startY; y <= radius; y++) {
             for (int x = -radius; x <= radius; x++) {
                 if (x*x + y*y < radius*radius) {
                     int px = gridX + x;
                     int py = gridY + y;
                     Element e = getSafeElement(sim, px, py);
+
                     if (e != null && !e.isStatic) {
-                        if (getSafeElement(sim, px, py + 1) instanceof EmptyCell) sim.moveElement(px, py, px, py + 1);
-                        else if (getSafeElement(sim, px+1, py) instanceof EmptyCell) sim.moveElement(px, py, px+1, py);
-                        else if (getSafeElement(sim, px-1, py) instanceof EmptyCell) sim.moveElement(px, py, px-1, py);
+                        // CRITICAL: If Ezra is standing on Mud or Obsidian,
+                        // he should NEVER be allowed to displace it.
+                        if (isFirmGround(e)) continue;
+
+                        if (y <= 0) {
+                            if (x < 0 && getSafeElement(sim, px-1, py) instanceof EmptyCell) sim.moveElement(px, py, px-1, py);
+                            else if (x > 0 && getSafeElement(sim, px+1, py) instanceof EmptyCell) sim.moveElement(px, py, px+1, py);
+                            else if (getSafeElement(sim, px, py+1) instanceof EmptyCell) sim.moveElement(px, py, px, py+1);
+                        } else {
+                            if (getSafeElement(sim, px, py+1) instanceof EmptyCell) sim.moveElement(px, py, px, py+1);
+                            else if (x < 0 && getSafeElement(sim, px-1, py) instanceof EmptyCell) sim.moveElement(px, py, px-1, py);
+                            else if (x > 0 && getSafeElement(sim, px+1, py) instanceof EmptyCell) sim.moveElement(px, py, px+1, py);
+                        }
                     }
                 }
             }
@@ -600,8 +693,50 @@ public class Player {
         return assimilationMeter / MAX_ASSIMILATION;
     }
 
+    public TextureRegion getFrame(float dt) {
+        TextureRegion region;
+        Vector2 vel = b2body.getLinearVelocity();
+
+        if (!isGrounded) {
+            if (vel.y > 0) {
+                region = jumpFrames[0];
+            } else {
+                region = jumpFrames[4];
+            }
+        } else if (isLanding) {
+            landingTimer += dt;
+            if (landingTimer < 0.1f) {
+                region = jumpFrames[5];
+            } else if (landingTimer < 0.2f) {
+                region = jumpFrames[6];
+            } else {
+                isLanding = false;
+                region = idleFrame;
+            }
+        } else {
+            if (Math.abs(vel.x) > 0.1f) {
+                stateTime += dt;
+                region = walkAnimationRight.getKeyFrame(stateTime, true);
+            } else {
+                stateTime = 0;
+                region = idleFrame;
+            }
+        }
+
+        if (vel.x > 0.1f && !facingRight) facingRight = true;
+        else if (vel.x < -0.1f && facingRight) facingRight = false;
+
+        if (!facingRight && !region.isFlipX()) region.flip(true, false);
+        else if (facingRight && region.isFlipX()) region.flip(true, false);
+
+        return region;
+    }
+
     public void draw(SpriteBatch batch) {
-        if (texture == null) return;
+        if (idleFrame == null) return;
+
+        TextureRegion currentFrame = getFrame(Gdx.graphics.getDeltaTime());
+
         if (invincibilityTimer > 0 && (invincibilityTimer % 0.2f < 0.1f)) {
             batch.setColor(1.0f, 0.2f, 0.2f, 0.6f);
         } else {
@@ -612,7 +747,24 @@ public class Player {
                 default: batch.setColor(1, 1, 1, 1); break;
             }
         }
-        batch.draw(texture, b2body.getPosition().x * Main.PPM - texture.getWidth() / 2f, b2body.getPosition().y * Main.PPM - texture.getHeight() / 2f);
+
+        float width = currentFrame.getRegionWidth();
+        float height = currentFrame.getRegionHeight();
+
+        batch.draw(currentFrame,
+            (b2body.getPosition().x * Main.PPM) - width / 2f,
+            (b2body.getPosition().y * Main.PPM) - height / 2f);
+
         batch.setColor(1, 1, 1, 1);
+    }
+
+    public void dispose() {
+        if(idleTexture != null) idleTexture.dispose();
+        if(playerSheetWalk != null) playerSheetWalk.dispose();
+        if(playerSheet != null) playerSheet.dispose();
+
+        if (stoneSteps != null) {
+            for (Sound s : stoneSteps) s.dispose();
+        }
     }
 }

@@ -23,8 +23,12 @@ public class WorldContactListener implements ContactListener {
 
     public static int footContacts = 0;
     public static Array<Body> bodiesToDestroy = new Array<>();
+
     public static tilemapmanager.TransitionData pendingTransition = null;
     public static boolean pendingFastReload = false;
+
+    // --- NEW FLAG: Demo End ---
+    public static boolean pendingDemoEnd = false;
 
     private static long getBucketKey(float x, float y) {
         int bx = (int) (x / BUCKET_SIZE);
@@ -122,29 +126,72 @@ public class WorldContactListener implements ContactListener {
             footContacts++;
         }
 
-        //ENEMY COLLISION  checker
+        //ENEMY COLLISION checker
         Object dataA = fa.getUserData();
         Object dataB = fb.getUserData();
 
+        //player hitting slime
         if ("PLAYER".equals(dataA) && dataB instanceof Enemy) handleEnemyHit((Enemy) dataB);
         else if ("PLAYER".equals(dataB) && dataA instanceof Enemy) handleEnemyHit((Enemy) dataA);
+
+            //projectile hitter for slimes
+        else if (dataA instanceof io.github.devsimulator.entities.SandProjectile && dataB instanceof Enemy) {
+            handleProjectileHit((io.github.devsimulator.entities.SandProjectile) dataA, (Enemy) dataB);
+        } else if (dataB instanceof io.github.devsimulator.entities.SandProjectile && dataA instanceof Enemy) {
+            handleProjectileHit((io.github.devsimulator.entities.SandProjectile) dataB, (Enemy) dataA);
+        }
+        //projectiles when hitting walls
+        else if (dataA instanceof io.github.devsimulator.entities.SandProjectile && "GROUND".equals(dataB)) {
+            ((io.github.devsimulator.entities.SandProjectile) dataA).isDestroyed = true;
+        } else if (dataB instanceof io.github.devsimulator.entities.SandProjectile && "GROUND".equals(dataA)) {
+            ((io.github.devsimulator.entities.SandProjectile) dataB).isDestroyed = true;
+        }
+
+        else if ("PLAYER".equals(dataA) && dataB instanceof io.github.devsimulator.entities.ItemDrop) {
+            handleDropPickup((io.github.devsimulator.entities.ItemDrop) dataB);
+        } else if ("PLAYER".equals(dataB) && dataA instanceof io.github.devsimulator.entities.ItemDrop) {
+            handleDropPickup((io.github.devsimulator.entities.ItemDrop) dataA);
+        }
 
         checkSensor(fa, fb);
     }
 
     private void handleEnemyHit(Enemy enemy) {
+        if (!enemy.isAlive) return;
         if (playerInstance != null) {
             float knockbackDir = (playerInstance.b2body.getPosition().x < enemy.b2body.getPosition().x) ? -4f : 4f;
-            playerInstance.takeDamage(15f, knockbackDir, null); // Pass null for sandMgr, it resolves safely
+            playerInstance.takeDamage(15f, knockbackDir, null);
+        }
+    }
+
+    private void handleProjectileHit(io.github.devsimulator.entities.SandProjectile proj, Enemy enemy) {
+        proj.isDestroyed = true;
+
+        proj.pierceCount--;
+        if(proj.pierceCount <= 0) proj.isDestroyed = true;
+
+        float dmg = proj.isMega ? 75f : 25f;
+        float kb = (proj.b2body.getPosition().x < enemy.b2body.getPosition().x) ? 3f : -3f;
+        enemy.takeDamage(dmg, kb);
+    }
+
+    private void handleDropPickup(io.github.devsimulator.entities.ItemDrop drop) {
+        if(drop.isDestroyed || playerInstance == null) return;
+
+        int slot = playerInstance.activeSlot;
+        if(playerInstance.elementSlots[slot].equals(drop.element)) {
+            playerInstance.chargeSlots[slot] = Math.min(playerInstance.chargeSlots[slot] + 1, playerInstance.maxCharges);
+            drop.isDestroyed = true;
+        } else if (playerInstance.elementSlots[slot].equals("NONE")) {
+            playerInstance.elementSlots[slot] = drop.element;
+            playerInstance.chargeSlots[slot] = 1;
+            drop.isDestroyed = true;
         }
     }
 
     private void checkSensor(Fixture a, Fixture b) {
-        Object dataA = a.getUserData();
-        Object dataB = b.getUserData();
-
-        processSensorData(dataA, a.getBody());
-        processSensorData(dataB, b.getBody());
+        processSensorData(a, b);
+        processSensorData(b, a);
     }
 
     @Override
@@ -152,13 +199,37 @@ public class WorldContactListener implements ContactListener {
         if ("FOOT_SENSOR".equals(contact.getFixtureA().getUserData()) || "FOOT_SENSOR".equals(contact.getFixtureB().getUserData())) footContacts--;
     }
 
-    private void processSensorData(Object data, Body body) {
-        if (data == null) return;
-        if (data instanceof tilemapmanager.TransitionData) {
-            pendingTransition = (tilemapmanager.TransitionData) data;
+    private void processSensorData(Fixture sensorFixture, Fixture touchingFixture) {
+        Object sensorData = sensorFixture.getUserData();
+        Object touchingData = touchingFixture.getUserData();
+
+        if (sensorData == null) return;
+
+        boolean isEzra = false;
+        if (playerInstance != null && touchingFixture.getBody() == playerInstance.b2body) {
+            isEzra = true;
+        } else if ("PLAYER".equals(touchingData)) {
+            isEzra = true;
         }
-        if ("KEY".equals(data)) {
-            bodiesToDestroy.add(body);
+
+        // --- UPDATED LEVEL TRANSITION LOGIC ---
+        if (sensorData instanceof tilemapmanager.TransitionData) {
+            if (isEzra) {
+                tilemapmanager.TransitionData tData = (tilemapmanager.TransitionData) sensorData;
+
+                // Intercept the "demo_end" string before it triggers a normal map load!
+                if ("demo_end".equals(tData.targetMap)) {
+                    pendingDemoEnd = true;
+                } else {
+                    pendingTransition = tData;
+                }
+            }
+        }
+
+        if ("KEY".equals(sensorData)) {
+            if (isEzra) {
+                bodiesToDestroy.add(sensorFixture.getBody());
+            }
         }
     }
 

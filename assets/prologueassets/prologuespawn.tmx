@@ -91,9 +91,10 @@
   <object id="4" x="480" y="224" width="32" height="32">
    <properties>
     <property name="description">
-WELCOME ADVENTURER
-PRESS A AND D TO MOVE || W AND SPACE TO JUMP</property>
-    <property name="header" value="MOVEMENT"/>
+WELCOME ADVENTURER FIND YOUR PURPOSE
+PRESS A AND D TO MOVE || W AND SPACE TO JUMP || LEFT CLICK TO ATTACK
+</property>
+    <property name="header" value=" MOVEMENT AND ATTACK"/>
     <property name="isHero" type="bool" value="false"/>
    </properties>
   </object>

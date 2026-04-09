@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 
 public class Slime extends Enemy {
+    private final Vector2 jumpVec = new Vector2();
     private Texture sheet;
     private Animation<TextureRegion> slimeAnimation;
     private float stateTimer = 0;
@@ -89,7 +90,8 @@ public class Slime extends Enemy {
 
             if (timer >= jumpInterval && isGrounded) {
                 float forceX = movingRight ? -jumpForceX : jumpForceX;
-                b2body.applyLinearImpulse(new Vector2(forceX, jumpForceY), b2body.getWorldCenter(), true);
+                jumpVec.set(forceX, jumpForceY);
+                b2body.applyLinearImpulse(jumpVec, b2body.getWorldCenter(), true);
                 isJumping = true;
                 timer = 0;
             }
@@ -142,10 +144,11 @@ public class Slime extends Enemy {
     @Override
     public void resetState() {
         this.isAlive = true;
-        this.health = 3;
+        this.hp = 50f;
         this.timer = 0;
         this.isJumping = false;
 
+        this.b2body.setActive(true);
         this.b2body.setTransform(spawnX, spawnY, 0);
         this.b2body.setLinearVelocity(0, 0);
         this.b2body.setAwake(true);

@@ -684,7 +684,7 @@
   <properties>
    <property name="spawnX" type="float" value="100"/>
    <property name="spawnY" type="float" value="200"/>
-   <property name="targetMap" value="level1fr2.tmx"/>
+   <property name="targetMap" value="levels1fr2.tmx"/>
   </properties>
   <object id="47" x="1887.99" y="0.0113636" width="32.0118" height="351.984">
    <properties>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="24" nextobjectid="49">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="27" nextobjectid="56">
  <tileset firstgid="1" name="terrain" tilewidth="32" tileheight="32" tilecount="96" columns="0">
   <grid orientation="orthogonal" width="1" height="1"/>
   <tile id="0">
@@ -549,6 +549,7 @@
   <image source="../runes/arijkx_animated_runes_v1/basic/animated_rune_drop_clean_shadow.png" width="768" height="64"/>
  </tileset>
  <tileset firstgid="265" source="../runes/runesOnline.tsx"/>
+ <tileset firstgid="445" source="../Fantasy Icons.tsx"/>
  <group id="8" name="parallax">
   <imagelayer id="2" name="backdrop" parallaxx="0.01" repeatx="1">
    <image source="parralax/1.png" width="576" height="324"/>
@@ -646,6 +647,22 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <layer id="26" name="keys_visual" width="60" height="12">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
  <layer id="17" name="runes_visual" width="60" height="12">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -696,6 +713,38 @@
  </objectgroup>
  <objectgroup color="#00aaff" id="14" name="water_zones">
   <object id="14" x="1536" y="256" width="384" height="96"/>
+ </objectgroup>
+ <objectgroup color="#ff0000" id="25" name="enemies">
+  <object id="50" x="497.333" y="307.333">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="51" x="882" y="339.667">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="52" x="1122" y="239">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="53" x="1218" y="240">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="54" x="1401" y="232">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="55" x="576" y="294">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup color="#ffffff" id="16" name="runes">
   <object id="34" x="832" y="224" width="32" height="32">

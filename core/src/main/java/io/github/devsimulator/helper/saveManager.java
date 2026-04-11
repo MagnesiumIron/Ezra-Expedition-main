@@ -261,7 +261,7 @@ public class saveManager extends Table {
         player.activeSlot = prefs.getInteger("activeSlot", 0);
 
         WorldContactListener.pendingTransition = new io.github.devsimulator.helper.tilemapmanager.TransitionData(
-            savedMap, savedX, savedY
+            savedMap, savedX, savedY, false
         );
 
         onLoadSuccess.run();

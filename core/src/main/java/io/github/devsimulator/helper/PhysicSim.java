@@ -108,15 +108,23 @@ public class PhysicSim {
         int cx = x / CHUNK_SIZE;
         int cy = y / CHUNK_SIZE;
 
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                int neighborX = cx + i;
-                int neighborY = cy + j;
+        if (cx >= 0 && cx < chunksX && cy >= 0 && cy < chunksY) {
+            nextActiveChunks[cx][cy] = true;
+        }
 
-                if (neighborX >= 0 && neighborX < chunksX && neighborY >= 0 && neighborY < chunksY) {
-                    nextActiveChunks[neighborX][neighborY] = true;
-                }
-            }
+        int localX = x % CHUNK_SIZE;
+        int localY = y % CHUNK_SIZE;
+
+        if (localX == 0 && cx > 0) {
+            nextActiveChunks[cx - 1][cy] = true;
+        } else if (localX == CHUNK_SIZE - 1 && cx < chunksX - 1) {
+            nextActiveChunks[cx + 1][cy] = true;
+        }
+
+        if (localY == 0 && cy > 0) {
+            nextActiveChunks[cx][cy - 1] = true;
+        } else if (localY == CHUNK_SIZE - 1 && cy < chunksY - 1) {
+            nextActiveChunks[cx][cy + 1] = true;
         }
     }
 
@@ -126,7 +134,7 @@ public class PhysicSim {
         String n1 = e1.getClass().getSimpleName().toUpperCase();
         String n2 = e2.getClass().getSimpleName().toUpperCase();
 
-        // Alphabetize the string so WATER_LAVA and LAVA_WATER both output "LAVA_WATER"
+        // Alphabetize the string
         String key = n1.compareTo(n2) < 0 ? n1 + "_" + n2 : n2 + "_" + n1;
 
         ElementType resultType = alchemyRecipes.get(key);

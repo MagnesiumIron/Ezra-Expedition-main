@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#329b7b78" nextlayerid="22" nextobjectid="50">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#329b7b78" nextlayerid="23" nextobjectid="55">
  <tileset firstgid="1" name="sky" tilewidth="32" tileheight="32" tilecount="180" columns="18">
   <image source="parralax/1.png" width="576" height="324"/>
  </tileset>
@@ -104,10 +104,32 @@
    </properties>
   </object>
  </objectgroup>
- <objectgroup color="#aa0000" id="20" name="lava_zones">
+ <objectgroup color="#7c0000" id="20" name="lava_zones">
   <object id="29" x="26.0931" y="239.956" width="197.909" height="63.3172"/>
   <object id="43" x="159.754" y="196.175" width="46.8257" height="42.0255"/>
   <object id="44" x="26.3485" y="162.281" width="36.1818" height="77.3172"/>
+ </objectgroup>
+ <objectgroup color="#ff0000" id="22" name="enemies">
+  <object id="51" x="324" y="273.333">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="52" x="414.667" y="255.333">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="53" x="534.667" y="174">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="54" x="236" y="180">
+   <properties>
+    <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="3" name="runes">
   <object id="30" x="95.9574" y="128.983" width="32" height="31.0156">

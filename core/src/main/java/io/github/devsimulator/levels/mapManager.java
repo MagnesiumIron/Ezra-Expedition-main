@@ -1,7 +1,6 @@
 package io.github.devsimulator.levels;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -26,7 +25,6 @@ public class mapManager {
     public void transitionToMap(String targetMapName, float spawnX, float spawnY) {
         baseLevel nextLevel = null;
 
-        // Routing logic
         if (targetMapName.contains("prologuespawn.tmx")) nextLevel = new prologuespawn();
         else if (targetMapName.contains("prologue1.tmx")) nextLevel = new prologue1();
         else if (targetMapName.contains("prologue2.tmx")) nextLevel = new prologue2();
@@ -43,12 +41,14 @@ public class mapManager {
             System.err.println("WARNING: mapManager doesn't know how to route: " + targetMapName);
         }
     }
+
     public void changeLevel(baseLevel newLevel, float spawnX, float spawnY) {
         if (currentLevel != null) {
             currentLevel.dispose();
         }
 
         WorldContactListener.clearHashes();
+        WorldContactListener.bodiesToDestroy.clear();
         WorldContactListener.closestSign = null;
         WorldContactListener.closestRune = null;
 
@@ -61,22 +61,18 @@ public class mapManager {
         }
 
         currentLevel = newLevel;
-        // load level
         currentLevel.loadLevel(world, player, sandManager);
         currentMapPath = newLevel.mapPath;
 
-        // call sandmanager to update the tile map
-        if (sandManager != null && currentLevel.map != null) {
-            sandManager.initLevel(currentLevel.map);
-        }
-
         player.saveRoomCheckpoint(spawnX, spawnY);
 
-        // reset player position
-        player.b2body.setTransform(spawnX, spawnY, 0);
-        player.b2body.setLinearVelocity(0, 0);
-
         if (currentLevel.map != null) {
+            // reset Portal graphics on map load
+            com.badlogic.gdx.maps.MapLayer closedLayer = currentLevel.map.getLayers().get("portal_closed");
+            com.badlogic.gdx.maps.MapLayer openLayer = currentLevel.map.getLayers().get("portal_open");
+            if (closedLayer != null) closedLayer.setVisible(true);
+            if (openLayer != null) openLayer.setVisible(false);
+
             com.badlogic.gdx.maps.MapLayer enemyLayer = currentLevel.map.getLayers().get("enemies");
             if (enemyLayer != null) {
                 for (com.badlogic.gdx.maps.MapObject object : enemyLayer.getObjects().getByType(com.badlogic.gdx.maps.objects.RectangleMapObject.class)) {
@@ -92,57 +88,62 @@ public class mapManager {
             }
         }
 
-        // reset player position
         player.b2body.setTransform(spawnX, spawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
-
-        // reset physics contacts
         WorldContactListener.footContacts = 0;
     }
 
     public void fastRoomReload() {
-        // reset elements present
-        if (sandManager != null && sandManager.sim != null) {
-            sandManager.sim.clearToPool();
-            sandManager.completedGeysers.clear(); //
-            sandManager.initLevel(currentLevel.map);
-        }
-
-        if (currentLevel != null) {
-            for (io.github.devsimulator.entities.SandProjectile p : currentLevel.projectiles) {
-                p.isDestroyed = true;
-            }
-            for (io.github.devsimulator.entities.ItemDrop d : currentLevel.drops) {
-                d.isDestroyed = true;
-            }
-            for (io.github.devsimulator.entities.Enemy e : currentLevel.enemies) {
-                e.resetState();
-            }
-        }
-
-        // unconsume runes
-        for (io.github.devsimulator.helper.tilemapmanager.RuneData rune : io.github.devsimulator.helper.WorldContactListener.allRunes) {
-            rune.isConsumed = false;
-        }
-
-        // revive and teleport enemies
-        if (currentLevel != null) {
-            for (io.github.devsimulator.entities.Enemy e : currentLevel.enemies) {
-                e.resetState();
-            }
-        }
-
         player.loadRoomCheckpoint();
+        transitionToMap(currentMapPath, player.chkSpawnX, player.chkSpawnY);
+
         player.b2body.setTransform(player.chkSpawnX, player.chkSpawnY, 0);
         player.b2body.setLinearVelocity(0, 0);
         player.b2body.setAwake(true);
     }
 
     public void update(float dt) {
+        if (!io.github.devsimulator.helper.WorldContactListener.bodiesToDestroy.isEmpty()) {
+            for (com.badlogic.gdx.physics.box2d.Body b : io.github.devsimulator.helper.WorldContactListener.bodiesToDestroy) {
+                if (b != null) {
+                    world.destroyBody(b); // to safely destroy the physics body
+                }
+            }
+            io.github.devsimulator.helper.WorldContactListener.bodiesToDestroy.clear(); // Empty the trash can
+        }
+
         if (currentLevel != null) {
             currentLevel.update(dt);
             currentLevel.updateEntities(dt);
-            AnimatedTiledMapTile.updateAnimationBaseTime();
+            com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile.updateAnimationBaseTime();
+
+            // KEY ERASURE
+            if (player != null && player.triggerKeyVisualRemoval && currentLevel.map != null) {
+                player.triggerKeyVisualRemoval = false;
+
+                com.badlogic.gdx.maps.MapLayer layer = currentLevel.map.getLayers().get("keys_visual");
+
+                if (layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer) {
+                    com.badlogic.gdx.maps.tiled.TiledMapTileLayer visualLayer = (com.badlogic.gdx.maps.tiled.TiledMapTileLayer) layer;
+
+                    int cellX = (int) ((player.keyPosToRemove.x * Main.PPM) / visualLayer.getTileWidth());
+                    int cellY = (int) ((player.keyPosToRemove.y * Main.PPM) / visualLayer.getTileHeight());
+
+                    com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell cell = visualLayer.getCell(cellX, cellY);
+                    if (cell != null) cell.setTile(null);
+                }
+            }
+
+            // PORTAL ANIMATION LOGIC
+            if (player != null && player.triggerPortalVisuals && currentLevel.map != null) {
+                player.triggerPortalVisuals = false;
+
+                com.badlogic.gdx.maps.MapLayer closedLayer = currentLevel.map.getLayers().get("portal_closed");
+                com.badlogic.gdx.maps.MapLayer openLayer = currentLevel.map.getLayers().get("portal_open");
+
+                if (closedLayer != null) closedLayer.setVisible(false);
+                if (openLayer != null) openLayer.setVisible(true);
+            }
         }
     }
 

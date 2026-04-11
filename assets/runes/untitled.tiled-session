@@ -3,17 +3,22 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx",
+    "activeFile": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
     "expandedProjectPaths": [
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/props",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/props",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets",
-        "."
+        ".",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/Fantasy Icons.tsx": {
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -23,15 +28,15 @@
             ],
             "expandedObjectLayers": [
                 14,
-                23,
                 13,
-                16
+                25,
+                23
             ],
-            "scale": 2,
-            "selectedLayer": 15,
+            "scale": 0.5,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 960.25,
-                "y": 192.25
+                "x": 961,
+                "y": 192
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx#animated_rune_drop_clean_shadow": {
@@ -65,16 +70,15 @@
                 2
             ],
             "expandedObjectLayers": [
-                10,
-                9,
-                12,
-                16
+                19,
+                16,
+                12
             ],
             "scale": 0.75,
-            "selectedLayer": 10,
+            "selectedLayer": 17,
             "viewCenter": {
-                "x": 640.6666666666666,
-                "y": 191.33333333333331
+                "x": 640.6666666666667,
+                "y": 191.99999999999994
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx#Tile_01": {
@@ -104,18 +108,32 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2-1.tmx": {
+            "expandedObjectLayers": [
+                10,
+                9,
+                8
+            ],
+            "scale": 0.5,
+            "selectedLayer": 12,
+            "viewCenter": {
+                "x": 641,
+                "y": 192
+            }
+        },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx": {
             "expandedObjectLayers": [
-                11,
+                3,
                 20,
-                4,
-                3
+                22,
+                11,
+                4
             ],
-            "scale": 0.75,
-            "selectedLayer": 10,
+            "scale": 1,
+            "selectedLayer": 11,
             "viewCenter": {
-                "x": 315.3333333333333,
-                "y": 324.66666666666663
+                "x": 320.5,
+                "y": 192
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx#clouds": {
@@ -171,19 +189,66 @@
             "scaleInDock": 1.5,
             "scaleInEditor": 1
         },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2end.tmx": {
+            "expandedObjectLayers": [
+                12
+            ],
+            "scale": 0.33,
+            "selectedLayer": 13,
+            "viewCenter": {
+                "x": 319.69696969696963,
+                "y": 766.6666666666666
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/Fairys.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/Objects.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/Tileset_forest.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/key.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/level3.tmx": {
+            "expandedObjectLayers": [
+                3,
+                11,
+                2
+            ],
+            "scale": 0.5,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 641,
+                "y": 272
+            }
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/level3.tmx##2 - Transparent & Drop Shadow": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/portal.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx": {
             "expandedObjectLayers": [
                 9,
-                7,
-                8,
                 6,
+                8,
+                7,
                 4
             ],
-            "scale": 1.5,
-            "selectedLayer": 7,
+            "scale": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 173.66666666666666,
-                "y": 159.33333333333331
+                "x": 320.5,
+                "y": 192
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx#CastleTiles": {
@@ -194,36 +259,36 @@
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx": {
             "expandedObjectLayers": [
-                5,
-                7,
-                6,
                 3,
-                4
+                9,
+                6,
+                7
             ],
-            "scale": 0.75,
-            "selectedLayer": 3,
+            "scale": 0.33,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": -154,
-                "y": 20
+                "x": 98.48484848484838,
+                "y": 112.12121212121212
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#CastleTiles": {
             "scaleInDock": 1
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx#runes": {
+            "dynamicWrapping": true,
             "scaleInDock": 1
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx": {
             "expandedObjectLayers": [
-                8,
                 6,
+                8,
                 4
             ],
             "scale": 0.75,
-            "selectedLayer": 5,
+            "selectedLayer": 6,
             "viewCenter": {
-                "x": 640.6666666666666,
-                "y": 191.33333333333331
+                "x": 640.6666666666667,
+                "y": 191.99999999999994
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx#CastleTiles": {
@@ -248,8 +313,8 @@
             "scale": 1,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 485.5,
-                "y": 160
+                "x": 320.5,
+                "y": 191
             }
         },
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx#CastleTiles": {
@@ -284,35 +349,38 @@
     "frame.defaultDuration": 120,
     "last.exportedFilePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/runes",
     "last.externalTilesetPath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground",
-    "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/tilesets/terrain/dungeon bricks",
+    "last.imagePath": "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets",
     "lastUsedTilesetExportFilter": "All Files (*)",
     "map.height": 12,
     "map.lastUsedFormat": "tmx",
     "map.width": 40,
     "openFiles": [
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/tilesets/terrain/dungeon bricks/dungeon_terrain.tsx"
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2-1.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2end.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/level3.tmx"
     ],
     "project": "untitled.tiled-project",
-    "property.type": "string",
+    "property.type": "float",
     "recentFiles": [
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologuespawn.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/tilesets/terrain/dungeon bricks/dungeon_terrain.tsx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2_layer1.tmx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/Level1_terrain.tsx",
-        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/tilesets/terrainground/objects.tsx",
         "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue1.tmx",
-        "runesOnline.tsx"
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level3assets/level3.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2end.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2-1.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level2assets/level2.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr2.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/level1assets/level1fr.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologueend.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/prologueassets/prologue2.tmx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/portal.tsx",
+        "C:/Users/Ashley/Desktop/Ezra-Expedition-main-clone/assets/Fantasy Icons.tsx"
     ],
     "tileset.embedInMap": false,
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",

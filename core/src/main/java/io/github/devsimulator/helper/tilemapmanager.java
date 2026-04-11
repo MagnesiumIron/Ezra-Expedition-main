@@ -16,10 +16,13 @@ public class tilemapmanager {
     public static class TransitionData {
         public String targetMap;
         public float spawnX, spawnY;
-        public TransitionData(String targetMap, float spawnX, float spawnY) {
+        public boolean requiresKey;
+
+        public TransitionData(String targetMap, float spawnX, float spawnY, boolean requiresKey) {
             this.targetMap = targetMap;
             this.spawnX = spawnX;
             this.spawnY = spawnY;
+            this.requiresKey = requiresKey;
         }
     }
 
@@ -67,29 +70,20 @@ public class tilemapmanager {
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
 
-                if (object.getProperties().containsKey("isKey")) {
-                    fdef.isSensor = true;
-                    body.createFixture(fdef).setUserData("KEY");
-                } else if (object.getProperties().containsKey("isDoor")) {
-                    body.createFixture(fdef).setUserData("DOOR");
-                } else {
-                    body.createFixture(fdef).setUserData("GROUND");
-                }
+                body.createFixture(fdef).setUserData("GROUND");
+
                 shape.dispose();
             }
 
-            // --- 2. POLYGON COLLISIONS (WITH CRASH FIX) ---
             for (MapObject object : objects.getByType(PolygonMapObject.class)) {
                 Polygon polygon = ((PolygonMapObject) object).getPolygon();
                 float[] vertices = polygon.getVertices();
 
-                // FIX: Box2D crashes if a polygon has < 3 or > 8 vertices.
-                // Since vertices array holds X,Y pairs, 3 vertices = length 6, and 8 vertices = length 16.
                 if (vertices.length < 6 || vertices.length > 16) {
                     System.err.println("WARNING: Invalid Polygon found in Tiled Map!");
                     System.err.println("It has " + (vertices.length / 2) + " vertices. Box2D requires between 3 and 8.");
                     System.err.println("Skipping this shape to prevent a game crash.");
-                    continue; // Skip this bad shape and move to the next one
+                    continue;
                 }
 
                 BodyDef bdef = new BodyDef();
@@ -131,7 +125,7 @@ public class tilemapmanager {
                 float sx = object.getProperties().get("spawnX", -1f, Float.class) / Main.PPM;
                 float sy = object.getProperties().get("spawnY", -1f, Float.class) / Main.PPM;
 
-                body.createFixture(fdef).setUserData(new TransitionData(target, sx, sy));
+                body.createFixture(fdef).setUserData(new TransitionData(target, sx, sy, false)); // Old doors don't need keys
                 shape.dispose();
             }
         }
@@ -200,6 +194,54 @@ public class tilemapmanager {
                 WorldContactListener.addRune(data);
 
                 shape.dispose();
+            }
+        }
+
+        //keys/doors checker
+        MapLayer itemsLayer = map.getLayers().get("keys");
+        if (itemsLayer != null) {
+            int keyCount = 0;
+
+            for (MapObject object : itemsLayer.getObjects().getByType(RectangleMapObject.class)) {
+                Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                float w = rect.width / Main.PPM;
+                float h = rect.height / Main.PPM;
+                float x = rect.x / Main.PPM;
+                float y = rect.y / Main.PPM;
+
+                BodyDef bdef = new BodyDef();
+                bdef.type = BodyDef.BodyType.StaticBody;
+                bdef.position.set(x + w/2, y + h/2);
+                Body body = world.createBody(bdef);
+
+                PolygonShape shape = new PolygonShape();
+                shape.setAsBox(w/2, h/2);
+                FixtureDef fdef = new FixtureDef();
+                fdef.shape = shape;
+                fdef.isSensor = true;
+
+                if (object.getProperties().containsKey("isKey") && object.getProperties().get("isKey", Boolean.class)) {
+                    body.createFixture(fdef).setUserData("KEY");
+                    keyCount++; // Found a key!
+                }
+                else if (object.getProperties().containsKey("isDoor") && object.getProperties().get("isDoor", Boolean.class)) {
+                    // Pull the routing variables from Tiled
+                    String target = object.getProperties().get("targetMap", String.class);
+                    float sx = object.getProperties().get("spawnX", -1f, Float.class) / Main.PPM;
+                    float sy = object.getProperties().get("spawnY", -1f, Float.class) / Main.PPM;
+
+                    // Create the transition data and flag it as requiring a key (true)
+                    TransitionData tData = new TransitionData(target, sx, sy, true);
+                    body.createFixture(fdef).setUserData(tData);
+                }
+
+                shape.dispose();
+            }
+
+            // Tell the player how many keys exist in this specific level
+            if (WorldContactListener.playerInstance != null) {
+                WorldContactListener.playerInstance.totalKeysInLevel = keyCount;
+                WorldContactListener.playerInstance.isPortalOpen = (keyCount == 0);
             }
         }
     }

@@ -78,10 +78,23 @@ public class Player {
     public float stunTimer = 0f;
     public float chargeProgress = 0f;
 
+    // --- PORTAL & KEY VARIABLES ---
+    public int keysCollected = 0;
+    public int totalKeysInLevel = 0;
+    public boolean isPortalOpen = false;
+    public boolean triggerPortalVisuals = false;
+    public boolean triggerKeyVisualRemoval = false;
+    public Vector2 keyPosToRemove = new Vector2();
+    public boolean showLockedMessage = false;
+    public float lockedMessageTimer = 0f;
+
+    private int chkKeysCollected = 0;
+    private boolean chkIsPortalOpen = false;
+
     // --- PHYSICS FLAGS ---
     private boolean isGrounded = false;
-    private boolean isSubmergedNormal = false; // Drowning (Head covered)
-    private boolean isWading = false;          // Wading (Legs covered)
+    private boolean isSubmergedNormal = false;
+    private boolean isWading = false;
     private boolean isFloatingInElement = false;
     private boolean interactedThisFrame = false;
 
@@ -195,12 +208,20 @@ public class Player {
     public void update(float dt, SandManager sandMgr) {
         if (!isAlive || sandMgr == null) return;
 
+        // UI Message Timer
+        if (showLockedMessage) {
+            lockedMessageTimer = 2.0f;
+            showLockedMessage = false;
+        }
+        if (lockedMessageTimer > 0) {
+            lockedMessageTimer -= dt;
+        }
+
         if (b2body.getPosition().y * Main.PPM < -50) {
             hp = 0;
             b2body.setLinearVelocity(0, 0);
         }
 
-        // RESET FLAGS AT START OF FRAME
         isSubmergedNormal = false;
         isWading = false;
         isFloatingInElement = false;
@@ -283,8 +304,6 @@ public class Player {
             float desiredX = com.badlogic.gdx.math.MathUtils.lerp(vel.x, targetX, 0.2f);
             b2body.setLinearVelocity(desiredX, desiredY);
         } else {
-
-            // --- NEW: WADING SLOWS YOU DOWN ---
             boolean hindered = isSubmergedNormal || isWading;
             float currentMoveSpeed = hindered ? MOVE_SPEED * 0.3f : MOVE_SPEED;
             float currentJumpSpeed = hindered ? JUMP_SPEED * 0.4f : JUMP_SPEED;
@@ -457,16 +476,14 @@ public class Player {
             triggerPlayerAlchemy(sim);
         }
 
-        // --- NEW: DUAL TIER ELEMENT DETECTION ---
-        // We check the legs (y-1) for wading, and the head (y+1) for drowning!
         Element head = getSafeElement(sim, simX, simY + 1);
         Element legs = getSafeElement(sim, simX, simY - 1);
 
         if (legs != null && !(legs instanceof EmptyCell)) {
-            applyElementEffects(legs, sandMgr, false); // false = checking legs
+            applyElementEffects(legs, sandMgr, false);
         }
         if (head != null && !(head instanceof EmptyCell)) {
-            applyElementEffects(head, sandMgr, true);  // true = checking head
+            applyElementEffects(head, sandMgr, true);
         }
 
         Vector2 pixelPos = new Vector2(b2body.getPosition().x * Main.PPM, b2body.getPosition().y * Main.PPM);
@@ -492,8 +509,7 @@ public class Player {
             if (rune != null) {
                 dist = pixelPos.dst(rune.worldX * Main.PPM, rune.worldY * Main.PPM);
             }
-
-            if (rune != null && dist < 64f && !rune.isContainer && !rune.isConsumed) {
+            if (rune != null && dist < 64f && !rune.isConsumed) {
                 String type = rune.elementType != null ? rune.elementType.toUpperCase() : "NONE";
 
                 if (rune.isSpawner) {
@@ -506,7 +522,7 @@ public class Player {
                             sandMgr.toggleSpawner(rune);
                         }
                     }
-                } else if (currentState == State.NORMAL) {
+                } else if (currentState == State.NORMAL && !rune.isContainer) {
                     if (!type.equals("NONE")) {
                         int existingSlot = -1;
                         if (elementSlots[0].equals(type)) existingSlot = 0;
@@ -616,7 +632,6 @@ public class Player {
         }
     }
 
-    // --- NEW: AFFECTS BY BODY PART ---
     private void applyElementEffects(Element e, SandManager sandMgr, boolean isHead) {
         if (currentState == State.DIRT_FORM && (e instanceof Sand || e instanceof Dirt || e instanceof Mud)) {
             isFloatingInElement = true;
@@ -657,7 +672,6 @@ public class Player {
             assimilationMeter = Math.max(0, assimilationMeter - (RECOVERY_RATE * dt));
         }
 
-        // --- DROWNING ONLY DRAINS HP ---
         if (isSubmergedNormal) {
             hp -= SUFFOCATION_RATE * dt;
             if (hp <= 0) {
@@ -713,9 +727,6 @@ public class Player {
         int gridY = (int) (b2body.getPosition().y * Main.PPM / CELL_SIZE);
         int radius = 10 / CELL_SIZE;
 
-        // FIX: Always start pushing from y=0 (Waist level).
-        // This ensures the sand at y=-1 (Legs) is never displaced,
-        // which allows the Wading slowdown to actually take effect!
         for (int y = 0; y <= radius; y++) {
             for (int x = -radius; x <= radius; x++) {
                 if (x*x + y*y < radius*radius) {
@@ -751,6 +762,8 @@ public class Player {
         this.chkActiveSlot = this.activeSlot;
         this.chkSpawnX = spawnX;
         this.chkSpawnY = spawnY;
+        this.chkKeysCollected = this.keysCollected;
+        this.chkIsPortalOpen = this.isPortalOpen;
     }
 
     public void loadRoomCheckpoint() {
@@ -763,6 +776,8 @@ public class Player {
         this.activeSlot = this.chkActiveSlot;
         this.currentState = State.NORMAL;
         this.currentTransformElement = "NONE";
+        this.keysCollected = this.chkKeysCollected;
+        this.isPortalOpen = this.chkIsPortalOpen;
     }
 
     private Element getSafeElement(PhysicSim sim, int x, int y) {

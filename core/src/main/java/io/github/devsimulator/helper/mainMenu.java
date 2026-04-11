@@ -140,7 +140,7 @@ public class mainMenu {
         player.activeSlot = 0;
 
         io.github.devsimulator.helper.WorldContactListener.pendingTransition =
-            new io.github.devsimulator.helper.tilemapmanager.TransitionData("prologuespawn.tmx", spawnX, spawnY);
+            new io.github.devsimulator.helper.tilemapmanager.TransitionData("prologuespawn.tmx", spawnX, spawnY, false);
 
         isStarted = true;
         Gdx.input.setInputProcessor(null);

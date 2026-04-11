@@ -212,12 +212,16 @@ public class WorldContactListener implements ContactListener {
             isEzra = true;
         }
 
-        // --- UPDATED LEVEL TRANSITION LOGIC ---
         if (sensorData instanceof tilemapmanager.TransitionData) {
             if (isEzra) {
                 tilemapmanager.TransitionData tData = (tilemapmanager.TransitionData) sensorData;
 
-                // Intercept the "demo_end" string before it triggers a normal map load!
+                // check if the door is locked and the portal isn't open yet
+                if (tData.requiresKey && !playerInstance.isPortalOpen) {
+                    playerInstance.showLockedMessage = true;
+                    return;
+                }
+
                 if ("demo_end".equals(tData.targetMap)) {
                     pendingDemoEnd = true;
                 } else {
@@ -228,7 +232,27 @@ public class WorldContactListener implements ContactListener {
 
         if ("KEY".equals(sensorData)) {
             if (isEzra) {
-                bodiesToDestroy.add(sensorFixture.getBody());
+                Body keyBody = sensorFixture.getBody();
+
+                // FIX: Prevent Box2D Crash by checking if we already scheduled this body for destruction
+                if (!bodiesToDestroy.contains(keyBody, true)) {
+
+                    playerInstance.keysCollected++;
+                    playerInstance.triggerKeyVisualRemoval = true;
+                    playerInstance.keyPosToRemove.set(keyBody.getPosition().x, keyBody.getPosition().y);
+
+                    bodiesToDestroy.add(keyBody); // Safely add it once
+
+                    // CHECK Did we just get the last key?
+                    if (playerInstance.keysCollected >= playerInstance.totalKeysInLevel) {
+                        playerInstance.isPortalOpen = true;
+                        playerInstance.triggerPortalVisuals = true;
+                    }
+
+                    if (Main.assimilationIN != null) {
+                        Main.assimilationIN.play(1.5f);
+                    }
+                }
             }
         }
     }

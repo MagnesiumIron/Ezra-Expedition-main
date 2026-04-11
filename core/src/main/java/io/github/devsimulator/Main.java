@@ -47,10 +47,6 @@ public class Main extends ApplicationAdapter {
     private io.github.devsimulator.helper.mainMenu mainMenu;
     private tutorialGUI tutorialGui;
 
-    // --- DEMO END SCREEN ---
-    private io.github.devsimulator.helper.endScreen endScreen;
-    public boolean isDemoEnded = false;
-
     public boolean isTutorialReading = false;
     private float stateTime = 0;
     private Texture hoverSheet;
@@ -160,33 +156,11 @@ public class Main extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
         ScreenUtils.clear(0.1f, 0.1f, 0.1f, 1f);
 
-        // --- DEMO END FLAG ---
-        if (io.github.devsimulator.helper.WorldContactListener.pendingDemoEnd) {
-            io.github.devsimulator.helper.WorldContactListener.pendingDemoEnd = false;
-            isDemoEnded = true;
-        }
-
-        // --- DRAW DEMO END SCREEN ONLY ---
-        if (isDemoEnded) {
-            if (endScreen == null) {
-                endScreen = new io.github.devsimulator.helper.endScreen(this);
-            }
-            endScreen.render(dt);
-            return;
-        }
-
         if (!mainMenu.isStarted) {
             mainMenu.render(dt);
         } else {
-            // 1. Check if the player is dead right away
-            boolean isPlayerDead = (player != null && player.hp <= 0);
+            pauseMenu.update();
 
-            // 2. FIX: Only let the pause menu listen for the ESC key if the player is ALIVE!
-            if (!isPlayerDead) {
-                pauseMenu.update();
-            }
-
-            // 3. Normal Gameplay Loop
             if (!pauseMenu.isPaused && !isTutorialReading) {
                 stateTime += dt;
 
@@ -214,8 +188,8 @@ public class Main extends ApplicationAdapter {
                 }
 
                 boolean isCinematicPlaying = fadingOut || fadingIn;
+                boolean isPlayerDead = (player != null && player.hp <= 0);
 
-                // Stop updating physics and controls if a cinematic is playing OR if the player is dead
                 if (!isCinematicPlaying && !isPlayerDead) {
                     accumulator += Math.min(dt, 0.25f);
                     while (accumulator >= TIME_STEP) {
@@ -234,7 +208,6 @@ public class Main extends ApplicationAdapter {
                     if (player != null) {
                         player.update(dt, sandManager);
 
-                        // Combat logic
                         if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && mapMgr.currentLevel != null) {
                             if (player.currentState == Player.State.NORMAL && player.chargeSlots[player.activeSlot] > 0 && !player.elementSlots[player.activeSlot].equals("NONE")) {
                                 isChargingCombat = true;
@@ -261,7 +234,6 @@ public class Main extends ApplicationAdapter {
                             player.chargeProgress = 0f;
                         }
 
-                        // Reading signs
                         if (player.hasJustInteractedWithSign()) {
                             tilemapmanager.InteractableData sign = WorldContactListener.closestSign;
                             if (sign != null) {
@@ -277,13 +249,11 @@ public class Main extends ApplicationAdapter {
                         mapMgr.fastRoomReload();
                         player.hp = 100f;
                     } else if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-                        mapMgr.fastRoomReload();
-                        player.hp = 100f;
-
                         mainMenu.isStarted = false;
-                        Gdx.input.setInputProcessor(mainMenu.stage);
+                        player.hp = 100f;
                     }
                 }
+
                 updateCameraPosition(dt);
             } else if (isTutorialReading) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
@@ -291,7 +261,6 @@ public class Main extends ApplicationAdapter {
                 }
             }
 
-            // --- ALL RENDERING HAPPENS BELOW ---
             AnimatedTiledMapTile.updateAnimationBaseTime();
             mapMgr.renderBackground(camera);
 
@@ -317,9 +286,11 @@ public class Main extends ApplicationAdapter {
                         String el = rune.elementType;
                         float textX = rX - (sharedLayout.width / 2f);
 
+                        // DRAW BLACK DROP SHADOW FIRST
                         font.setColor(0f, 0f, 0f, 0.8f);
-                        font.draw(batch, el, textX + 2f, rY - 2f);
+                        font.draw(batch, el, textX + 2f, rY - 2f); // Offset by 2 pixels
 
+                        // DRAW THE MAIN COLOR
                         if (el.equals("WATER")) font.setColor(0.2f, 0.6f, 1.0f, 1f);
                         else if (el.equals("LAVA")) font.setColor(1.0f, 0.4f, 0.0f, 1f);
                         else font.setColor(0.6f, 0.4f, 0.2f, 1f);
@@ -345,8 +316,8 @@ public class Main extends ApplicationAdapter {
             pauseMenu.render(dt);
         }
 
-        // --- DRAW DEATH SCREEN OVERLAY ---
         if (player != null && player.hp <= 0) {
+            // Calculate screen boundaries based on the actual camera viewport
             float viewX = camera.position.x - viewport.getWorldWidth() / 2f;
             float viewY = camera.position.y - viewport.getWorldHeight() / 2f;
             float vWidth = viewport.getWorldWidth();
@@ -373,18 +344,20 @@ public class Main extends ApplicationAdapter {
             batch.setProjectionMatrix(camera.combined);
             batch.begin();
 
+            // --- 1. "YOU DIED" TITLE WITH DROP SHADOW ---
             font.getData().setScale(1.2f);
             String titleText = "Y O U   D I E D";
             sharedLayout.setText(font, titleText);
             float titleX = centerX - (sharedLayout.width / 2f);
             float titleY = centerY + (vHeight * 0.08f);
 
-            font.setColor(0f, 0f, 0f, 0.8f);
+            font.setColor(0f, 0f, 0f, 0.8f); // Thick Black Shadow
             font.draw(batch, titleText, titleX + 2f, titleY - 2f);
 
-            font.setColor(1.0f, 0.2f, 0.2f, 1f);
+            font.setColor(1.0f, 0.2f, 0.2f, 1f); // Blood Red
             font.draw(batch, titleText, titleX, titleY);
 
+            // --- 2. SUBTITLES WITH DROP SHADOW (NO BRACKETS!) ---
             font.getData().setScale(0.5f);
 
             String promptF = "PRESS F TO RESPAWN";
@@ -392,10 +365,10 @@ public class Main extends ApplicationAdapter {
             float fX = centerX - (sharedLayout.width / 2f);
             float fY = centerY - (vHeight * 0.04f);
 
-            font.setColor(0f, 0f, 0f, 0.8f);
+            font.setColor(0f, 0f, 0f, 0.8f); // Black Shadow
             font.draw(batch, promptF, fX + 1f, fY - 1f);
 
-            font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+            font.setColor(com.badlogic.gdx.graphics.Color.WHITE); // White Text
             font.draw(batch, promptF, fX, fY);
 
             String promptEsc = "PRESS ESC TO WITHDRAW";
@@ -403,19 +376,19 @@ public class Main extends ApplicationAdapter {
             float escX = centerX - (sharedLayout.width / 2f);
             float escY = centerY - (vHeight * 0.1f);
 
-            font.setColor(0f, 0f, 0f, 0.8f);
+            font.setColor(0f, 0f, 0f, 0.8f); // Black Shadow
             font.draw(batch, promptEsc, escX + 1f, escY - 1f);
 
-            font.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+            font.setColor(com.badlogic.gdx.graphics.Color.WHITE); // White Text
             font.draw(batch, promptEsc, escX, escY);
 
+            // Reset scale
             font.getData().setScale(1.0f);
 
             batch.end();
         }
 
-        // --- DRAW CINEMATIC FADE OVERLAY ---
-        if (fadeAlpha > 0f && !isDemoEnded) {
+        if (fadeAlpha > 0f) {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -431,9 +404,11 @@ public class Main extends ApplicationAdapter {
             Gdx.gl.glDisable(GL20.GL_BLEND);
         }
     }
+
     private String getString() {
         String currentPrompt = "";
         if (player != null && !isTutorialReading) {
+            // ZERO-ALLOCATION VECTOR UPDATING
             cachedPlayerPos.set(player.b2body.getPosition().x * PPM, player.b2body.getPosition().y * PPM);
 
             if (WorldContactListener.closestSign != null) {
@@ -531,12 +506,14 @@ public class Main extends ApplicationAdapter {
             font.getData().setScale(1.0f);
         }
 
+        // center subtitle
         if (currentPrompt != null && !currentPrompt.isEmpty() && font != null) {
             font.getData().setScale(0.5f);
             sharedLayout.setText(font, currentPrompt);
             float screenCenterX = viewport.getWorldWidth() / 2f;
             float bottomY = 60f;
             font.draw(batch, currentPrompt, screenCenterX - (sharedLayout.width / 2f), bottomY);
+
             font.getData().setScale(1.0f);
         }
     }
@@ -567,7 +544,6 @@ public class Main extends ApplicationAdapter {
         if (mainMenu != null) mainMenu.stage.getViewport().update(width, height, true);
         if (pauseMenu != null) pauseMenu.stage.getViewport().update(width, height, true);
         if (tutorialGui != null) tutorialGui.resize(width, height);
-        if (endScreen != null) endScreen.resize(width, height);
     }
 
     @Override
@@ -581,7 +557,6 @@ public class Main extends ApplicationAdapter {
         pauseMenu.dispose();
         mainMenu.dispose();
         mapMgr.dispose();
-        if(endScreen != null) endScreen.dispose(); // Added Dispose
         if(tutorialGui != null) tutorialGui.dispose();
         if(hoverSheet != null) hoverSheet.dispose();
         if(font != null) font.dispose();

@@ -557,6 +557,21 @@ public class Main extends ApplicationAdapter {
         // Resizing end screen if it exists
         if (endScreen != null) endScreen.resize(width, height);
     }
+    // Inside Main.java
+    public void returnToMenu() {
+        this.isDemoEnded = false;         // Stop showing the end screen
+        this.mainMenu.isStarted = false;  // Show the main menu again
+
+        // Crucial: Give control back to the Main Menu's buttons
+        Gdx.input.setInputProcessor(mainMenu.stage);
+
+        // Optional: Reset Ezra to the starting level so they can play again
+        // mapMgr.changeLevel(new prologuespawn(), 100 / PPM, 200 / PPM);
+
+        // Stop any level music and play menu music again
+        if (level1Ambience != null) level1Ambience.stop();
+        if (menuTheme != null) menuTheme.play();
+    }
 
     @Override
     public void dispose() {

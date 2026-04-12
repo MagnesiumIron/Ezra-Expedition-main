@@ -73,16 +73,24 @@ public class mapManager {
             if (closedLayer != null) closedLayer.setVisible(true);
             if (openLayer != null) openLayer.setVisible(false);
 
+            // Inside mapManager.java -> changeLevel()
             com.badlogic.gdx.maps.MapLayer enemyLayer = currentLevel.map.getLayers().get("enemies");
+
             if (enemyLayer != null) {
                 for (com.badlogic.gdx.maps.MapObject object : enemyLayer.getObjects().getByType(com.badlogic.gdx.maps.objects.RectangleMapObject.class)) {
                     com.badlogic.gdx.math.Rectangle rect = ((com.badlogic.gdx.maps.objects.RectangleMapObject) object).getRectangle();
+
+                    // Pull the type from Tiled, defaulting to "slime"
                     String type = object.getProperties().get("enemyType", "slime", String.class);
 
                     if (type.equalsIgnoreCase("slime")) {
                         currentLevel.enemies.add(new io.github.devsimulator.entities.Slime(world, player, rect.getX(), rect.getY()));
-                    } else if (type.equalsIgnoreCase("gasSlime")) {
-                        currentLevel.enemies.add(new io.github.devsimulator.entities.GasSlime(world, player, rect.getX(), rect.getY()));
+                    }
+                    else if (type.equalsIgnoreCase("lavaSlime")) {
+                        currentLevel.enemies.add(new io.github.devsimulator.entities.LavaSlime(world, player, rect.getX(), rect.getY()));
+                    }
+                    else if (type.equalsIgnoreCase("sandSlime")) {
+                        currentLevel.enemies.add(new io.github.devsimulator.entities.SandSlime(world, player, rect.getX(), rect.getY()));
                     }
                 }
             }

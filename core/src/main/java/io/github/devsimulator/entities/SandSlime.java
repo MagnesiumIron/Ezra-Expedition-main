@@ -58,7 +58,12 @@ public class SandSlime extends Enemy {
 
     @Override
     public void update(float dt, io.github.devsimulator.controllers.SandManager sandMgr) {
-        if (!isAlive || health <= 0) return;
+        if (!isAlive || hp <= 0) {
+            if (b2body.isActive()) {
+                b2body.setActive(false);
+            }
+            return;
+        }
 
         timer += dt;
 

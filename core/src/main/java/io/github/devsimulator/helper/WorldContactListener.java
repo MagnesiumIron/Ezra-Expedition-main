@@ -111,7 +111,6 @@ public class WorldContactListener implements ContactListener {
         Object dataB = fb.getUserData();
 
         // --- FIX: FOOT SENSOR ONLY COUNTS SOLID GROUND ---
-        // We ignore other sensors (Keys, Transitions) so destruction doesn't break grounding
         if ("FOOT_SENSOR".equals(dataA) && !fb.isSensor()) footContacts++;
         else if ("FOOT_SENSOR".equals(dataB) && !fa.isSensor()) footContacts++;
 
@@ -146,8 +145,6 @@ public class WorldContactListener implements ContactListener {
     private void handleEnemyHit(Enemy enemy) {
         if (!enemy.isAlive || playerInstance == null) return;
         float knockbackDir = (playerInstance.b2body.getPosition().x < enemy.b2body.getPosition().x) ? -4f : 4f;
-
-        // Pass the player's world's sandManager if needed, otherwise null is fine if takeDamage handles it
         playerInstance.takeDamage(15f, knockbackDir, null);
     }
 
@@ -166,7 +163,6 @@ public class WorldContactListener implements ContactListener {
         if (drop.isDestroyed || playerInstance == null) return;
 
         int slot = playerInstance.activeSlot;
-        // Logic for absorbing element or adding charges
         if (playerInstance.elementSlots[slot].equals(drop.element)) {
             playerInstance.chargeSlots[slot] = Math.min(playerInstance.chargeSlots[slot] + 1, playerInstance.maxCharges);
             drop.isDestroyed = true;
@@ -189,8 +185,6 @@ public class WorldContactListener implements ContactListener {
         Fixture fa = contact.getFixtureA();
         Fixture fb = contact.getFixtureB();
 
-        // --- FIX: FOOT SENSOR END LOGIC ---
-        // Must match beginContact exactly to keep the counter accurate
         if ("FOOT_SENSOR".equals(fa.getUserData()) && !fb.isSensor()) footContacts--;
         else if ("FOOT_SENSOR".equals(fb.getUserData()) && !fa.isSensor()) footContacts--;
     }
@@ -202,23 +196,30 @@ public class WorldContactListener implements ContactListener {
         boolean isEzra = (touchingFixture.getBody() == playerInstance.b2body || "PLAYER".equals(touchingFixture.getUserData()));
         if (!isEzra) return;
 
-        // Map Transitions
+        // --- MAP TRANSITIONS & DEMO END LOGIC ---
         if (sensorData instanceof tilemapmanager.TransitionData) {
             tilemapmanager.TransitionData tData = (tilemapmanager.TransitionData) sensorData;
 
+            // DEBUG LOG 1: Tells us if the portal was touched and what it's named
+            System.out.println("DEBUG: Hit Portal -> targetMap: " + tData.targetMap);
+
             if (tData.requiresKey && !playerInstance.isPortalOpen) {
+                // DEBUG LOG 2: Tells us if Tiled is marking this portal as a locked door
+                System.out.println("DEBUG: Blocked! Door is locked (requiresKey is true).");
                 playerInstance.showLockedMessage = true;
                 return;
             }
 
             if ("demo_end".equals(tData.targetMap)) {
+                // DEBUG LOG 3: Tells us the end screen successfully triggered
+                System.out.println("DEBUG: DEMO_END SIGNAL SENT!");
                 pendingDemoEnd = true;
             } else {
                 pendingTransition = tData;
             }
         }
 
-        // Key Collection
+        // --- KEY COLLECTION ---
         if ("KEY".equals(sensorData)) {
             Body keyBody = sensorFixture.getBody();
             if (!bodiesToDestroy.contains(keyBody, true)) {

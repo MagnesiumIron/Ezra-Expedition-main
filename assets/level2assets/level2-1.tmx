@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="15" nextobjectid="66">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="40" height="12" tilewidth="32" tileheight="32" infinite="0" nextlayerid="15" nextobjectid="72">
  <tileset firstgid="1" source="tilesets/terrain/dungeon bricks/dungeon_terrain.tsx"/>
  <tileset firstgid="113" source="../runes/runesOnline.tsx"/>
  <tileset firstgid="293" source="../Fantasy Icons.tsx"/>
@@ -210,6 +210,26 @@
   <object id="63" x="1180" y="117">
    <properties>
     <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="66" x="1108.83" y="325.458">
+   <properties>
+    <property name="enemyType" value="sandSlime"/>
+   </properties>
+  </object>
+  <object id="69" x="1138" y="316.25">
+   <properties>
+    <property name="enemyType" value="sandSlime"/>
+   </properties>
+  </object>
+  <object id="70" x="1202.75" y="322">
+   <properties>
+    <property name="enemyType" value="sandSlime"/>
+   </properties>
+  </object>
+  <object id="71" x="1170.25" y="295.75">
+   <properties>
+    <property name="enemyType" value="sandSlime"/>
    </properties>
   </object>
  </objectgroup>

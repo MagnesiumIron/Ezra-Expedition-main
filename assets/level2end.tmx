@@ -354,11 +354,11 @@
   <object id="34" x="160" y="352" width="32" height="64"/>
   <object id="35" x="0" y="480" width="192" height="32"/>
   <object id="36" x="160" y="448" width="32" height="32"/>
-  <object id="37" x="48" y="784">
-   <polygon points="0,0 16,0 16,16 -8,16 -8,8 0,8"/>
+  <object id="37" x="36.9091" y="784">
+   <polygon points="0,0 27.0909,0 27.0909,16 -13.5455,16 -13.5455,8 0,8"/>
   </object>
-  <object id="38" x="96" y="816">
-   <polygon points="0,0 16,0 16,8 24,8 24,16 0,16 0,0"/>
+  <object id="38" x="81.9091" y="816">
+   <polygon points="0,0 25.3939,0 25.3939,8 38.0909,8 38.0909,16 0,16 0,0"/>
   </object>
   <object id="39" x="112" y="864">
    <polygon points="0,0 16,0 16,16 8,16 8,8 0,8"/>
@@ -369,8 +369,8 @@
   <object id="41" x="96" y="704">
    <polygon points="0,0 32,0 32,16 8,16 8,32 0,32"/>
   </object>
-  <object id="42" x="16" y="704">
-   <polygon points="0,0 16,0 16,16 0,16"/>
+  <object id="42" x="1.25" y="704">
+   <polygon points="0,0 30.75,0 30.75,16 0,16"/>
   </object>
   <object id="43" x="64" y="640">
    <polygon points="0,0 64,0 64,48 32,48 32,32 40,32 40,16 0,16 0,0"/>

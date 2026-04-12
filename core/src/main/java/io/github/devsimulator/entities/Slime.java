@@ -57,7 +57,12 @@ public class Slime extends Enemy {
 
     @Override
     public void update(float dt, SandManager sandMgr) {
-        if (!isAlive || health <= 0) return;
+        if (!isAlive || hp <= 0) {
+            if (b2body.isActive()) {
+                b2body.setActive(false);
+            }
+            return;
+        }
 
         timer += dt;
         stateTimer += dt;

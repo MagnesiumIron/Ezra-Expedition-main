@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#329b7b78" nextlayerid="23" nextobjectid="55">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="12" tilewidth="32" tileheight="32" infinite="0" backgroundcolor="#329b7b78" nextlayerid="23" nextobjectid="60">
  <tileset firstgid="1" name="sky" tilewidth="32" tileheight="32" tilecount="180" columns="18">
   <image source="parralax/1.png" width="576" height="324"/>
  </tileset>
@@ -112,22 +112,27 @@
  <objectgroup color="#ff0000" id="22" name="enemies">
   <object id="51" x="324" y="273.333">
    <properties>
-    <property name="enemyType" value="slime"/>
-   </properties>
-  </object>
-  <object id="52" x="414.667" y="255.333">
-   <properties>
-    <property name="enemyType" value="slime"/>
-   </properties>
-  </object>
-  <object id="53" x="534.667" y="174">
-   <properties>
-    <property name="enemyType" value="slime"/>
+    <property name="enemyType" value="lavaSlime"/>
    </properties>
   </object>
   <object id="54" x="236" y="180">
    <properties>
     <property name="enemyType" value="slime"/>
+   </properties>
+  </object>
+  <object id="55" x="408.5" y="244">
+   <properties>
+    <property name="enemyType" value="lavaSlime"/>
+   </properties>
+  </object>
+  <object id="56" x="464" y="221.75">
+   <properties>
+    <property name="enemyType" value="lavaSlime"/>
+   </properties>
+  </object>
+  <object id="59" x="464.25" y="20.25">
+   <properties>
+    <property name="enemyType" value="lavaSlime"/>
    </properties>
   </object>
  </objectgroup>
@@ -165,7 +170,7 @@
     <property name="runeID" type="int" value="1"/>
    </properties>
   </object>
-  <object id="35" x="353.251" y="224.009" width="95.741" height="63.9919">
+  <object id="35" x="352" y="224" width="95.741" height="63.9919">
    <properties>
     <property name="elementType" value="LAVA"/>
     <property name="isContainer" type="bool" value="true"/>

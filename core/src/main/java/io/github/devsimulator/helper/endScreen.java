@@ -1,78 +1,115 @@
-package io.github.devsimulator.helper; // Updated package!
+package io.github.devsimulator.helper;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.Align;
 import io.github.devsimulator.Main;
 
-public class endScreen implements Screen { // Updated class name!
+public class endScreen {
     private Main game;
     private SpriteBatch batch;
-    private BitmapFont fontTitle;
-    private BitmapFont fontSub;
+    private BitmapFont font;
+    private GlyphLayout layout;
+    private Texture bgDimTex;
+
     private float alpha = 0f;
     private float stateTime = 0f;
 
     public endScreen(Main game) {
         this.game = game;
         this.batch = new SpriteBatch();
+        this.layout = new GlyphLayout();
 
-        this.fontTitle = new BitmapFont();
-        this.fontTitle.getData().setScale(2.5f);
+        // Load your custom font
+        try {
+            this.font = new BitmapFont(Gdx.files.internal("fantasyfontt.fnt"));
+        } catch (Exception e) {
+            Gdx.app.error("endScreen", "Font load failed, using default: " + e.getMessage());
+            this.font = new BitmapFont();
+        }
 
-        this.fontSub = new BitmapFont();
-        this.fontSub.getData().setScale(1.2f);
+        // Create the cinematic dimmed background
+        Pixmap pix = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pix.setColor(0, 0, 0, 0.85f);
+        pix.fill();
+        this.bgDimTex = new Texture(pix);
+        pix.dispose();
     }
 
-    @Override
-    public void show() { }
+    public void render(float dt) {
+        stateTime += dt;
 
-    @Override
-    public void render(float delta) {
-        stateTime += delta;
-
-        // Cinematic Fade-in effect
+        // Fade-in logic
         if (alpha < 1f) {
-            alpha += delta * 0.5f;
+            alpha += dt * 0.5f;
             if (alpha > 1f) alpha = 1f;
         }
 
-        Gdx.gl.glClearColor(0.05f, 0.05f, 0.08f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        // Use the game's UI viewport settings for perfect scaling
+        batch.setProjectionMatrix(game.viewport.getCamera().combined);
         batch.begin();
 
-        fontTitle.setColor(1, 1, 1, alpha);
-        fontTitle.draw(batch, "THANK YOU FOR PLAYING", Gdx.graphics.getWidth() / 2f - 220, Gdx.graphics.getHeight() / 2f + 50);
+        // 1. Draw Background Dim
+        batch.setColor(1, 1, 1, alpha);
+        batch.draw(bgDimTex, 0, 0, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
 
-        fontSub.setColor(0.7f, 0.7f, 0.7f, alpha);
-        fontSub.draw(batch, "Ezra's journey will continue in the full game.", Gdx.graphics.getWidth() / 2f - 180, Gdx.graphics.getHeight() / 2f - 20);
+        float centerX = game.viewport.getWorldWidth() / 2f;
+        float centerY = game.viewport.getWorldHeight() / 2f;
 
-        // Blinking Prompt
-        if (alpha >= 1f && (Math.sin(stateTime * 5f) > 0)) {
-            fontSub.setColor(1f, 1f, 0.4f, 1f);
-            fontSub.draw(batch, "Press ESC or Click to Exit", Gdx.graphics.getWidth() / 2f - 100, Gdx.graphics.getHeight() / 2f - 100);
+        // 2. Draw Title
+        font.getData().setScale(1.2f);
+        font.setColor(Color.WHITE);
+        font.getColor().a = alpha;
+        String title = "DEMO COMPLETED";
+        layout.setText(font, title);
+        font.draw(batch, title, centerX - layout.width / 2f, centerY + 50);
+
+        // 3. Draw Subtitle
+        font.getData().setScale(0.5f);
+        font.setColor(Color.LIGHT_GRAY);
+        font.getColor().a = alpha;
+        String sub = "Ezra's journey will continue in the full game.";
+        layout.setText(font, sub);
+        font.draw(batch, sub, centerX - layout.width / 2f, centerY - 10);
+
+        // 4. Draw Blinking Prompt
+        if (alpha >= 1f && (Math.sin(stateTime * 4f) > 0)) {
+            font.setColor(Color.GOLD);
+            String prompt = "Press ESC to return to Menu";
+            layout.setText(font, prompt);
+            font.draw(batch, prompt, centerX - layout.width / 2f, centerY - 80);
         }
 
         batch.end();
+        batch.setColor(Color.WHITE); // Reset batch color
 
-        if (alpha >= 1f && (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))) {
+        // 5. Input Handling
+        if (alpha >= 1f && (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.justTouched())) {
+            // Reset game state and return to menu
+            game.isDemoEnded = false;
+            // Assuming your mainMenu is accessible in Main
+            // game.mainMenu.isStarted = false;
+            // Gdx.input.setInputProcessor(game.mainMenu.stage);
+
+            // For now, exit just to be safe as per your code
             Gdx.app.exit();
         }
     }
 
-    @Override public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    public void resize(int width, int height) {
+        // Main.java handles the viewport update, but we ensure our batch is ready
+    }
 
-    @Override
     public void dispose() {
         batch.dispose();
-        fontTitle.dispose();
-        fontSub.dispose();
+        if (font != null) font.dispose();
+        if (bgDimTex != null) bgDimTex.dispose();
     }
 }

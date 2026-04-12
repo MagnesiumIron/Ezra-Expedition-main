@@ -4,6 +4,7 @@
  <tileset firstgid="113" source="runes/runesOnline.tsx"/>
  <tileset firstgid="293" source="Fantasy Icons.tsx"/>
  <tileset firstgid="613" source="portal.tsx"/>
+ <tileset firstgid="619" source="level3assets/key.tsx"/>
  <layer id="1" name="backdrop" width="20" height="48">
   <data encoding="csv">
 18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,
@@ -181,7 +182,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,478,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,619,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -215,7 +216,6 @@
  <layer id="14" name="portal_closed" width="20" height="48">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,616,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -261,7 +261,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,
+614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614,614
 </data>
  </layer>
  <layer id="15" name="portal_open" width="20" height="48" visible="0">
@@ -312,17 +313,17 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,
+613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613,613
 </data>
  </layer>
  <objectgroup id="5" name="sand_zones">
-  <object id="5" x="320" y="544" width="288" height="96"/>
+  <object id="5" x="322.391" y="544" width="285.609" height="94.3913"/>
   <object id="6" x="352" y="512" width="224" height="32"/>
   <object id="7" x="544" y="480" width="96" height="32"/>
   <object id="8" x="576" y="352" width="64" height="128"/>
   <object id="9" x="608" y="160" width="32" height="192"/>
-  <object id="10" x="544" y="96" width="96" height="64"/>
+  <object id="10" x="544" y="1.75" width="96" height="158.25"/>
  </objectgroup>
  <objectgroup color="#00007f" id="4" name="collisions">
   <object id="1" x="0" y="-32" width="640" height="32"/>
@@ -342,8 +343,8 @@
   <object id="22" x="352" y="480" width="192" height="32"/>
   <object id="23" x="576" y="512" width="64" height="32"/>
   <object id="24" x="608" y="544" width="32" height="96"/>
-  <object id="25" x="320" y="640" width="320" height="32"/>
-  <object id="26" x="288" y="544" width="32" height="96"/>
+  <object id="25" x="320" y="639.091" width="320" height="32.9091"/>
+  <object id="26" x="288" y="544" width="32" height="96.5455"/>
   <object id="27" x="288" y="512" width="64" height="32"/>
   <object id="28" x="320" y="480" width="32" height="32"/>
   <object id="29" x="256" y="128" width="32" height="96"/>
@@ -450,9 +451,7 @@
   <object id="117" x="96" y="1280" width="64" height="64"/>
   <object id="120" x="0" y="1152" width="32" height="160"/>
  </objectgroup>
- <objectgroup id="6" name="end">
-  <object id="82" x="0" y="1504" width="640" height="32"/>
- </objectgroup>
+ <objectgroup id="6" name="end"/>
  <objectgroup id="8" name="runes">
   <object id="83" x="224" y="384" width="32" height="32">
    <properties>
@@ -529,16 +528,16 @@
   </object>
   <object id="152" x="289.479" y="962.604" width="90.3753" height="28.125">
    <properties>
-    <property name="elementType" value="SAND"/>
+    <property name="elementType" value="WATER"/>
     <property name="isContainer" type="bool" value="true"/>
-    <property name="runeID" type="int" value="0"/>
+    <property name="runeID" type="int" value="1"/>
    </properties>
   </object>
   <object id="153" x="320" y="992" width="29.042" height="28.6667">
    <properties>
-    <property name="elementType" value="SAND"/>
+    <property name="elementType" value="WATER"/>
     <property name="isContainer" type="bool" value="true"/>
-    <property name="runeID" type="int" value="0"/>
+    <property name="runeID" type="int" value="1"/>
    </properties>
   </object>
   <object id="154" x="325.479" y="697.271" width="253.042" height="65.4583">
@@ -548,7 +547,7 @@
     <property name="runeID" type="int" value="1"/>
    </properties>
   </object>
-  <object id="155" x="319.479" y="639.271" width="63.0413" height="58.125" rotation="90">
+  <object id="155" x="318.653" y="641.097" width="61.2152" height="57.2989" rotation="90">
    <properties>
     <property name="elementType" value="WATER"/>
     <property name="isContainer" type="bool" value="true"/>
@@ -624,16 +623,16 @@
   </object>
  </objectgroup>
  <objectgroup color="#ffff00" id="12" name="keys" class="Key">
-  <object id="157" x="97.3636" y="609.788" width="29.0909" height="29.3334">
+  <object id="157" x="388.697" y="607.788" width="29.0909" height="29.3334">
    <properties>
     <property name="isKey" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="158" x="32.1818" y="31.5152" width="31.6364" height="31.303">
+  <object id="158" x="0" y="1472" width="635.636" height="59.9697">
    <properties>
     <property name="isDoor" type="bool" value="true"/>
     <property name="spawnX" type="float" value="100"/>
-    <property name="spawnY" type="float" value="800"/>
+    <property name="spawnY" type="float" value="250"/>
     <property name="targetMap" value="level3.tmx"/>
    </properties>
   </object>

@@ -2,7 +2,6 @@ package io.github.devsimulator.helper;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -27,13 +26,14 @@ public class mainMenu {
     private BitmapFont font;
     private Player player;
 
-    private Texture continueTex, saveLoadTex, withdrawTex, hoverSheet, menuBg;
+    private Texture continueTex, saveLoadTex, controlTex, withdrawTex, hoverSheet, menuBg;
     private Animation<TextureRegion> hoverAnimation;
     private float stateTime = 0f;
     private Actor hoveredButton = null;
 
     private Table mainTable;
     private saveManager saveManager;
+    private controlUI controlUI; // Added reference
     private Label title;
 
     public mainMenu(Player player) {
@@ -44,7 +44,9 @@ public class mainMenu {
         menuBg = new Texture(Gdx.files.internal("bg_menu.png"));
         continueTex = new Texture("menubtn_continue.png");
         saveLoadTex = new Texture("menubtn_saveload.png");
+        controlTex = new Texture("control_btn.png"); // New Texture
         withdrawTex = new Texture("menubtn_withdraw.png");
+
         hoverSheet = new Texture("menubtn_hovereffect.png");
         int frameCount = hoverSheet.getWidth() / 14;
         TextureRegion[][] tmp = TextureRegion.split(hoverSheet, 14, 9);
@@ -55,6 +57,7 @@ public class mainMenu {
 
         ImageButton continueBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(continueTex)));
         ImageButton loadBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(saveLoadTex)));
+        ImageButton controlBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(controlTex)));
         ImageButton withdrawBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(withdrawTex)));
 
         ClickListener hoverListener = new ClickListener() {
@@ -70,6 +73,7 @@ public class mainMenu {
 
         continueBtn.addListener(hoverListener);
         loadBtn.addListener(hoverListener);
+        controlBtn.addListener(hoverListener);
         withdrawBtn.addListener(hoverListener);
 
         continueBtn.addListener(new ClickListener() {
@@ -78,22 +82,15 @@ public class mainMenu {
 
         loadBtn.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
-                boolean hasAnySave = false;
-                for (int i = 1; i <= 3; i++) {
-                    if (Gdx.app.getPreferences("EzraSave_" + i).getBoolean("hasData", false)) hasAnySave = true;
-                }
-
-                if (!hasAnySave) {
-                    title.setText("NO SAVES FOUND");
-                    title.setColor(Color.RED);
-                    Timer.schedule(new Timer.Task() {
-                        @Override public void run() { title.setText("EZRA'S EXPEDITION"); title.setColor(Color.WHITE); }
-                    }, 2f);
-                    return;
-                }
-
                 mainTable.setVisible(false);
                 saveManager.setVisible(true);
+            }
+        });
+
+        controlBtn.addListener(new ClickListener() {
+            @Override public void clicked(InputEvent event, float x, float y) {
+                mainTable.setVisible(false);
+                controlUI.setVisible(true);
             }
         });
 
@@ -103,7 +100,6 @@ public class mainMenu {
 
         mainTable = new Table();
         mainTable.setFillParent(true);
-
         mainTable.setBackground(new TextureRegionDrawable(new TextureRegion(menuBg)));
 
         title = new Label("EZRA'S EXPEDITION", new Label.LabelStyle(font, Color.WHITE));
@@ -111,16 +107,25 @@ public class mainMenu {
         mainTable.add(title).padBottom(30).row();
         mainTable.add(continueBtn).width(58).height(15).pad(5).row();
         mainTable.add(loadBtn).width(58).height(15).pad(5).row();
+        mainTable.add(controlBtn).width(58).height(15).pad(5).row(); // Added to table
         mainTable.add(withdrawBtn).width(58).height(15).pad(5);
 
+        // Init Managers
         saveManager = new saveManager(player, false,
             () -> { saveManager.setVisible(false); mainTable.setVisible(true); },
             () -> { isStarted = true; Gdx.input.setInputProcessor(null); }
         );
         saveManager.setVisible(false);
 
+        controlUI = new controlUI(() -> {
+            controlUI.setVisible(false);
+            mainTable.setVisible(true);
+        });
+        controlUI.setVisible(false);
+
         stage.addActor(mainTable);
         stage.addActor(saveManager);
+        stage.addActor(controlUI);
         Gdx.input.setInputProcessor(stage);
     }
 
@@ -168,9 +173,11 @@ public class mainMenu {
         font.dispose();
         continueTex.dispose();
         saveLoadTex.dispose();
+        controlTex.dispose(); // Dispose new texture
         withdrawTex.dispose();
         hoverSheet.dispose();
         menuBg.dispose();
         if(saveManager != null) saveManager.dispose();
+        if(controlUI != null) controlUI.dispose(); // Dispose new UI
     }
 }

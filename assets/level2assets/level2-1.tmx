@@ -232,7 +232,7 @@
    <properties>
     <property name="isDoor" type="bool" value="true"/>
     <property name="spawnX" type="float" value="100"/>
-    <property name="spawnY" type="float" value="800"/>
+    <property name="spawnY" type="float" value="1500"/>
     <property name="targetMap" value="level2end.tmx"/>
    </properties>
   </object>

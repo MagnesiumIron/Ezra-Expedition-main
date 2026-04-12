@@ -182,12 +182,12 @@
     <property name="isKey" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="56" x="1183.35" y="64.5152" width="31.6364" height="31.303">
+  <object id="56" x="1184" y="64" width="31.6364" height="31.303">
    <properties>
     <property name="isDoor" type="bool" value="true"/>
     <property name="spawnX" type="float" value="100"/>
     <property name="spawnY" type="float" value="800"/>
-    <property name="targetMap" value="levelEnding.tmx"/>
+    <property name="targetMap" value="demo_end"/>
    </properties>
   </object>
  </objectgroup>
